@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const services = [
   {
     title: "Private Chef Dining",
@@ -69,16 +71,21 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#fffdf8] text-[#241b15]">
       <header className="sticky top-0 z-50 border-b border-[#241b15]/10 bg-[#fffdf8]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-10">
           <a href="#home" className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#b8892d]/40 bg-white font-serif text-lg font-bold text-[#9b6c18]">
-              iBC
-            </div>
+            <Image
+              src="/ibirdchef-logo.jpeg"
+              alt="iBirdChef South Asian Cuisine Catering Company"
+              width={500}
+              height={500}
+              className="h-16 w-16 rounded-xl object-cover shadow-sm"
+              priority
+            />
 
-            <div>
+            <div className="hidden sm:block">
               <p className="font-serif text-xl font-semibold">iBirdChef</p>
               <p className="text-[10px] uppercase tracking-[0.22em] text-[#76685d]">
-                Private Chef & Catering
+                South Asian Cuisine Catering
               </p>
             </div>
           </a>
@@ -163,25 +170,23 @@ export default function Home() {
           </div>
 
           <div className="relative">
-            <div className="aspect-[4/3] overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#6f4b2a,#c39859_55%,#38271d)] shadow-2xl">
-              <div className="flex h-full flex-col justify-between p-8 text-white sm:p-10">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/75">
-                  Chef Simbu
-                </p>
-
-                <div>
-                  <p className="font-serif text-5xl font-semibold">16+</p>
-                  <p className="mt-2 text-sm uppercase tracking-[0.2em] text-white/75">
-                    Years of culinary experience
-                  </p>
-                </div>
+            <div className="aspect-[4/3] overflow-hidden rounded-[2rem] bg-[#062b35] shadow-2xl">
+              <div className="relative flex h-full items-center justify-center p-8">
+                <Image
+                  src="/ibirdchef-logo.jpeg"
+                  alt="iBirdChef South Asian Cuisine Catering Company"
+                  width={500}
+                  height={500}
+                  className="h-full w-full object-contain"
+                  priority
+                />
               </div>
             </div>
 
             <div className="absolute -bottom-5 -left-4 rounded-2xl bg-white px-6 py-5 shadow-xl">
-              <p className="text-sm font-semibold">Fresh menus</p>
+              <p className="text-sm font-semibold">16+ years</p>
               <p className="mt-1 text-xs text-[#76685d]">
-                Designed for your occasion
+                Culinary and foodservice experience
               </p>
             </div>
           </div>
@@ -289,7 +294,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="about" className="bg-[#2c241e] text-white">
+      <section id="about" className="bg-[#062b35] text-white">
         <div className="mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-2 lg:px-10">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#d8ae58]">
