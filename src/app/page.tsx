@@ -22,6 +22,10 @@ const serviceAreas = [
   "Redmond",
   "Sammamish",
   "Issaquah",
+  "San Francisco Bay Area",
+  "San Jose",
+  "Oakland",
+  "Fremont",
   "Eastside communities",
 ];
 
@@ -90,7 +94,8 @@ export default function Home() {
 
             <p className="mt-6 max-w-xl text-lg leading-8 text-[#6e6259]">
               iBirdChef provides private dining, corporate catering, and
-              special-event culinary services across Seattle and the Eastside.
+	      special-event culinary services across Seattle, the Eastside,
+	      and the San Francisco Bay Area.
             </p>
 
             <div className="mt-9 flex flex-col gap-4 sm:flex-row">
