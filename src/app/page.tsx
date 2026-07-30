@@ -7,12 +7,33 @@ const services = [
   {
     title: "Corporate Catering",
     description:
-      "Professional breakfast, lunch, reception, and executive catering for Seattle-area workplaces.",
+      "Professional breakfast, lunch, reception, and executive catering for workplaces across Seattle, the Eastside, and the San Francisco Bay Area.",
   },
   {
     title: "Special Events",
     description:
-      "Thoughtful menus and reliable culinary execution for celebrations, weddings, and private gatherings.",
+      "Thoughtful menus and reliable culinary execution for celebrations, weddings, corporate events, and private gatherings.",
+  },
+];
+
+const corporateHighlights = [
+  {
+    value: "Approved",
+    label: "Aramark Vendor",
+    description:
+      "Approved-vendor experience supporting professional corporate foodservice operations.",
+  },
+  {
+    value: "Approved",
+    label: "Sodexo Vendor",
+    description:
+      "Experience working within established corporate dining and event-service requirements.",
+  },
+  {
+    value: "5,000+",
+    label: "Meals Supported",
+    description:
+      "Meals prepared and served for Bay Area corporate offices and special events.",
   },
 ];
 
@@ -22,11 +43,26 @@ const serviceAreas = [
   "Redmond",
   "Sammamish",
   "Issaquah",
+  "Eastside Communities",
   "San Francisco Bay Area",
   "San Jose",
   "Oakland",
   "Fremont",
-  "Eastside communities",
+];
+
+const galleryItems = [
+  {
+    title: "Corporate Breakfast",
+    style: "bg-[linear-gradient(135deg,#d7b985,#87613c)]",
+  },
+  {
+    title: "Private Dining",
+    style: "bg-[linear-gradient(135deg,#8e4f32,#d5a56d)]",
+  },
+  {
+    title: "Special Event Catering",
+    style: "bg-[linear-gradient(135deg,#737c53,#d2be8b)]",
+  },
 ];
 
 export default function Home() {
@@ -47,20 +83,28 @@ export default function Home() {
             </div>
           </a>
 
-          <nav className="hidden items-center gap-7 text-sm font-medium lg:flex">
-            <a href="#home" className="hover:text-[#a5741d]">
+          <nav className="hidden items-center gap-6 text-sm font-medium lg:flex">
+            <a href="#home" className="transition hover:text-[#a5741d]">
               Home
             </a>
-            <a href="#about" className="hover:text-[#a5741d]">
-              About
-            </a>
-            <a href="#services" className="hover:text-[#a5741d]">
+
+            <a href="#services" className="transition hover:text-[#a5741d]">
               Services
             </a>
-            <a href="#gallery" className="hover:text-[#a5741d]">
+
+            <a href="#corporate" className="transition hover:text-[#a5741d]">
+              Corporate
+            </a>
+
+            <a href="#about" className="transition hover:text-[#a5741d]">
+              About
+            </a>
+
+            <a href="#gallery" className="transition hover:text-[#a5741d]">
               Menus & Gallery
             </a>
-            <a href="#contact" className="hover:text-[#a5741d]">
+
+            <a href="#contact" className="transition hover:text-[#a5741d]">
               Contact
             </a>
 
@@ -81,11 +125,14 @@ export default function Home() {
         </div>
       </header>
 
-      <section id="home" className="border-b border-[#241b15]/10 bg-[#f3efe7]">
+      <section
+        id="home"
+        className="border-b border-[#241b15]/10 bg-[#f3efe7]"
+      >
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-6 py-16 lg:grid-cols-2 lg:px-10 lg:py-24">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#a5741d]">
-              Seattle Private Chef & Catering
+              Seattle & Bay Area Private Chef and Catering
             </p>
 
             <h1 className="mt-5 max-w-2xl font-serif text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
@@ -94,8 +141,8 @@ export default function Home() {
 
             <p className="mt-6 max-w-xl text-lg leading-8 text-[#6e6259]">
               iBirdChef provides private dining, corporate catering, and
-	      special-event culinary services across Seattle, the Eastside,
-	      and the San Francisco Bay Area.
+              special-event culinary services across Seattle, the Eastside,
+              and the San Francisco Bay Area.
             </p>
 
             <div className="mt-9 flex flex-col gap-4 sm:flex-row">
@@ -141,7 +188,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="services" className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
+      <section
+        id="services"
+        className="mx-auto max-w-7xl px-6 py-20 lg:px-10"
+      >
         <div className="max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#a5741d]">
             Our Services
@@ -180,6 +230,65 @@ export default function Home() {
         </div>
       </section>
 
+      <section
+        id="corporate"
+        className="border-y border-[#241b15]/10 bg-[#f3efe7]"
+      >
+        <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
+          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#a5741d]">
+                Corporate Experience
+              </p>
+
+              <h2 className="mt-4 font-serif text-4xl font-semibold tracking-tight sm:text-5xl">
+                Proven experience supporting corporate dining and events.
+              </h2>
+            </div>
+
+            <div>
+              <p className="text-lg leading-8 text-[#6e6259]">
+                iBirdChef is an approved vendor for Aramark and Sodexo and has
+                supported the preparation and service of more than 5,000 meals
+                for Bay Area corporate offices and events.
+              </p>
+
+              <p className="mt-4 text-sm leading-6 text-[#81746a]">
+                Our experience includes workplace meals, corporate events,
+                executive service, high-volume production, dietary
+                accommodations, and dependable event execution.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {corporateHighlights.map((highlight) => (
+              <article
+                key={highlight.label}
+                className="rounded-3xl border border-[#241b15]/10 bg-white p-8 shadow-sm"
+              >
+                <p className="font-serif text-4xl font-semibold text-[#9b6c18]">
+                  {highlight.value}
+                </p>
+
+                <h3 className="mt-3 text-lg font-semibold">
+                  {highlight.label}
+                </h3>
+
+                <p className="mt-4 leading-7 text-[#6e6259]">
+                  {highlight.description}
+                </p>
+              </article>
+            ))}
+          </div>
+
+          <p className="mt-8 text-center text-xs leading-5 text-[#81746a]">
+            Approved-vendor status is presented as factual business experience
+            and does not imply endorsement by the named organizations.
+          </p>
+        </div>
+      </section>
+
       <section id="about" className="bg-[#2c241e] text-white">
         <div className="mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-2 lg:px-10">
           <div>
@@ -202,14 +311,17 @@ export default function Home() {
 
             <p className="mt-6 leading-7 text-white/60">
               Every event is planned with attention to the guest experience,
-              dietary requirements, production timing, and the details that
-              make food memorable.
+              dietary requirements, production timing, food safety, and the
+              details that make food memorable.
             </p>
           </div>
         </div>
       </section>
 
-      <section id="gallery" className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
+      <section
+        id="gallery"
+        className="mx-auto max-w-7xl px-6 py-20 lg:px-10"
+      >
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#a5741d]">
@@ -222,33 +334,24 @@ export default function Home() {
           </div>
 
           <p className="max-w-md leading-7 text-[#6e6259]">
-            Our full menu collections and event gallery will be added here as
-            the website is completed.
+            Our complete menu collections and original event photography will
+            be added as the website is completed.
           </p>
         </div>
 
         <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {[
-            "Corporate Breakfast",
-            "Private Dining",
-            "Special Event Catering",
-          ].map((item, index) => (
+          {galleryItems.map((item) => (
             <article
-              key={item}
+              key={item.title}
               className="overflow-hidden rounded-3xl border border-[#241b15]/10 bg-white"
             >
-              <div
-                className={`aspect-[4/3] ${
-                  index === 0
-                    ? "bg-[linear-gradient(135deg,#d7b985,#87613c)]"
-                    : index === 1
-                      ? "bg-[linear-gradient(135deg,#8e4f32,#d5a56d)]"
-                      : "bg-[linear-gradient(135deg,#737c53,#d2be8b)]"
-                }`}
-              />
+              <div className={`aspect-[4/3] ${item.style}`} />
 
               <div className="p-6">
-                <h3 className="font-serif text-xl font-semibold">{item}</h3>
+                <h3 className="font-serif text-xl font-semibold">
+                  {item.title}
+                </h3>
+
                 <p className="mt-2 text-sm text-[#76685d]">
                   Original iBirdChef photography coming next.
                 </p>
@@ -261,7 +364,7 @@ export default function Home() {
       <section className="border-y border-[#241b15]/10 bg-[#f3efe7]">
         <div className="mx-auto max-w-7xl px-6 py-16 lg:px-10">
           <p className="text-center text-xs font-bold uppercase tracking-[0.25em] text-[#a5741d]">
-            Service Area
+            Service Areas
           </p>
 
           <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -277,7 +380,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="contact" className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
+      <section
+        id="contact"
+        className="mx-auto max-w-7xl px-6 py-20 lg:px-10"
+      >
         <div className="rounded-[2rem] bg-[#b8892d] px-8 py-14 text-white sm:px-12">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-white/75">
             Request Catering
@@ -291,8 +397,9 @@ export default function Home() {
 
               <p className="mt-5 max-w-2xl text-lg leading-8 text-white/80">
                 Share your event date, guest count, location, menu preferences,
-                and dietary needs. The complete inquiry form will be connected
-                during the next build stage.
+                dietary needs, service style, and estimated budget. The
+                complete inquiry form will be connected during the next build
+                stage.
               </p>
             </div>
 
@@ -309,7 +416,11 @@ export default function Home() {
       <footer className="border-t border-[#241b15]/10 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 px-6 py-8 text-sm text-[#76685d] sm:flex-row lg:px-10">
           <p>© 2026 iBirdChef. All rights reserved.</p>
-          <p>Private chef and catering services in the Seattle area.</p>
+
+          <p>
+            Private chef and catering services in Seattle, the Eastside, and
+            the San Francisco Bay Area.
+          </p>
         </div>
       </footer>
     </main>
