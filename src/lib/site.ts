@@ -4,6 +4,10 @@ export const siteConfig = {
   description:
     "iBirdChef provides private chef dining, corporate catering, and special-event culinary services across Seattle, the Eastside, and the San Francisco Bay Area. South Asian catering for private gatherings and workplaces.",
   chef: "Chef Simbu",
+  phoneDisplay: "(425) 600-6692",
+  phoneHref: "tel:+14256006692",
+  emailDisplay: "order@ibirdchef.com",
+  emailHref: "mailto:order@ibirdchef.com",
   keywords: [
     "Seattle catering",
     "Eastside catering",

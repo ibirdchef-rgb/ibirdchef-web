@@ -302,8 +302,8 @@ export default function InquiryForm() {
 
       <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm leading-6 text-[#5f534a]">
-          Your inquiry is emailed to the iBirdChef team. We do not publish
-          pricing or contact details on this form.
+          Your inquiry is emailed to the iBirdChef team. Prefer to call or
+          email directly? Use the contact links above this form.
         </p>
         <button
           type="submit"

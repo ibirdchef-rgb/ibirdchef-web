@@ -385,6 +385,21 @@ export default function Home() {
               dietary needs, service style, and estimated budget. We serve
               Seattle, the Eastside, and the San Francisco Bay Area.
             </p>
+
+            <div className="mt-8 flex flex-col gap-3 text-base sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-8 sm:gap-y-3">
+              <a
+                href={siteConfig.phoneHref}
+                className="inline-flex min-h-11 items-center font-semibold text-[var(--ivory-soft)] underline decoration-[var(--bronze)] underline-offset-4 transition hover:text-white"
+              >
+                {siteConfig.phoneDisplay}
+              </a>
+              <a
+                href={siteConfig.emailHref}
+                className="inline-flex min-h-11 items-center font-semibold text-[var(--ivory-soft)] underline decoration-[var(--bronze)] underline-offset-4 transition hover:text-white"
+              >
+                {siteConfig.emailDisplay}
+              </a>
+            </div>
           </div>
 
           <div className="mt-8">
@@ -394,13 +409,30 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-[var(--navy)]/10 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 px-6 py-8 text-sm text-[var(--ink-muted)] sm:flex-row lg:px-10">
-          <p>© 2026 iBirdChef. All rights reserved.</p>
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 text-sm text-[var(--ink-muted)] lg:px-10">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+            <p>© 2026 iBirdChef. All rights reserved.</p>
 
-          <p>
-            Private chef and catering services in Seattle, the Eastside, and
-            the San Francisco Bay Area.
-          </p>
+            <p className="sm:max-w-md sm:text-right">
+              Private chef and catering services in Seattle, the Eastside, and
+              the San Francisco Bay Area.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
+            <a
+              href={siteConfig.phoneHref}
+              className="inline-flex min-h-11 items-center font-medium text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4 transition hover:decoration-[var(--bronze)]"
+            >
+              {siteConfig.phoneDisplay}
+            </a>
+            <a
+              href={siteConfig.emailHref}
+              className="inline-flex min-h-11 items-center font-medium text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4 transition hover:decoration-[var(--bronze)]"
+            >
+              {siteConfig.emailDisplay}
+            </a>
+          </div>
         </div>
       </footer>
     </div>
