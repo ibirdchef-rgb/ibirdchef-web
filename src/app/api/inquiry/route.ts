@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import {
+  buildClowInquiryPayload,
+  createSubmissionId,
+  forwardInquiryToClow,
+  logClowForwardResult,
+} from "@/lib/clow-intake";
 
 export const runtime = "nodejs";
 
@@ -105,8 +111,9 @@ function validate(body: InquiryBody): string | null {
   return null;
 }
 
-function buildEmailHtml(body: InquiryBody): string {
+function buildEmailHtml(body: InquiryBody, submissionId: string): string {
   const rows: Array<[string, string]> = [
+    ["Submission ID", submissionId],
     ["Name", body.name],
     ["Email", body.email],
     ["Phone", body.phone],
@@ -168,6 +175,8 @@ export async function POST(request: Request) {
     );
   }
 
+  const submissionId = createSubmissionId();
+
   try {
     const resend = new Resend(apiKey);
     const { error } = await resend.emails.send({
@@ -175,10 +184,11 @@ export async function POST(request: Request) {
       to: [toEmail],
       replyTo: body.email,
       subject: `Catering inquiry from ${body.name}`,
-      html: buildEmailHtml(body),
+      html: buildEmailHtml(body, submissionId),
       text: [
         "New catering inquiry",
         "",
+        `Submission ID: ${submissionId}`,
         `Name: ${body.name}`,
         `Email: ${body.email}`,
         `Phone: ${body.phone}`,
@@ -201,6 +211,11 @@ export async function POST(request: Request) {
         { status: 502 },
       );
     }
+
+    const clowResult = await forwardInquiryToClow({
+      payload: buildClowInquiryPayload(body, submissionId),
+    });
+    logClowForwardResult(submissionId, clowResult);
 
     return NextResponse.json({ ok: true });
   } catch (error) {
