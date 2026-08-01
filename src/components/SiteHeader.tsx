@@ -4,11 +4,12 @@ import Image from "next/image";
 import { useEffect, useId, useState } from "react";
 
 const navLinks = [
-  { href: "#services", label: "Services" },
-  { href: "#corporate", label: "Corporate" },
-  { href: "#about", label: "About" },
-  { href: "#experience", label: "Food Experience" },
-  { href: "#areas", label: "Service Areas" },
+  { href: "/#services", label: "Services" },
+  { href: "/#corporate", label: "Corporate" },
+  { href: "/#menu", label: "Menu" },
+  { href: "/#about", label: "About" },
+  { href: "/#experience", label: "Food Experience" },
+  { href: "/#areas", label: "Service Areas" },
 ] as const;
 
 export default function SiteHeader() {
@@ -43,7 +44,7 @@ export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--navy)]/10 bg-[var(--ivory)]/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3 lg:px-10">
-        <a href="#home" className="flex min-w-0 items-center gap-3" onClick={closeMenu}>
+        <a href="/#home" className="flex min-w-0 items-center gap-3" onClick={closeMenu}>
           <Image
             src="/ibirdchef-logo.jpeg"
             alt="iBirdChef South Asian Cuisine Catering Company"
@@ -78,7 +79,7 @@ export default function SiteHeader() {
           ))}
 
           <a
-            href="#contact"
+            href="/#contact"
             className="inline-flex min-h-12 items-center rounded-full bg-[var(--bronze)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--bronze-dark)]"
           >
             Book
@@ -87,7 +88,7 @@ export default function SiteHeader() {
 
         <div className="flex items-center gap-2 lg:hidden">
           <a
-            href="#contact"
+            href="/#contact"
             className="inline-flex min-h-11 items-center rounded-full bg-[var(--bronze)] px-4 py-2.5 text-sm font-semibold text-white"
             onClick={closeMenu}
           >
@@ -126,7 +127,7 @@ export default function SiteHeader() {
             ))}
             <li>
               <a
-                href="#contact"
+                href="/#contact"
                 className="mt-2 flex min-h-12 items-center justify-center rounded-full bg-[var(--bronze)] px-4 text-base font-semibold text-white"
                 onClick={closeMenu}
               >
