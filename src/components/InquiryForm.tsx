@@ -1,22 +1,18 @@
 "use client";
 
-import { FormEvent, useId, useState } from "react";
-
-const serviceTypes = [
-  "Private Chef Dining",
-  "Corporate Catering",
-  "Special Events",
-  "Other",
-] as const;
-
-const budgetRanges = [
-  "Under $1,000",
-  "$1,000 – $2,500",
-  "$2,500 – $5,000",
-  "$5,000 – $10,000",
-  "$10,000+",
-  "Not sure yet",
-] as const;
+import { FormEvent, useId, useMemo, useState } from "react";
+import {
+  BUDGET_RANGES,
+  CORPORATE_EVENT_TYPES,
+  EVENT_CATEGORIES,
+  EVENT_CATEGORY_LABELS,
+  LEAD_SOURCES,
+  PRIVATE_FAMILY_EVENT_TYPES,
+  SERVICE_STYLES,
+  SERVICE_TYPES,
+  type EventCategory,
+  type PageSource,
+} from "@/lib/event-inquiry";
 
 const fieldClassName =
   "mt-2 min-h-12 w-full rounded-xl border border-[#241b15]/15 bg-white px-4 py-3 text-base text-[#241b15] outline-none transition placeholder:text-[#6e6259] focus:border-[#b8892d] focus:ring-2 focus:ring-[#b8892d]/30";
@@ -25,10 +21,47 @@ const labelClassName = "block text-sm font-semibold text-[#241b15]";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
-export default function InquiryForm() {
+export type InquiryFormProps = {
+  title?: string;
+  description?: string;
+  submitLabel?: string;
+  defaultEventCategory?: EventCategory;
+  defaultServiceType?: (typeof SERVICE_TYPES)[number];
+  pageSource?: PageSource;
+};
+
+function eventTypesForCategory(category: EventCategory | ""): readonly string[] {
+  if (category === "corporate") {
+    return CORPORATE_EVENT_TYPES;
+  }
+  if (category === "personal_family" || category === "private_chef") {
+    return PRIVATE_FAMILY_EVENT_TYPES;
+  }
+  return [
+    ...CORPORATE_EVENT_TYPES,
+    ...PRIVATE_FAMILY_EVENT_TYPES,
+  ];
+}
+
+export default function InquiryForm({
+  title = "Catering inquiry",
+  description = "Share a few details about your event. Required fields are marked with an asterisk.",
+  submitLabel = "Send inquiry",
+  defaultEventCategory,
+  defaultServiceType,
+  pageSource = "homepage",
+}: InquiryFormProps) {
   const formId = useId();
   const [status, setStatus] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [eventCategory, setEventCategory] = useState<EventCategory | "">(
+    defaultEventCategory ?? "",
+  );
+
+  const eventTypeOptions = useMemo(
+    () => eventTypesForCategory(eventCategory),
+    [eventCategory],
+  );
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,13 +75,22 @@ export default function InquiryForm() {
       name: String(formData.get("name") ?? ""),
       email: String(formData.get("email") ?? ""),
       phone: String(formData.get("phone") ?? ""),
+      eventCategory: String(formData.get("eventCategory") ?? ""),
+      eventType: String(formData.get("eventType") ?? ""),
       eventDate: String(formData.get("eventDate") ?? ""),
+      eventTime: String(formData.get("eventTime") ?? ""),
       guestCount: String(formData.get("guestCount") ?? ""),
       eventLocation: String(formData.get("eventLocation") ?? ""),
+      cuisinePreference: String(formData.get("cuisinePreference") ?? ""),
+      serviceStyle: String(formData.get("serviceStyle") ?? ""),
       serviceType: String(formData.get("serviceType") ?? ""),
       estimatedBudget: String(formData.get("estimatedBudget") ?? ""),
       dietaryNeeds: String(formData.get("dietaryNeeds") ?? ""),
+      leadSource: String(formData.get("leadSource") ?? ""),
+      contactConsent: formData.get("contactConsent") === "on",
+      smsConsent: formData.get("smsConsent") === "on",
       message: String(formData.get("message") ?? ""),
+      pageSource,
     };
 
     try {
@@ -73,6 +115,7 @@ export default function InquiryForm() {
       }
 
       form.reset();
+      setEventCategory(defaultEventCategory ?? "");
       setStatus("success");
     } catch {
       setStatus("error");
@@ -94,7 +137,8 @@ export default function InquiryForm() {
         </h3>
         <p className="mt-4 leading-7 text-[#6e6259]">
           Your message was sent to the iBirdChef team. We will follow up using
-          the contact details you provided.
+          the contact details you provided. Final pricing is confirmed after we
+          review your event details and operational requirements.
         </p>
         <button
           type="button"
@@ -117,12 +161,9 @@ export default function InquiryForm() {
         id={`${formId}-title`}
         className="font-serif text-2xl font-semibold text-[#241b15]"
       >
-        Catering inquiry
+        {title}
       </h3>
-      <p className="mt-3 leading-7 text-[#6e6259]">
-        Share a few details about your event. Required fields are marked with an
-        asterisk.
-      </p>
+      <p className="mt-3 leading-7 text-[#6e6259]">{description}</p>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
         <div>
@@ -171,6 +212,56 @@ export default function InquiryForm() {
         </div>
 
         <div>
+          <label htmlFor={`${formId}-event-category`} className={labelClassName}>
+            Event category <span aria-hidden="true">*</span>
+          </label>
+          <select
+            id={`${formId}-event-category`}
+            name="eventCategory"
+            required
+            value={eventCategory}
+            disabled={status === "submitting"}
+            className={fieldClassName}
+            onChange={(event) =>
+              setEventCategory(event.target.value as EventCategory | "")
+            }
+          >
+            <option value="" disabled>
+              Select a category
+            </option>
+            {EVENT_CATEGORIES.map((category) => (
+              <option key={category} value={category}>
+                {EVENT_CATEGORY_LABELS[category]}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor={`${formId}-event-type`} className={labelClassName}>
+            Event type <span aria-hidden="true">*</span>
+          </label>
+          <select
+            key={eventCategory || "all"}
+            id={`${formId}-event-type`}
+            name="eventType"
+            required
+            defaultValue=""
+            disabled={status === "submitting"}
+            className={fieldClassName}
+          >
+            <option value="" disabled>
+              Select an event type
+            </option>
+            {eventTypeOptions.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
           <label htmlFor={`${formId}-event-date`} className={labelClassName}>
             Event date <span aria-hidden="true">*</span>
           </label>
@@ -179,6 +270,19 @@ export default function InquiryForm() {
             name="eventDate"
             type="date"
             required
+            disabled={status === "submitting"}
+            className={fieldClassName}
+          />
+        </div>
+
+        <div>
+          <label htmlFor={`${formId}-event-time`} className={labelClassName}>
+            Event time
+          </label>
+          <input
+            id={`${formId}-event-time`}
+            name="eventTime"
+            type="time"
             disabled={status === "submitting"}
             className={fieldClassName}
           />
@@ -217,6 +321,42 @@ export default function InquiryForm() {
         </div>
 
         <div>
+          <label htmlFor={`${formId}-cuisine`} className={labelClassName}>
+            Cuisine preference
+          </label>
+          <input
+            id={`${formId}-cuisine`}
+            name="cuisinePreference"
+            type="text"
+            placeholder="South Asian favorites, mixed menu, etc."
+            disabled={status === "submitting"}
+            className={fieldClassName}
+          />
+        </div>
+
+        <div>
+          <label htmlFor={`${formId}-service-style`} className={labelClassName}>
+            Service style
+          </label>
+          <select
+            id={`${formId}-service-style`}
+            name="serviceStyle"
+            defaultValue=""
+            disabled={status === "submitting"}
+            className={fieldClassName}
+          >
+            <option value="" disabled>
+              Select a style
+            </option>
+            {SERVICE_STYLES.map((style) => (
+              <option key={style} value={style}>
+                {style}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
           <label htmlFor={`${formId}-service-type`} className={labelClassName}>
             Service type <span aria-hidden="true">*</span>
           </label>
@@ -224,14 +364,14 @@ export default function InquiryForm() {
             id={`${formId}-service-type`}
             name="serviceType"
             required
-            defaultValue=""
+            defaultValue={defaultServiceType ?? ""}
             disabled={status === "submitting"}
             className={fieldClassName}
           >
             <option value="" disabled>
               Select a service
             </option>
-            {serviceTypes.map((type) => (
+            {SERVICE_TYPES.map((type) => (
               <option key={type} value={type}>
                 {type}
               </option>
@@ -253,7 +393,7 @@ export default function InquiryForm() {
             <option value="" disabled>
               Select a range
             </option>
-            {budgetRanges.map((range) => (
+            {BUDGET_RANGES.map((range) => (
               <option key={range} value={range}>
                 {range}
               </option>
@@ -261,9 +401,28 @@ export default function InquiryForm() {
           </select>
         </div>
 
+        <div>
+          <label htmlFor={`${formId}-lead-source`} className={labelClassName}>
+            How did you hear about us?
+          </label>
+          <select
+            id={`${formId}-lead-source`}
+            name="leadSource"
+            defaultValue="Website"
+            disabled={status === "submitting"}
+            className={fieldClassName}
+          >
+            {LEAD_SOURCES.map((source) => (
+              <option key={source} value={source}>
+                {source}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="sm:col-span-2">
           <label htmlFor={`${formId}-dietary`} className={labelClassName}>
-            Dietary needs
+            Dietary needs / allergies
           </label>
           <input
             id={`${formId}-dietary`}
@@ -289,6 +448,35 @@ export default function InquiryForm() {
             className={`${fieldClassName} resize-y`}
           />
         </div>
+
+        <div className="sm:col-span-2 space-y-3">
+          <label className="flex items-start gap-3 text-sm leading-6 text-[#241b15]">
+            <input
+              type="checkbox"
+              name="contactConsent"
+              required
+              disabled={status === "submitting"}
+              className="mt-1 h-4 w-4 accent-[#926b24]"
+            />
+            <span>
+              I agree that iBirdChef may contact me about this inquiry using the
+              email and phone number I provided.{" "}
+              <span aria-hidden="true">*</span>
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3 text-sm leading-6 text-[#241b15]">
+            <input
+              type="checkbox"
+              name="smsConsent"
+              disabled={status === "submitting"}
+              className="mt-1 h-4 w-4 accent-[#926b24]"
+            />
+            <span>
+              Optional: I agree to receive SMS follow-up about this inquiry.
+            </span>
+          </label>
+        </div>
       </div>
 
       {status === "error" ? (
@@ -302,15 +490,16 @@ export default function InquiryForm() {
 
       <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm leading-6 text-[#5f534a]">
-          Your inquiry is emailed to the iBirdChef team. Prefer to call or
-          email directly? Use the contact links above this form.
+          Your inquiry is emailed to the iBirdChef team and prepared for lead
+          follow-up. Final pricing is confirmed after event details and
+          operational costs are reviewed.
         </p>
         <button
           type="submit"
           disabled={status === "submitting"}
           className="inline-flex h-12 min-w-[11rem] shrink-0 items-center justify-center rounded-full bg-[#926b24] px-7 text-sm font-semibold text-white transition hover:bg-[#7e591c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7e591c] disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {status === "submitting" ? "Sending…" : "Send inquiry"}
+          {status === "submitting" ? "Sending…" : submitLabel}
         </button>
       </div>
     </form>
