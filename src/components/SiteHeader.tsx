@@ -66,7 +66,7 @@ export default function SiteHeader() {
         </a>
 
         <nav
-          className="hidden items-center gap-6 text-sm font-medium text-[var(--navy)] lg:flex"
+          className="hidden items-center gap-6 text-sm font-medium text-[var(--navy)] xl:flex"
           aria-label="Primary"
         >
           {navLinks.map((link) => (
@@ -87,7 +87,7 @@ export default function SiteHeader() {
           </a>
         </nav>
 
-        <div className="flex items-center gap-2 lg:hidden">
+        <div className="flex items-center gap-2 xl:hidden">
           <a
             href="/#contact"
             className="inline-flex min-h-11 items-center rounded-full bg-[var(--bronze)] px-4 py-2.5 text-sm font-semibold text-white"
@@ -111,7 +111,7 @@ export default function SiteHeader() {
       {open ? (
         <nav
           id={menuId}
-          className="border-t border-[var(--navy)]/10 bg-[var(--ivory)] lg:hidden"
+          className="border-t border-[var(--navy)]/10 bg-[var(--ivory)] xl:hidden"
           aria-label="Mobile"
         >
           <ul className="mx-auto flex max-w-7xl list-none flex-col gap-1 px-6 py-4">
