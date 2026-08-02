@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import SiteHeader from "@/components/SiteHeader";
+import SiteShell from "@/components/SiteShell";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -22,9 +22,7 @@ export const metadata: Metadata = {
  */
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-[var(--ivory)] text-[var(--foreground)]">
-      <SiteHeader />
-
+    <SiteShell>
       <main id="main-content" className="mx-auto max-w-3xl px-6 py-20 lg:px-10">
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze-dark)]">
           Legal
@@ -67,16 +65,6 @@ export default function PrivacyPage() {
           </Link>
         </p>
       </main>
-
-      <footer className="border-t border-[var(--navy)]/10 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 text-sm text-[var(--ink-muted)] lg:px-10">
-          <p>© 2026 iBirdChef. All rights reserved.</p>
-          <p>
-            Privacy policy text pending approval — this route is not linked
-            from the public site footer yet.
-          </p>
-        </div>
-      </footer>
-    </div>
+    </SiteShell>
   );
 }

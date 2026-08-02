@@ -16,6 +16,7 @@ import {
   buildIBirdOsCostingRequest,
   forwardInquiryToIBirdOs,
 } from "@/lib/ibirdos-intake";
+import { regionLabel } from "@/lib/regions";
 
 export const runtime = "nodejs";
 
@@ -34,11 +35,14 @@ function buildEmailHtml(body: EventInquiry, submissionId: string): string {
     ["Name", body.name],
     ["Email", body.email],
     ["Phone", body.phone],
+    ["Service region", regionLabel(body.serviceRegion)],
     ["Event category", eventCategoryLabel(body.eventCategory)],
     ["Event type", body.eventType],
     ["Event date", body.eventDate],
     ["Event time", body.eventTime || "Not provided"],
     ["Guest count", body.guestCount],
+    ["Event city", body.eventCity],
+    ["Venue or ZIP", body.venueOrZip],
     ["Event location", body.eventLocation],
     ["Cuisine preference", body.cuisinePreference || "Not provided"],
     ["Service style", body.serviceStyle || "Not provided"],
@@ -76,11 +80,14 @@ function buildEmailText(body: EventInquiry, submissionId: string): string {
     `Name: ${body.name}`,
     `Email: ${body.email}`,
     `Phone: ${body.phone}`,
+    `Service region: ${regionLabel(body.serviceRegion)}`,
     `Event category: ${eventCategoryLabel(body.eventCategory)}`,
     `Event type: ${body.eventType}`,
     `Event date: ${body.eventDate}`,
     `Event time: ${body.eventTime || "Not provided"}`,
     `Guest count: ${body.guestCount}`,
+    `Event city: ${body.eventCity}`,
+    `Venue or ZIP: ${body.venueOrZip}`,
     `Event location: ${body.eventLocation}`,
     `Cuisine preference: ${body.cuisinePreference || "Not provided"}`,
     `Service style: ${body.serviceStyle || "Not provided"}`,

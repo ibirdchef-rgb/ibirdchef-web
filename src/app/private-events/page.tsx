@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import InquiryForm from "@/components/InquiryForm";
-import SiteHeader from "@/components/SiteHeader";
+import PlanningSteps from "@/components/home/PlanningSteps";
+import SiteShell from "@/components/SiteShell";
 import { PRIVATE_FAMILY_EVENT_TYPES } from "@/lib/event-inquiry";
 import { siteConfig } from "@/lib/site";
 
@@ -59,16 +60,7 @@ const highlights = [
 
 export default function PrivateEventsPage() {
   return (
-    <div className="min-h-screen bg-[var(--ivory)] text-[var(--foreground)]">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:shadow-lg"
-      >
-        Skip to main content
-      </a>
-
-      <SiteHeader />
-
+    <SiteShell>
       <main id="main-content">
         <section
           className="relative overflow-hidden bg-[var(--navy)] text-white"
@@ -77,6 +69,14 @@ export default function PrivateEventsPage() {
           <div
             className="absolute inset-0 bg-[linear-gradient(120deg,rgba(4,31,39,0.96)_0%,rgba(4,31,39,0.88)_55%,rgba(6,43,53,0.82)_100%)]"
             aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-30"
+            aria-hidden="true"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 80% 20%, rgba(184,137,45,0.25), transparent 42%)",
+            }}
           />
           <div className="relative mx-auto max-w-7xl px-6 py-16 lg:px-10 lg:py-24">
             <p className="font-serif text-4xl font-semibold tracking-tight text-[var(--ivory-soft)] sm:text-5xl">
@@ -93,9 +93,9 @@ export default function PrivateEventsPage() {
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">
               From birthdays and baby showers to religious celebrations and
-              private dinners, every personal and family event receives a custom
-              quote after we review your details — the same careful workflow we
-              use for corporate catering.
+              private dinners across Greater Seattle and the San Francisco Bay
+              Area—every personal and family event receives a custom,
+              chef-approved quote after we review your details.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <a
@@ -168,52 +168,7 @@ export default function PrivateEventsPage() {
           </div>
         </section>
 
-        <section
-          className="border-y border-[var(--navy)]/10 bg-[var(--ivory-soft)]"
-          aria-labelledby="process-heading"
-        >
-          <div className="mx-auto max-w-7xl px-6 py-16 lg:px-10">
-            <h2
-              id="process-heading"
-              className="font-serif text-3xl font-semibold tracking-tight text-[var(--navy)] sm:text-4xl"
-            >
-              How your quote is prepared
-            </h2>
-            <ol className="mt-8 grid list-none gap-8 p-0 md:grid-cols-3">
-              <li className="border-t border-[var(--navy)]/15 pt-6">
-                <p className="text-sm font-bold text-[var(--bronze-dark)]">01</p>
-                <h3 className="mt-3 font-serif text-xl font-semibold text-[var(--navy)]">
-                  Share your event details
-                </h3>
-                <p className="mt-3 text-sm leading-7 text-[var(--ink-muted)]">
-                  Tell us the occasion, date, guest count, location, cuisine
-                  preferences, dietary needs, and service style.
-                </p>
-              </li>
-              <li className="border-t border-[var(--navy)]/15 pt-6">
-                <p className="text-sm font-bold text-[var(--bronze-dark)]">02</p>
-                <h3 className="mt-3 font-serif text-xl font-semibold text-[var(--navy)]">
-                  Lead follow-up
-                </h3>
-                <p className="mt-3 text-sm leading-7 text-[var(--ink-muted)]">
-                  Your inquiry is captured for follow-up so the team can qualify
-                  details and keep the conversation moving.
-                </p>
-              </li>
-              <li className="border-t border-[var(--navy)]/15 pt-6">
-                <p className="text-sm font-bold text-[var(--bronze-dark)]">03</p>
-                <h3 className="mt-3 font-serif text-xl font-semibold text-[var(--navy)]">
-                  Custom quote after review
-                </h3>
-                <p className="mt-3 text-sm leading-7 text-[var(--ink-muted)]">
-                  Final pricing is confirmed after event requirements and
-                  operational costs are reviewed — never as an automated instant
-                  price.
-                </p>
-              </li>
-            </ol>
-          </div>
-        </section>
+        <PlanningSteps />
 
         <section
           id="request-quote"
@@ -232,9 +187,8 @@ export default function PrivateEventsPage() {
             </h2>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-white/80">
               No fixed private-event pricing is published on this page. Share
-              your details below and we will prepare a custom quote for your
-              gathering across {siteConfig.serviceAreas.slice(0, 3).join(", ")},
-              and beyond.
+              your region, city, venue or ZIP, and event details below and we
+              will prepare a custom quote.
             </p>
             <div className="mt-8 flex flex-col gap-3 text-base sm:flex-row sm:gap-x-8">
               <a
@@ -264,38 +218,6 @@ export default function PrivateEventsPage() {
           </div>
         </section>
       </main>
-
-      <footer className="border-t border-[var(--navy)]/10 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 text-sm text-[var(--ink-muted)] lg:px-10">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-            <p>© 2026 iBirdChef. All rights reserved.</p>
-            <p className="sm:max-w-md sm:text-right">
-              Private chef and catering services in Seattle, the Eastside, and
-              the San Francisco Bay Area.
-            </p>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
-            <a
-              href={siteConfig.phoneHref}
-              className="inline-flex min-h-11 items-center font-medium text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4"
-            >
-              {siteConfig.phoneDisplay}
-            </a>
-            <a
-              href={siteConfig.emailHref}
-              className="inline-flex min-h-11 items-center font-medium text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4"
-            >
-              {siteConfig.emailDisplay}
-            </a>
-            <Link
-              href="/#menu"
-              className="inline-flex min-h-11 items-center font-medium text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4"
-            >
-              Seasonal menu
-            </Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </SiteShell>
   );
 }

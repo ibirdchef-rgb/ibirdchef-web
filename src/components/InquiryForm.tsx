@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useId, useMemo, useState } from "react";
+import { FormEvent, useEffect, useId, useMemo, useState } from "react";
+import { useRegion } from "@/components/RegionProvider";
 import {
   BUDGET_RANGES,
   CORPORATE_EVENT_TYPES,
@@ -13,11 +14,17 @@ import {
   type EventCategory,
   type PageSource,
 } from "@/lib/event-inquiry";
+import {
+  OUTSIDE_AREA_MESSAGE,
+  regions,
+  SERVICE_REGIONS,
+  type ServiceRegion,
+} from "@/lib/regions";
 
 const fieldClassName =
-  "mt-2 min-h-12 w-full rounded-xl border border-[#241b15]/15 bg-white px-4 py-3 text-base text-[#241b15] outline-none transition placeholder:text-[#6e6259] focus:border-[#b8892d] focus:ring-2 focus:ring-[#b8892d]/30";
+  "mt-2 min-h-12 w-full rounded-xl border border-[var(--navy)]/15 bg-white px-4 py-3 text-base text-[var(--navy)] outline-none transition placeholder:text-[var(--ink-muted)] focus:border-[var(--bronze)] focus:ring-2 focus:ring-[var(--bronze)]/30";
 
-const labelClassName = "block text-sm font-semibold text-[#241b15]";
+const labelClassName = "block text-sm font-semibold text-[var(--navy)]";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
@@ -27,6 +34,7 @@ export type InquiryFormProps = {
   submitLabel?: string;
   defaultEventCategory?: EventCategory;
   defaultServiceType?: (typeof SERVICE_TYPES)[number];
+  defaultServiceRegion?: ServiceRegion | "";
   pageSource?: PageSource;
 };
 
@@ -37,10 +45,7 @@ function eventTypesForCategory(category: EventCategory | ""): readonly string[] 
   if (category === "personal_family" || category === "private_chef") {
     return PRIVATE_FAMILY_EVENT_TYPES;
   }
-  return [
-    ...CORPORATE_EVENT_TYPES,
-    ...PRIVATE_FAMILY_EVENT_TYPES,
-  ];
+  return [...CORPORATE_EVENT_TYPES, ...PRIVATE_FAMILY_EVENT_TYPES];
 }
 
 export default function InquiryForm({
@@ -49,14 +54,39 @@ export default function InquiryForm({
   submitLabel = "Send inquiry",
   defaultEventCategory,
   defaultServiceType,
+  defaultServiceRegion = "",
   pageSource = "homepage",
 }: InquiryFormProps) {
   const formId = useId();
+  const { region: preferredRegion } = useRegion();
   const [status, setStatus] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [eventCategory, setEventCategory] = useState<EventCategory | "">(
     defaultEventCategory ?? "",
   );
+  const [serviceRegion, setServiceRegion] = useState<ServiceRegion | "">(
+    defaultServiceRegion || "",
+  );
+  const [eventCity, setEventCity] = useState("");
+  const [customCity, setCustomCity] = useState("");
+
+  useEffect(() => {
+    if (!serviceRegion && (defaultServiceRegion || preferredRegion)) {
+      setServiceRegion(defaultServiceRegion || preferredRegion);
+    }
+  }, [defaultServiceRegion, preferredRegion, serviceRegion]);
+
+  const cityOptions = useMemo(() => {
+    if (!serviceRegion) {
+      return [] as string[];
+    }
+    return [...regions[serviceRegion].cities];
+  }, [serviceRegion]);
+
+  const showOutsideMessage =
+    Boolean(serviceRegion) &&
+    (eventCity === "__other__" ||
+      (customCity.trim().length > 0 && eventCity === "__other__"));
 
   const eventTypeOptions = useMemo(
     () => eventTypesForCategory(eventCategory),
@@ -70,17 +100,24 @@ export default function InquiryForm({
 
     const form = event.currentTarget;
     const formData = new FormData(form);
+    const selectedCity = String(formData.get("eventCity") ?? "");
+    const resolvedCity =
+      selectedCity === "__other__"
+        ? String(formData.get("customCity") ?? "").trim()
+        : selectedCity;
 
     const payload = {
       name: String(formData.get("name") ?? ""),
       email: String(formData.get("email") ?? ""),
       phone: String(formData.get("phone") ?? ""),
+      serviceRegion: String(formData.get("serviceRegion") ?? ""),
       eventCategory: String(formData.get("eventCategory") ?? ""),
       eventType: String(formData.get("eventType") ?? ""),
       eventDate: String(formData.get("eventDate") ?? ""),
       eventTime: String(formData.get("eventTime") ?? ""),
+      eventCity: resolvedCity,
+      venueOrZip: String(formData.get("venueOrZip") ?? ""),
       guestCount: String(formData.get("guestCount") ?? ""),
-      eventLocation: String(formData.get("eventLocation") ?? ""),
       cuisinePreference: String(formData.get("cuisinePreference") ?? ""),
       serviceStyle: String(formData.get("serviceStyle") ?? ""),
       serviceType: String(formData.get("serviceType") ?? ""),
@@ -116,6 +153,9 @@ export default function InquiryForm({
 
       form.reset();
       setEventCategory(defaultEventCategory ?? "");
+      setServiceRegion(defaultServiceRegion || preferredRegion || "");
+      setEventCity("");
+      setCustomCity("");
       setStatus("success");
     } catch {
       setStatus("error");
@@ -128,14 +168,14 @@ export default function InquiryForm({
   if (status === "success") {
     return (
       <div
-        className="rounded-3xl border border-[#241b15]/10 bg-white p-8 shadow-sm sm:p-10"
+        className="rounded-3xl border border-[var(--navy)]/10 bg-white p-8 shadow-sm sm:p-10"
         role="status"
         aria-live="polite"
       >
-        <h3 className="font-serif text-2xl font-semibold text-[#241b15]">
+        <h3 className="font-serif text-2xl font-semibold text-[var(--navy)]">
           Thank you for your inquiry.
         </h3>
-        <p className="mt-4 leading-7 text-[#6e6259]">
+        <p className="mt-4 leading-7 text-[var(--ink-muted)]">
           Your message was sent to the iBirdChef team. We will follow up using
           the contact details you provided. Final pricing is confirmed after we
           review your event details and operational requirements.
@@ -143,7 +183,7 @@ export default function InquiryForm({
         <button
           type="button"
           onClick={() => setStatus("idle")}
-          className="mt-8 inline-flex h-12 min-w-[11rem] items-center justify-center rounded-full border border-[#241b15]/20 bg-white px-7 text-sm font-semibold text-[#241b15] transition hover:border-[#b8892d]"
+          className="mt-8 inline-flex h-12 min-w-[11rem] items-center justify-center rounded-full border border-[var(--navy)]/20 bg-white px-7 text-sm font-semibold text-[var(--navy)] transition hover:border-[var(--bronze)]"
         >
           Submit another inquiry
         </button>
@@ -154,16 +194,16 @@ export default function InquiryForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-3xl border border-[#241b15]/10 bg-white p-8 shadow-sm sm:p-10"
+      className="rounded-3xl border border-[var(--navy)]/10 bg-white p-8 shadow-sm sm:p-10"
       aria-labelledby={`${formId}-title`}
     >
       <h3
         id={`${formId}-title`}
-        className="font-serif text-2xl font-semibold text-[#241b15]"
+        className="font-serif text-2xl font-semibold text-[var(--navy)]"
       >
         {title}
       </h3>
-      <p className="mt-3 leading-7 text-[#6e6259]">{description}</p>
+      <p className="mt-3 leading-7 text-[var(--ink-muted)]">{description}</p>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
         <div>
@@ -210,6 +250,102 @@ export default function InquiryForm({
             className={fieldClassName}
           />
         </div>
+
+        <div>
+          <label htmlFor={`${formId}-service-region`} className={labelClassName}>
+            Service region <span aria-hidden="true">*</span>
+          </label>
+          <select
+            id={`${formId}-service-region`}
+            name="serviceRegion"
+            required
+            value={serviceRegion}
+            disabled={status === "submitting"}
+            className={fieldClassName}
+            onChange={(event) => {
+              setServiceRegion(event.target.value as ServiceRegion | "");
+              setEventCity("");
+              setCustomCity("");
+            }}
+          >
+            <option value="" disabled>
+              Select a region
+            </option>
+            {SERVICE_REGIONS.map((id) => (
+              <option key={id} value={id}>
+                {regions[id].shortLabel}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor={`${formId}-event-city`} className={labelClassName}>
+            Event city <span aria-hidden="true">*</span>
+          </label>
+          <select
+            id={`${formId}-event-city`}
+            name="eventCity"
+            required
+            value={eventCity}
+            disabled={status === "submitting" || !serviceRegion}
+            className={fieldClassName}
+            onChange={(event) => setEventCity(event.target.value)}
+          >
+            <option value="" disabled>
+              {serviceRegion ? "Select a city" : "Select a region first"}
+            </option>
+            {cityOptions.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+            <option value="__other__">Other / outside listed cities</option>
+          </select>
+        </div>
+
+        {eventCity === "__other__" ? (
+          <div>
+            <label htmlFor={`${formId}-custom-city`} className={labelClassName}>
+              City or community <span aria-hidden="true">*</span>
+            </label>
+            <input
+              id={`${formId}-custom-city`}
+              name="customCity"
+              type="text"
+              required
+              value={customCity}
+              onChange={(event) => setCustomCity(event.target.value)}
+              disabled={status === "submitting"}
+              placeholder="Enter your city"
+              className={fieldClassName}
+            />
+          </div>
+        ) : null}
+
+        <div className={eventCity === "__other__" ? undefined : "sm:col-span-2"}>
+          <label htmlFor={`${formId}-venue`} className={labelClassName}>
+            Venue or ZIP <span aria-hidden="true">*</span>
+          </label>
+          <input
+            id={`${formId}-venue`}
+            name="venueOrZip"
+            type="text"
+            required
+            disabled={status === "submitting"}
+            placeholder="Venue name or ZIP code"
+            className={fieldClassName}
+          />
+        </div>
+
+        {showOutsideMessage ? (
+          <p
+            className="sm:col-span-2 rounded-xl border border-[var(--bronze)]/30 bg-[var(--ivory-soft)] px-4 py-3 text-sm leading-6 text-[var(--navy)]"
+            role="status"
+          >
+            {OUTSIDE_AREA_MESSAGE}
+          </p>
+        ) : null}
 
         <div>
           <label htmlFor={`${formId}-event-category`} className={labelClassName}>
@@ -305,19 +441,26 @@ export default function InquiryForm({
         </div>
 
         <div>
-          <label htmlFor={`${formId}-location`} className={labelClassName}>
-            Event location <span aria-hidden="true">*</span>
+          <label htmlFor={`${formId}-service-style`} className={labelClassName}>
+            Service style <span aria-hidden="true">*</span>
           </label>
-          <input
-            id={`${formId}-location`}
-            name="eventLocation"
-            type="text"
-            autoComplete="address-level2"
+          <select
+            id={`${formId}-service-style`}
+            name="serviceStyle"
             required
-            placeholder="City or venue"
+            defaultValue=""
             disabled={status === "submitting"}
             className={fieldClassName}
-          />
+          >
+            <option value="" disabled>
+              Select a style
+            </option>
+            {SERVICE_STYLES.map((style) => (
+              <option key={style} value={style}>
+                {style}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -332,28 +475,6 @@ export default function InquiryForm({
             disabled={status === "submitting"}
             className={fieldClassName}
           />
-        </div>
-
-        <div>
-          <label htmlFor={`${formId}-service-style`} className={labelClassName}>
-            Service style
-          </label>
-          <select
-            id={`${formId}-service-style`}
-            name="serviceStyle"
-            defaultValue=""
-            disabled={status === "submitting"}
-            className={fieldClassName}
-          >
-            <option value="" disabled>
-              Select a style
-            </option>
-            {SERVICE_STYLES.map((style) => (
-              <option key={style} value={style}>
-                {style}
-              </option>
-            ))}
-          </select>
         </div>
 
         <div>
@@ -450,13 +571,13 @@ export default function InquiryForm({
         </div>
 
         <div className="sm:col-span-2 space-y-3">
-          <label className="flex items-start gap-3 text-sm leading-6 text-[#241b15]">
+          <label className="flex items-start gap-3 text-sm leading-6 text-[var(--navy)]">
             <input
               type="checkbox"
               name="contactConsent"
               required
               disabled={status === "submitting"}
-              className="mt-1 h-4 w-4 accent-[#926b24]"
+              className="mt-1 h-4 w-4 accent-[var(--bronze-dark)]"
             />
             <span>
               I agree that iBirdChef may contact me about this inquiry using the
@@ -465,12 +586,12 @@ export default function InquiryForm({
             </span>
           </label>
 
-          <label className="flex items-start gap-3 text-sm leading-6 text-[#241b15]">
+          <label className="flex items-start gap-3 text-sm leading-6 text-[var(--navy)]">
             <input
               type="checkbox"
               name="smsConsent"
               disabled={status === "submitting"}
-              className="mt-1 h-4 w-4 accent-[#926b24]"
+              className="mt-1 h-4 w-4 accent-[var(--bronze-dark)]"
             />
             <span>
               Optional: I agree to receive SMS follow-up about this inquiry.
@@ -489,15 +610,14 @@ export default function InquiryForm({
       ) : null}
 
       <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm leading-6 text-[#5f534a]">
-          Your inquiry is emailed to the iBirdChef team and prepared for lead
-          follow-up. Final pricing is confirmed after event details and
-          operational costs are reviewed.
+        <p className="text-sm leading-6 text-[var(--ink-muted)]">
+          Share your event details, iBirdChef follows up, and you receive a
+          custom, chef-approved quote after review.
         </p>
         <button
           type="submit"
           disabled={status === "submitting"}
-          className="inline-flex h-12 min-w-[11rem] shrink-0 items-center justify-center rounded-full bg-[#926b24] px-7 text-sm font-semibold text-white transition hover:bg-[#7e591c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7e591c] disabled:cursor-not-allowed disabled:opacity-70"
+          className="inline-flex h-12 min-w-[11rem] shrink-0 items-center justify-center rounded-full bg-[var(--bronze-dark)] px-7 text-sm font-semibold text-white transition hover:bg-[var(--bronze)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--bronze-dark)] disabled:cursor-not-allowed disabled:opacity-70"
         >
           {status === "submitting" ? "Sending…" : submitLabel}
         </button>

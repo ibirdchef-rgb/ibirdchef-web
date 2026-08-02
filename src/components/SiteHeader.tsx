@@ -1,15 +1,16 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useId, useState } from "react";
+import RegionSelector from "@/components/RegionSelector";
 
 const navLinks = [
   { href: "/#services", label: "Services" },
   { href: "/#corporate", label: "Corporate" },
   { href: "/private-events", label: "Private & Family Events" },
   { href: "/#menu", label: "Menu" },
-  { href: "/#about", label: "About" },
-  { href: "/#experience", label: "Food Experience" },
+  { href: "/#experience", label: "Experience" },
   { href: "/#areas", label: "Service Areas" },
 ] as const;
 
@@ -45,7 +46,11 @@ export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--navy)]/10 bg-[var(--ivory)]/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3 lg:px-10">
-        <a href="/#home" className="flex min-w-0 items-center gap-3" onClick={closeMenu}>
+        <a
+          href="/#home"
+          className="flex min-w-0 items-center gap-3"
+          onClick={closeMenu}
+        >
           <Image
             src="/ibirdchef-logo.jpeg"
             alt="iBirdChef South Asian Cuisine Catering Company"
@@ -65,27 +70,40 @@ export default function SiteHeader() {
           </div>
         </a>
 
-        <nav
-          className="hidden items-center gap-6 text-sm font-medium text-[var(--navy)] xl:flex"
-          aria-label="Primary"
-        >
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="transition hover:text-[var(--bronze)]"
-            >
-              {link.label}
-            </a>
-          ))}
-
-          <a
-            href="/#contact"
-            className="inline-flex min-h-12 items-center rounded-full bg-[var(--bronze)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--bronze-dark)]"
+        <div className="hidden items-center gap-5 xl:flex">
+          <RegionSelector variant="header" />
+          <nav
+            className="flex items-center gap-5 text-sm font-medium text-[var(--navy)]"
+            aria-label="Primary"
           >
-            Book
-          </a>
-        </nav>
+            {navLinks.map((link) =>
+              link.href.startsWith("/") && !link.href.includes("#") ? (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="transition hover:text-[var(--bronze)]"
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="transition hover:text-[var(--bronze)]"
+                >
+                  {link.label}
+                </a>
+              ),
+            )}
+
+            <a
+              href="/#contact"
+              className="inline-flex min-h-12 items-center rounded-full bg-[var(--bronze)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--bronze-dark)]"
+            >
+              Book
+            </a>
+          </nav>
+        </div>
 
         <div className="flex items-center gap-2 xl:hidden">
           <a
@@ -114,16 +132,29 @@ export default function SiteHeader() {
           className="border-t border-[var(--navy)]/10 bg-[var(--ivory)] xl:hidden"
           aria-label="Mobile"
         >
+          <div className="mx-auto max-w-7xl px-6 pt-4">
+            <RegionSelector variant="header" />
+          </div>
           <ul className="mx-auto flex max-w-7xl list-none flex-col gap-1 px-6 py-4">
             {navLinks.map((link) => (
               <li key={link.href}>
-                <a
-                  href={link.href}
-                  className="flex min-h-12 items-center rounded-xl px-3 text-base font-medium text-[var(--navy)] hover:bg-[var(--navy)]/5"
-                  onClick={closeMenu}
-                >
-                  {link.label}
-                </a>
+                {link.href.startsWith("/") && !link.href.includes("#") ? (
+                  <Link
+                    href={link.href}
+                    className="flex min-h-12 items-center rounded-xl px-3 text-base font-medium text-[var(--navy)] hover:bg-[var(--navy)]/5"
+                    onClick={closeMenu}
+                  >
+                    {link.label}
+                  </Link>
+                ) : (
+                  <a
+                    href={link.href}
+                    className="flex min-h-12 items-center rounded-xl px-3 text-base font-medium text-[var(--navy)] hover:bg-[var(--navy)]/5"
+                    onClick={closeMenu}
+                  >
+                    {link.label}
+                  </a>
+                )}
               </li>
             ))}
             <li>

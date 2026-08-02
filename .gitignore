@@ -40,3 +40,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local full viewport QA dumps (heroes committed separately)
+docs/qa-screenshots/premium-v1/*-*.png
+!docs/qa-screenshots/premium-v1/home-desktop-hero.png
+!docs/qa-screenshots/premium-v1/home-mobile-hero.png
+!docs/qa-screenshots/premium-v1/seattle-390.png
+!docs/qa-screenshots/premium-v1/bay-area-390.png
+

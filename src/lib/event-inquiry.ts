@@ -4,6 +4,11 @@
  * rather than inventing parallel field shapes.
  */
 
+import {
+  isServiceRegion,
+  type ServiceRegion,
+} from "@/lib/regions";
+
 export const EVENT_CATEGORIES = [
   "corporate",
   "personal_family",
@@ -84,6 +89,8 @@ export const LEAD_SOURCES = [
 export const PAGE_SOURCES = [
   "homepage",
   "private-events",
+  "seattle",
+  "bay-area",
   "menu-chat",
   "other",
 ] as const;
@@ -95,10 +102,14 @@ export type EventInquiry = {
   name: string;
   email: string;
   phone: string;
+  serviceRegion: ServiceRegion | "";
   eventCategory: EventCategory | "";
   eventType: string;
   eventDate: string;
   eventTime: string;
+  eventCity: string;
+  venueOrZip: string;
+  /** Combined city + venue/ZIP for legacy Clow/email compatibility. */
   eventLocation: string;
   guestCount: string;
   cuisinePreference: string;
@@ -107,7 +118,6 @@ export type EventInquiry = {
   estimatedBudget: string;
   dietaryNeeds: string;
   leadSource: string;
-  /** Customer consents to be contacted about this inquiry. */
   contactConsent: boolean;
   smsConsent: boolean;
   message: string;
@@ -118,11 +128,14 @@ export const EVENT_INQUIRY_MAX_LENGTH = {
   name: 120,
   email: 254,
   phone: 40,
+  serviceRegion: 40,
   eventCategory: 40,
   eventType: 120,
   eventDate: 40,
   eventTime: 40,
-  eventLocation: 200,
+  eventCity: 120,
+  venueOrZip: 120,
+  eventLocation: 240,
   guestCount: 20,
   cuisinePreference: 200,
   serviceStyle: 80,
@@ -148,13 +161,23 @@ function asBoolean(value: unknown): boolean {
   }
   if (typeof value === "string") {
     const normalized = value.trim().toLowerCase();
-    return normalized === "true" || normalized === "on" || normalized === "1" || normalized === "yes";
+    return (
+      normalized === "true" ||
+      normalized === "on" ||
+      normalized === "1" ||
+      normalized === "yes"
+    );
   }
   return false;
 }
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+export function composeEventLocation(city: string, venueOrZip: string): string {
+  const parts = [city.trim(), venueOrZip.trim()].filter(Boolean);
+  return parts.join(" · ");
 }
 
 export function emptyEventInquiry(
@@ -164,10 +187,13 @@ export function emptyEventInquiry(
     name: "",
     email: "",
     phone: "",
+    serviceRegion: "",
     eventCategory: "",
     eventType: "",
     eventDate: "",
     eventTime: "",
+    eventCity: "",
+    venueOrZip: "",
     eventLocation: "",
     guestCount: "",
     cuisinePreference: "",
@@ -192,18 +218,29 @@ export function parseEventInquiry(raw: unknown): EventInquiry | null {
   const data = raw as Record<string, unknown>;
   const eventCategory = asTrimmedString(data.eventCategory);
   const pageSource = asTrimmedString(data.pageSource);
+  const serviceRegionRaw = asTrimmedString(data.serviceRegion);
+  const eventCity = asTrimmedString(data.eventCity);
+  const venueOrZip = asTrimmedString(data.venueOrZip);
+  const legacyLocation = asTrimmedString(data.eventLocation);
+  const resolvedCity = eventCity || legacyLocation;
+  const eventLocation =
+    asTrimmedString(data.eventLocation) ||
+    composeEventLocation(resolvedCity, venueOrZip);
 
   return {
     name: asTrimmedString(data.name),
     email: asTrimmedString(data.email),
     phone: asTrimmedString(data.phone),
+    serviceRegion: isServiceRegion(serviceRegionRaw) ? serviceRegionRaw : "",
     eventCategory: (EVENT_CATEGORIES as readonly string[]).includes(eventCategory)
       ? (eventCategory as EventCategory)
       : (eventCategory as EventCategory | ""),
     eventType: asTrimmedString(data.eventType),
     eventDate: asTrimmedString(data.eventDate),
     eventTime: asTrimmedString(data.eventTime),
-    eventLocation: asTrimmedString(data.eventLocation),
+    eventCity: resolvedCity,
+    venueOrZip,
+    eventLocation,
     guestCount: asTrimmedString(data.guestCount),
     cuisinePreference: asTrimmedString(data.cuisinePreference),
     serviceStyle: asTrimmedString(data.serviceStyle),
@@ -227,11 +264,14 @@ export function validateEventInquiry(
     "name",
     "email",
     "phone",
+    "serviceRegion",
     "eventCategory",
     "eventType",
     "eventDate",
-    "eventLocation",
+    "eventCity",
+    "venueOrZip",
     "guestCount",
+    "serviceStyle",
     "serviceType",
     "message",
   ];
@@ -252,6 +292,10 @@ export function validateEventInquiry(
 
   if (!isValidEmail(inquiry.email)) {
     return { ok: false, error: "Please provide a valid email address." };
+  }
+
+  if (!isServiceRegion(inquiry.serviceRegion)) {
+    return { ok: false, error: "Please select a service region." };
   }
 
   if (

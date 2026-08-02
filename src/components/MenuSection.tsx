@@ -133,20 +133,20 @@ export default function MenuSection() {
   return (
     <section
       id="menu"
-      className="border-y border-[var(--navy)]/10 bg-[var(--ivory-soft)]"
+      className="border-y border-[var(--navy)]/10 texture-ivory"
       aria-labelledby="menu-heading"
     >
       <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
         <div className="max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze-dark)]">
-            Sample Menu
+            Seasonal Boxes
           </p>
 
           <h2
             id="menu-heading"
             className="mt-4 font-serif text-4xl font-semibold tracking-tight text-[var(--navy)] sm:text-5xl"
           >
-            Seasonal boxed lunches and featured dishes.
+            Seasonal boxed lunches, thoughtfully composed.
           </h2>
 
           <p className="mt-5 text-lg leading-8 text-[var(--ink-muted)]">
