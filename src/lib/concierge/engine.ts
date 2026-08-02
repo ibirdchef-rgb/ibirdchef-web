@@ -124,6 +124,12 @@ function wantsHuman(text: string): boolean {
   );
 }
 
+function isGreetingOnly(text: string): boolean {
+  return /^(hi|hello|hey|good morning|good afternoon|good evening)[!. ]*$/i.test(
+    text.trim(),
+  );
+}
+
 function wantsRecommendations(text: string): boolean {
   return /\b(recommend|suggest|ideas|what should|balanced menu|help me choose|options)\b/i.test(
     text,
@@ -426,6 +432,56 @@ function composeReply(
   return [lead, followUp, extra].filter(Boolean).join("\n\n");
 }
 
+function lastAssistantMessageMatches(
+  session: ConciergeSession,
+  content: string,
+): boolean {
+  const lastMessage = session.messages.at(-1);
+  return lastMessage?.role === "assistant" && lastMessage.content === content;
+}
+
+function acknowledgementForUpdate(
+  activeKey: SlotKey | undefined,
+  slots: ConciergeSlots,
+): string {
+  switch (activeKey) {
+    case "eventType":
+      return "That sounds like a great event to plan. Let's build it one detail at a time.";
+    case "location":
+      return slots.cityOrZip
+        ? `${slots.cityOrZip} - got it. Now we can plan for the right service area.`
+        : "Great, we have the location direction.";
+    case "guestCount":
+      return slots.guestCount
+        ? `${slots.guestCount} guests - plenty of happy plates to plan for.`
+        : "Great, we have the guest-count direction.";
+    case "serviceStyle":
+      return slots.serviceStyle
+        ? `${slots.serviceStyle} gives us a clear service direction.`
+        : "Great, we have the service style.";
+    case "eventDate":
+      return slots.budgetNotes
+        ? "Perfect. The date and budget target give us a clear planning lane."
+        : "Great, we have the event timing started.";
+    case "budgetNotes":
+      return "Perfect. That gives us a clear planning target.";
+    case "cuisinePreference":
+      return slots.cuisinePreference
+        ? `A ${slots.cuisinePreference} direction gives us room to build a crowd-friendly menu.`
+        : "Great, we have the cuisine direction.";
+    case "dietaryRequirements":
+      return "Thank you for sharing that. Dietary details help us plan more carefully.";
+    case "operationalNeeds":
+      return "Great - now we know what support the kitchen and service team may need.";
+    case "selectedDishes":
+      return "Your menu is coming together nicely.";
+    case "contact":
+      return "Almost there. Let's add the best contact details for your inquiry.";
+    default:
+      return "Great, your event plan is coming together.";
+  }
+}
+
 export function selectDish(
   session: ConciergeSession,
   dishId: string,
@@ -501,9 +557,12 @@ export function submitConciergeInquiry(
   const missing = missingSlotKeys(session.slots);
   if (missing.length) {
     const reply = composeReply(
-      "I still need a few details before we can review your event.",
+      "Your plan is taking shape. Let's fill in the next detail before we review it.",
       questionForSlot(missing[0]!, session.slots),
     );
+    if (lastAssistantMessageMatches(session, reply)) {
+      return { session, assistantReply: reply };
+    }
     const next = pushMessage(session, "assistant", reply);
     return { session: next, assistantReply: reply };
   }
@@ -566,6 +625,14 @@ export function processConciergeMessage(
   const displayText = maskContactText(text);
   let next = pushMessage(session, "customer", displayText);
   next = pushAudit(next, "customer_message", displayText);
+
+  if (isGreetingOnly(text)) {
+    const reply =
+      "Hi! I'm glad you're here. Tell me what kind of event you're planning - a corporate lunch, private dinner, celebration, or something else?";
+    next = pushMessage(next, "assistant", reply);
+    next = pushAudit(next, "assistant_message", reply);
+    return { session: next, assistantReply: reply };
+  }
 
   // Validate contact answers before mutating slots.
   const contactFieldBefore = getActiveContactField(session.slots);
@@ -858,14 +925,14 @@ export function processConciergeMessage(
     };
     const reply = composeReply(
       summarizeEvent(slots),
-      "If this looks right, choose “Review My Event” as your next step, then continue to the inquiry form. I will not send a quote or confirm a booking.",
+      "If this looks right, choose Review My Event as your next step, then continue to the inquiry form. I will not send a quote or confirm a booking.",
     );
     next = pushMessage(next, "assistant", reply);
     next = pushAudit(next, "summary_shown", "Event summary shown with masked contact details.");
     return { session: next, assistantReply: reply };
   }
 
-  let lead = "Thanks—I've noted that.";
+  let lead = acknowledgementForUpdate(activeKey, slots);
   let followUp = questionForSlot(missing[0]!, slots);
 
   if (
@@ -883,7 +950,7 @@ export function processConciergeMessage(
     missing.includes("budgetNotes") &&
     slots.serviceStyle
   ) {
-    lead = "Thanks—I've noted that.";
+    lead = "Perfect. The service style is set, so let's add the date and budget target.";
     followUp =
       "What date are you considering, and approximately how much would you like to spend per person?";
   } else if (activeKey === "dietaryRequirements" || missing[0] === "dietaryRequirements") {
@@ -891,7 +958,7 @@ export function processConciergeMessage(
   } else if (missing[0] === "selectedDishes" && slots.selectedDishIds.length) {
     lead = buildBalancedMenuNote(slots);
   } else if (missing[0] === "contact") {
-    lead = "Thanks—I've noted that.";
+    lead = acknowledgementForUpdate("contact", slots);
     followUp = [questionForSlot("contact", slots), CONTACT_PRIVACY_NOTICE].join(
       "\n\n",
     );
