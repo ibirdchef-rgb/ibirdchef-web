@@ -17,7 +17,6 @@ import {
   submitConciergeInquiry,
 } from "@/lib/concierge/engine";
 import { listSelectedDishNames } from "@/lib/concierge/menu-retrieval";
-import { missingSlotKeys } from "@/lib/concierge/slots";
 import type { ConciergeSession } from "@/lib/concierge/types";
 import { openInquiryFormSection } from "@/lib/inquiry-form-gate";
 
@@ -117,9 +116,9 @@ export default function ConciergeChat() {
     selectedCount > 0 || hasRecommendations || hasReviewed || awaitingSummary;
 
   const contactField =
-    missingSlotKeys(session.slots)[0] === "contact"
-      ? getActiveContactField(session.slots)
-      : null;
+  session.pendingQuestionKeys[0] === "contact"
+    ? getActiveContactField(session.slots)
+    : null;
   const inputConfig = inputConfigForContactField(contactField);
 
   function applyResult(result: { session: ConciergeSession }) {
