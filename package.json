@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test src/lib/clow-intake.test.ts"
+    "test": "tsx --test src/lib/clow-intake.test.ts src/lib/curated-menu.test.ts src/lib/quote-approval-workflow.test.ts"
   },
   "dependencies": {
     "next": "16.2.12",
@@ -23,6 +23,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
+    "playwright": "^1.62.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.1",
     "typescript": "^5"

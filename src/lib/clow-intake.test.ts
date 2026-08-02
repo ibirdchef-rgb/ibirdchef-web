@@ -178,6 +178,8 @@ describe("Shared event inquiry and iBirdOS preparation", () => {
     assert.match(prompt, /\$18/);
     assert.match(prompt, /Clow/);
     assert.match(prompt, /iBirdOS/);
+    assert.match(prompt, /Draft — Pending Chef Approval/);
+    assert.match(prompt, /Do not send quotes to customers in this pass/);
     for (const rule of AI_CHAT_TASK_A_FORBIDDEN) {
       assert.ok(prompt.includes(rule), `missing forbidden rule: ${rule}`);
     }
