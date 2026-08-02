@@ -21,7 +21,7 @@ export default function Home() {
         <CuisineExperience />
         <PlanningSteps />
         <ConciergePreview />
-        <PlanEventCta pageSource="homepage" />
+        <PlanEventCta pageSource="homepage" gateInquiryForm />
       </main>
     </SiteShell>
   );

@@ -168,7 +168,7 @@ describe("AI catering concierge phase 1", () => {
   it("rejects unknown dish ids", () => {
     const session = createConciergeSession();
     const result = selectDish(session, "not-a-real-dish");
-    assert.match(result.assistantReply, /approved public menu/i);
+    assert.match(result.assistantReply, /published menu/i);
     assert.equal(result.session.slots.selectedDishIds.length, 0);
   });
 
@@ -229,14 +229,20 @@ describe("AI catering concierge phase 1", () => {
     }
 
     const submitted = submitConciergeInquiry(session);
+    // Internal draft status stays on the session for Chef tooling — not customer copy.
     assert.equal(submitted.session.quoteStatusLabel, DRAFT_PENDING_LABEL);
-    assert.match(submitted.assistantReply, /Draft — Pending Chef Approval/);
-    assert.match(submitted.assistantReply, /not sent a quote/i);
+    assert.doesNotMatch(
+      submitted.assistantReply,
+      /Draft — Pending Chef Approval|Internal draft|Customer quote sending remains blocked/i,
+    );
+    assert.match(submitted.assistantReply, /inquiry form/i);
     assert.match(submitted.assistantReply, /not Chef Simbu/i);
     assert.ok(submitted.session.inquiryHref?.includes("askDishes="));
     assert.ok(
       submitted.session.auditTrail.some(
-        (event) => event.type === "quote_draft_created",
+        (event) =>
+          event.type === "quote_draft_created" &&
+          event.detail.includes(DRAFT_PENDING_LABEL),
       ),
     );
     assert.ok(

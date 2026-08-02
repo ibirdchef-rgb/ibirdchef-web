@@ -332,7 +332,7 @@ function summarizeEvent(slots: ConciergeSlots): string {
   ].filter(Boolean);
 
   return [
-    "Here is the event summary so far (recommendations vs confirmed details are separated below):",
+    "Here is your event summary so far:",
     `• Event: ${slots.eventType || "Not provided"} (${slots.eventCategory || "category pending"})`,
     `• When: ${slots.eventDate || "Date pending"}${slots.eventTime ? ` at ${slots.eventTime}` : ""}`,
     `• Where: ${slots.cityOrZip || "Location pending"} / ${slots.serviceRegion || "region pending"}`,
@@ -421,7 +421,7 @@ export function selectDish(
   const dish = getApprovedDishById(dishId);
   if (!dish) {
     const reply =
-      "I can only add dishes from our approved public menu. Please choose one of the listed selections.";
+      "I can only add dishes from our published menu. Please choose one of the listed selections.";
     let next = pushMessage(session, "assistant", reply);
     next = pushAudit(next, "safety_response", "Rejected unknown dish id.");
     return { session: next, assistantReply: reply };
@@ -484,7 +484,7 @@ export function submitConciergeInquiry(
   const missing = missingSlotKeys(session.slots);
   if (missing.length) {
     const reply = composeReply(
-      "I still need a few details before I can prepare the inquiry summary.",
+      "I still need a few details before we can review your event.",
       questionForSlot(missing[0]!, session.slots),
     );
     const next = pushMessage(session, "assistant", reply);
@@ -522,8 +522,8 @@ export function submitConciergeInquiry(
 
   const reply = composeReply(
     summary,
-    `Internal status: ${draft.statusLabel}. I have not sent a quote or confirmed availability. You can continue to the inquiry form to share these details with the iBirdChef team.`,
-    "I am an event concierge assistant, not Chef Simbu. A team member can follow up after review.",
+    "Your event summary is ready. Continue to the inquiry form to send these details to the iBirdChef team. Final pricing and availability are confirmed after Chef Simbu reviews your event.",
+    "I am the Catering Concierge assistant—not Chef Simbu—and a team member can follow up after review.",
   );
   next = pushMessage(next, "assistant", reply);
   next = pushAudit(next, "assistant_message", reply);
@@ -746,12 +746,12 @@ export function processConciergeMessage(
       recommendedDishIds: suggestions.map((item) => item.id),
       phase: "recommending",
       lastRecommendationsNote:
-        "These are approved-menu recommendations only—not confirmed selections until you add them.",
+        "These are menu suggestions only—not confirmed selections until you add them.",
     };
     next = pushAudit(
       next,
       "menu_recommended",
-      `Recommended ${suggestions.length} approved dishes.`,
+      `Recommended ${suggestions.length} menu dishes for customer review.`,
     );
     const lines = suggestions
       .map(
@@ -760,8 +760,8 @@ export function processConciergeMessage(
       )
       .join("\n");
     const reply = composeReply(
-      "Here are approved-menu recommendations for a balanced plan. I will not replace any dishes you already chose unless you ask.",
-      lines || "I could not find additional matches in the approved menu for that preference.",
+      "Here are menu recommendations for a balanced plan. I will not replace any dishes you already chose unless you ask.",
+      lines || "I could not find additional matches in our menu for that preference.",
       `${DIETARY_CONFIRMATION_NOTICE} Would you like to add any of these, or tell me specific dishes to include?`,
     );
     next = pushMessage(next, "assistant", reply);
@@ -769,7 +769,11 @@ export function processConciergeMessage(
     return { session: next, assistantReply: reply };
   }
 
-  if (/\b(summary|looks good|submit|ready|prepare inquiry|that's all)\b/i.test(text)) {
+  if (
+    /\b(summary|looks good|submit|ready|prepare inquiry|review my event|that's all)\b/i.test(
+      text,
+    )
+  ) {
     return submitConciergeInquiry(next);
   }
 
@@ -781,7 +785,7 @@ export function processConciergeMessage(
     };
     const reply = composeReply(
       summarizeEvent(slots),
-      "If this looks right, reply “prepare inquiry” and I will create the summary for follow-up. I will not send a quote or confirm a booking.",
+      "If this looks right, choose “Review My Event” and then continue to the inquiry form. I will not send a quote or confirm a booking.",
     );
     next = pushMessage(next, "assistant", reply);
     next = pushAudit(next, "summary_shown", "Event summary shown.");

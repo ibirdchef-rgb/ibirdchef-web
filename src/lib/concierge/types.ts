@@ -4,7 +4,7 @@ import type { ServiceRegion } from "@/lib/regions";
 import type { QuoteDraft } from "@/lib/quote-draft";
 
 export const CONCIERGE_WELCOME =
-  "Welcome to iBirdChef. I can help you plan a menu for your event. What are you celebrating or organizing?";
+  "Welcome to iBirdChef! I can help you plan a menu for your event. What type of event are you organizing?";
 
 export const PRICE_SAFE_RESPONSE =
   "Pricing depends on the final menu, guest count, service requirements and current ingredient costs. I can prepare your selections for Chef Simbu to review and approve.";

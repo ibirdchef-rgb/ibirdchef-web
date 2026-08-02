@@ -153,7 +153,7 @@ export function listSelectedDishNames(ids: readonly string[]): string[] {
 export function buildBalancedMenuNote(slots: ConciergeSlots): string {
   const names = listSelectedDishNames(slots.selectedDishIds);
   if (!names.length) {
-    return "No dishes selected yet. I can recommend approved entrées, sides, rice, breads, and dessert when you are ready.";
+    return "No dishes selected yet. I can recommend entrées, sides, rice, breads, and dessert when you are ready.";
   }
-  return `Current approved selections: ${names.join("; ")}. I can suggest complementary items without replacing your choices unless you ask.`;
+  return `Current selections: ${names.join("; ")}. I can suggest complementary items without replacing your choices unless you ask.`;
 }

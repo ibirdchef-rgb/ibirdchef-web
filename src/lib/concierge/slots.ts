@@ -174,7 +174,7 @@ export function questionForSlot(key: SlotKey, slots: ConciergeSlots): string {
     case "operationalNeeds":
       return "Will you need delivery, on-site setup, staffing, rentals, or equipment support?";
     case "selectedDishes":
-      return "I can suggest a balanced menu from our approved selections. Would you like recommendations for entrées, sides, rice, breads, and dessert—or do you already have dishes in mind?";
+      return "I can suggest a balanced menu from our menu. Would you like recommendations for entrées, sides, rice, breads, and dessert—or do you already have dishes in mind?";
     case "contact":
       if (!slots.customerName) {
         return "What name should Chef Simbu’s team use for follow-up?";
