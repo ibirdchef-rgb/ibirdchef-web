@@ -79,8 +79,13 @@ export function getClowIntakeConfig(): {
   const secret = process.env.IBIRDCHEF_INQUIRY_WEBHOOK_SECRET?.trim() ?? "";
 
   if (!url || !secret) {
-    return null;
-  }
+  console.error("CLOW intake configuration missing", {
+    urlConfigured: Boolean(url),
+    secretConfigured: Boolean(secret),
+  });
+
+  return null;
+}
 
   return { url, secret };
 }
