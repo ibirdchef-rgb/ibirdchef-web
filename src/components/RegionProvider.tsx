@@ -4,9 +4,8 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import {
@@ -23,24 +22,54 @@ type RegionContextValue = {
 
 const RegionContext = createContext<RegionContextValue | null>(null);
 
-export function RegionProvider({ children }: { children: ReactNode }) {
-  const [region, setRegionState] = useState<ServiceRegion | "">("");
-  const [ready, setReady] = useState(false);
+const REGION_CHANGE_EVENT = "ibirdchef-region-change";
 
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(REGION_STORAGE_KEY);
-      if (isServiceRegion(stored)) {
-        setRegionState(stored);
-      }
-    } catch {
-      // Ignore storage access errors.
+function subscribeRegion(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === REGION_STORAGE_KEY || event.key === null) {
+      onStoreChange();
     }
-    setReady(true);
-  }, []);
+  };
+  const onLocal = () => onStoreChange();
+
+  window.addEventListener("storage", onStorage);
+  window.addEventListener(REGION_CHANGE_EVENT, onLocal);
+  return () => {
+    window.removeEventListener("storage", onStorage);
+    window.removeEventListener(REGION_CHANGE_EVENT, onLocal);
+  };
+}
+
+function readStoredRegion(): ServiceRegion | "" {
+  try {
+    const stored = window.localStorage.getItem(REGION_STORAGE_KEY);
+    return isServiceRegion(stored) ? stored : "";
+  } catch {
+    return "";
+  }
+}
+
+function getServerRegionSnapshot(): ServiceRegion | "" {
+  return "";
+}
+
+export function RegionProvider({ children }: { children: ReactNode }) {
+  const region = useSyncExternalStore(
+    subscribeRegion,
+    readStoredRegion,
+    getServerRegionSnapshot,
+  );
+  const ready = useSyncExternalStore(
+    subscribeRegion,
+    () => true,
+    () => false,
+  );
 
   const setRegion = useCallback((next: ServiceRegion | "") => {
-    setRegionState(next);
     try {
       if (next) {
         window.localStorage.setItem(REGION_STORAGE_KEY, next);
@@ -50,6 +79,7 @@ export function RegionProvider({ children }: { children: ReactNode }) {
     } catch {
       // Ignore storage access errors.
     }
+    window.dispatchEvent(new Event(REGION_CHANGE_EVENT));
   }, []);
 
   const value = useMemo(

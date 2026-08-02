@@ -114,8 +114,9 @@ export function buildIBirdOsCostingRequest(
  * Placeholder until an approved iBirdOS intake URL/secret are configured.
  * Preserves the current email + Clow path as the working submission flow.
  */
-export function forwardInquiryToIBirdOs(_input: {
+export function forwardInquiryToIBirdOs(input: {
   payload: IBirdOsCostingRequest;
 }): IBirdOsForwardResult {
+  void input.payload;
   return { ok: false, category: "not_configured" };
 }

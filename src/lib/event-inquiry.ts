@@ -91,6 +91,7 @@ export const PAGE_SOURCES = [
   "private-events",
   "seattle",
   "bay-area",
+  "menu",
   "menu-chat",
   "other",
 ] as const;

@@ -48,3 +48,12 @@ docs/qa-screenshots/premium-v1/*-*.png
 !docs/qa-screenshots/premium-v1/seattle-390.png
 !docs/qa-screenshots/premium-v1/bay-area-390.png
 
+
+# Local menu source documents (never commit)
+/docs/menu-sources/
+
+# Local full-viewport dumps for curated menu QA (selected heroes may be committed)
+docs/qa-screenshots/curated-menu-v1/*-*.png
+!docs/qa-screenshots/curated-menu-v1/menu-desktop-1280.png
+!docs/qa-screenshots/curated-menu-v1/menu-mobile-390.png
+

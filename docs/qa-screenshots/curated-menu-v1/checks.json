@@ -1,0 +1,124 @@
+{
+  "a11y": [
+    {
+      "width": 390,
+      "itemCountHint": true,
+      "seasonalPrice": true,
+      "availability": true,
+      "dietaryNotice": true,
+      "liveProposal": true,
+      "noHaywardStreet": true,
+      "noLegacyPackagePrice": true,
+      "noSourceFilenames": true,
+      "hasAskAbout": true,
+      "overflow": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "hasHorizontalOverflow": false
+      },
+      "focusTag": {
+        "tag": "A",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      }
+    },
+    {
+      "width": 768,
+      "itemCountHint": true,
+      "seasonalPrice": true,
+      "availability": true,
+      "dietaryNotice": true,
+      "liveProposal": true,
+      "noHaywardStreet": true,
+      "noLegacyPackagePrice": true,
+      "noSourceFilenames": true,
+      "hasAskAbout": true,
+      "overflow": {
+        "scrollWidth": 768,
+        "clientWidth": 768,
+        "hasHorizontalOverflow": false
+      },
+      "focusTag": {
+        "tag": "A",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      }
+    },
+    {
+      "width": 1024,
+      "itemCountHint": true,
+      "seasonalPrice": true,
+      "availability": true,
+      "dietaryNotice": true,
+      "liveProposal": true,
+      "noHaywardStreet": true,
+      "noLegacyPackagePrice": true,
+      "noSourceFilenames": true,
+      "hasAskAbout": true,
+      "overflow": {
+        "scrollWidth": 1024,
+        "clientWidth": 1024,
+        "hasHorizontalOverflow": false
+      },
+      "focusTag": {
+        "tag": "A",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      }
+    },
+    {
+      "width": 1280,
+      "itemCountHint": true,
+      "seasonalPrice": true,
+      "availability": true,
+      "dietaryNotice": true,
+      "liveProposal": true,
+      "noHaywardStreet": true,
+      "noLegacyPackagePrice": true,
+      "noSourceFilenames": true,
+      "hasAskAbout": true,
+      "overflow": {
+        "scrollWidth": 1280,
+        "clientWidth": 1280,
+        "hasHorizontalOverflow": false
+      },
+      "focusTag": {
+        "tag": "A",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      },
+      "prefillWorks": true
+    },
+    {
+      "width": 1440,
+      "itemCountHint": true,
+      "seasonalPrice": true,
+      "availability": true,
+      "dietaryNotice": true,
+      "liveProposal": true,
+      "noHaywardStreet": true,
+      "noLegacyPackagePrice": true,
+      "noSourceFilenames": true,
+      "hasAskAbout": true,
+      "overflow": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "focusTag": {
+        "tag": "A",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      }
+    }
+  ],
+  "screenshots": [
+    "docs\\qa-screenshots\\curated-menu-v1\\menu-390.png",
+    "docs\\qa-screenshots\\curated-menu-v1\\menu-768.png",
+    "docs\\qa-screenshots\\curated-menu-v1\\menu-1024.png",
+    "docs\\qa-screenshots\\curated-menu-v1\\menu-1280.png",
+    "docs\\qa-screenshots\\curated-menu-v1\\menu-1440.png"
+  ],
+  "privacyRobots": "noindex, nofollow",
+  "privacyNoIndex": true
+}

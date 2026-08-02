@@ -46,7 +46,7 @@ export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--navy)]/10 bg-[var(--ivory)]/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3 lg:px-10">
-        <a
+        <Link
           href="/#home"
           className="flex min-w-0 items-center gap-3"
           onClick={closeMenu}
@@ -68,7 +68,7 @@ export default function SiteHeader() {
               South Asian Cuisine Catering
             </p>
           </div>
-        </a>
+        </Link>
 
         <div className="hidden items-center gap-5 xl:flex">
           <RegionSelector variant="header" />
@@ -76,43 +76,33 @@ export default function SiteHeader() {
             className="flex items-center gap-5 text-sm font-medium text-[var(--navy)]"
             aria-label="Primary"
           >
-            {navLinks.map((link) =>
-              link.href.startsWith("/") && !link.href.includes("#") ? (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="transition hover:text-[var(--bronze)]"
-                >
-                  {link.label}
-                </Link>
-              ) : (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="transition hover:text-[var(--bronze)]"
-                >
-                  {link.label}
-                </a>
-              ),
-            )}
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="transition hover:text-[var(--bronze)]"
+              >
+                {link.label}
+              </Link>
+            ))}
 
-            <a
+            <Link
               href="/#contact"
               className="inline-flex min-h-12 items-center rounded-full bg-[var(--bronze)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--bronze-dark)]"
             >
               Book
-            </a>
+            </Link>
           </nav>
         </div>
 
         <div className="flex items-center gap-2 xl:hidden">
-          <a
+          <Link
             href="/#contact"
             className="inline-flex min-h-11 items-center rounded-full bg-[var(--bronze)] px-4 py-2.5 text-sm font-semibold text-white"
             onClick={closeMenu}
           >
             Book
-          </a>
+          </Link>
 
           <button
             type="button"
@@ -138,33 +128,23 @@ export default function SiteHeader() {
           <ul className="mx-auto flex max-w-7xl list-none flex-col gap-1 px-6 py-4">
             {navLinks.map((link) => (
               <li key={link.href}>
-                {link.href.startsWith("/") && !link.href.includes("#") ? (
-                  <Link
-                    href={link.href}
-                    className="flex min-h-12 items-center rounded-xl px-3 text-base font-medium text-[var(--navy)] hover:bg-[var(--navy)]/5"
-                    onClick={closeMenu}
-                  >
-                    {link.label}
-                  </Link>
-                ) : (
-                  <a
-                    href={link.href}
-                    className="flex min-h-12 items-center rounded-xl px-3 text-base font-medium text-[var(--navy)] hover:bg-[var(--navy)]/5"
-                    onClick={closeMenu}
-                  >
-                    {link.label}
-                  </a>
-                )}
+                <Link
+                  href={link.href}
+                  className="flex min-h-12 items-center rounded-xl px-3 text-base font-medium text-[var(--navy)] hover:bg-[var(--navy)]/5"
+                  onClick={closeMenu}
+                >
+                  {link.label}
+                </Link>
               </li>
             ))}
             <li>
-              <a
+              <Link
                 href="/#contact"
                 className="mt-2 flex min-h-12 items-center justify-center rounded-full bg-[var(--bronze)] px-4 text-base font-semibold text-white"
                 onClick={closeMenu}
               >
                 Book
-              </a>
+              </Link>
             </li>
           </ul>
         </nav>

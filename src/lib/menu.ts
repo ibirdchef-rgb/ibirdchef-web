@@ -145,7 +145,10 @@ function uniqueItems(names: string[]): MenuItem[] {
   return items;
 }
 
-/** Price-free à la carte foundation built only from seasonal-box dishes. */
+/**
+ * Legacy seasonal-derived categories retained for internal/AI helpers.
+ * Public browsing uses the curated V1 explorer (`src/lib/curated-menu.ts`).
+ */
 export const menuCategories: MenuCategory[] = [
   {
     id: "rice",

@@ -1,7 +1,9 @@
 "use client";
 
-import { FormEvent, useEffect, useId, useMemo, useState } from "react";
+import { FormEvent, Suspense, useId, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useRegion } from "@/components/RegionProvider";
+import { buildDishInquiryMessage } from "@/lib/curated-menu";
 import {
   BUDGET_RANGES,
   CORPORATE_EVENT_TYPES,
@@ -48,7 +50,7 @@ function eventTypesForCategory(category: EventCategory | ""): readonly string[] 
   return [...CORPORATE_EVENT_TYPES, ...PRIVATE_FAMILY_EVENT_TYPES];
 }
 
-export default function InquiryForm({
+function InquiryFormInner({
   title = "Catering inquiry",
   description = "Share a few details about your event. Required fields are marked with an asterisk.",
   submitLabel = "Send inquiry",
@@ -58,23 +60,34 @@ export default function InquiryForm({
   pageSource = "homepage",
 }: InquiryFormProps) {
   const formId = useId();
+  const searchParams = useSearchParams();
   const { region: preferredRegion } = useRegion();
   const [status, setStatus] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [eventCategory, setEventCategory] = useState<EventCategory | "">(
     defaultEventCategory ?? "",
   );
-  const [serviceRegion, setServiceRegion] = useState<ServiceRegion | "">(
-    defaultServiceRegion || "",
-  );
+  const [serviceRegionOverride, setServiceRegionOverride] = useState<
+    ServiceRegion | "" | null
+  >(null);
   const [eventCity, setEventCity] = useState("");
   const [customCity, setCustomCity] = useState("");
+  const [messageOverride, setMessageOverride] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!serviceRegion && (defaultServiceRegion || preferredRegion)) {
-      setServiceRegion(defaultServiceRegion || preferredRegion);
+  const dishPrefill = useMemo(() => {
+    const askDish = searchParams.get("askDish")?.trim();
+    if (!askDish) {
+      return "";
     }
-  }, [defaultServiceRegion, preferredRegion, serviceRegion]);
+    const askCategory =
+      searchParams.get("askCategory")?.trim() || "Curated menu";
+    return buildDishInquiryMessage(askDish, askCategory);
+  }, [searchParams]);
+
+  const serviceRegion =
+    serviceRegionOverride ??
+    (defaultServiceRegion || preferredRegion || "");
+  const message = messageOverride ?? dishPrefill;
 
   const cityOptions = useMemo(() => {
     if (!serviceRegion) {
@@ -153,9 +166,10 @@ export default function InquiryForm({
 
       form.reset();
       setEventCategory(defaultEventCategory ?? "");
-      setServiceRegion(defaultServiceRegion || preferredRegion || "");
+      setServiceRegionOverride(null);
       setEventCity("");
       setCustomCity("");
+      setMessageOverride(null);
       setStatus("success");
     } catch {
       setStatus("error");
@@ -263,7 +277,9 @@ export default function InquiryForm({
             disabled={status === "submitting"}
             className={fieldClassName}
             onChange={(event) => {
-              setServiceRegion(event.target.value as ServiceRegion | "");
+              setServiceRegionOverride(
+                event.target.value as ServiceRegion | "",
+              );
               setEventCity("");
               setCustomCity("");
             }}
@@ -564,6 +580,8 @@ export default function InquiryForm({
             name="message"
             required
             rows={5}
+            value={message}
+            onChange={(event) => setMessageOverride(event.target.value)}
             placeholder="Tell us about your event, menu preferences, and timing."
             disabled={status === "submitting"}
             className={`${fieldClassName} resize-y`}
@@ -623,5 +641,28 @@ export default function InquiryForm({
         </button>
       </div>
     </form>
+  );
+}
+
+export default function InquiryForm(props: InquiryFormProps) {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="rounded-3xl border border-[var(--navy)]/10 bg-white p-8 shadow-sm sm:p-10"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          <p className="font-serif text-2xl font-semibold text-[var(--navy)]">
+            Catering inquiry
+          </p>
+          <p className="mt-3 leading-7 text-[var(--ink-muted)]">
+            Loading inquiry form…
+          </p>
+        </div>
+      }
+    >
+      <InquiryFormInner {...props} />
+    </Suspense>
   );
 }
