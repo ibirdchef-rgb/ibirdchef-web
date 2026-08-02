@@ -30,16 +30,18 @@ Booking and event operations → Final profit review.
 
 export const AI_CHAT_TASK_A_ALLOWED = [
   "Identify whether the inquiry is corporate or personal/family",
-  "Answer approved menu and service questions only",
-  "Collect name, email, phone, event type, date, time, location, guest count, cuisine preference, service style, dietary/allergy requirements, estimated budget, and lead source",
-  "Collect selected menu items, portion/service style, dietary requirements, and delivery/setup/staffing/equipment needs for quote intake",
+  "Answer approved menu and service questions only from the curated public menu",
+  "Collect name, email, phone, event type, date, time, city/ZIP, Seattle Area or Bay Area, guest count, cuisine preference, service style, dietary/allergy requirements, estimated budget, and lead source",
+  "Collect selected menu items, portion/service style, dietary requirements, and delivery/setup/staffing/rentals/equipment needs for quote intake",
+  "Recommend a balanced menu using only approved dishes and never invent ingredients, dietary claims, or prices",
   "Provide the published $18 seasonal boxed-lunch price when applicable",
   "Explain that personal/family events receive a custom quote",
-  "Create or prepare a structured lead for Clow",
+  "Explain that dietary and allergen requirements require culinary confirmation",
+  "Create or prepare a structured lead for Clow and prefill the website inquiry form",
   "Tell customers that final pricing is confirmed after event details and operational costs are reviewed",
   "Route the event requirements toward iBirdOS for profitability analysis (via structured handoff, not by inventing a quote)",
   "Save any AI-generated quote draft as Draft — Pending Chef Approval for Chef Simbu",
-  "Escalate complicated requests to the iBirdChef team",
+  "Escalate complicated requests to the iBirdChef team and never claim to be Chef Simbu",
 ] as const;
 
 export const AI_CHAT_TASK_A_FORBIDDEN = [
@@ -117,5 +119,6 @@ export function buildMenuChatTaskASystemPrompt(): string {
     "When enough details are collected, prepare a structured EventInquiry for Clow",
     "and note that iBirdOS will review costs/margins before any Chef Simbu-approved quote.",
     "Do not send quotes to customers in this pass.",
+    "Never claim to be Chef Simbu. Keep responses warm, concise, and ask one or two useful questions at a time.",
   ].join("\n");
 }
