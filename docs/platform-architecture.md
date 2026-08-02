@@ -129,6 +129,23 @@ Held: deposits/payments, fake urgency / limited-slot claims without real availab
 
 Policy helpers live in `src/lib/ai-chat-policy.ts`. Live model wiring is out of scope for this pass.
 
+## Quote draft and Chef Simbu approval (internal)
+
+Public curated-menu V1 pricing labels are **not** financial approval. Implementation lives in:
+
+- `src/lib/quote-draft.ts` — intake, cost inputs, calculation, chef breakdown, audit types
+- `src/lib/quote-approval-workflow.ts` — draft creation, calculate/flag, approve/edit/reject, send blocked
+
+Rules in this pass:
+
+1. AI may collect contact, event, guest count, menu selections, service style, dietary needs, and delivery/setup/staffing/equipment needs.
+2. Costing uses only current internal costs. Missing/outdated costs are flagged. Historical menu prices are forbidden as costs. Values are never invented.
+3. Required math: direct cost → cost before profit → selling price before tax → final quote with tax.
+4. Every AI-generated quote is saved as **Draft — Pending Chef Approval** with an internal Chef Simbu cost breakdown.
+5. Chef Simbu may approve, edit, or reject. Audit events record calculation, edits, approval/rejection, and blocked send attempts.
+6. Automatic customer quoting/sending is **not activated**. Even approved drafts cannot be sent yet.
+7. Seafood, lamb, goat, rentals, staffed events, and market-priced ingredients require manual approval. Public `$18` seasonal pricing must not change until reviewed.
+
 ## Privacy
 
 `/privacy` remains a `noindex` placeholder until approved policy text is provided. Do not invent policy language.

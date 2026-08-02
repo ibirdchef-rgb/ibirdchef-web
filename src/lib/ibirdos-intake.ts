@@ -1,10 +1,14 @@
 import type { EventInquiry } from "@/lib/event-inquiry";
+import type { QuoteDraft } from "@/lib/quote-draft";
 
 /**
  * iBirdOS Engine adapter — profitability and operations handoff.
  *
  * This pass prepares a typed payload only. Do not call imaginary endpoints or
  * hard-code credentials. Real forwarding waits on approved iBirdOS integration.
+ *
+ * Quote drafts created for Chef Simbu approval live in `quote-draft.ts` /
+ * `quote-approval-workflow.ts`. Customer send remains disabled.
  */
 
 export type IBirdOsCostingRequest = {
@@ -59,6 +63,15 @@ export type IBirdOsCostingRequest = {
 export type IBirdOsForwardResult =
   | { ok: true; status: "prepared" }
   | { ok: false; category: "not_configured" };
+
+/** Optional link from an inquiry handoff to an internal quote draft. */
+export type IBirdOsQuoteDraftHandoff = {
+  inquirySubmissionId: string;
+  quoteDraftId: QuoteDraft["id"];
+  quoteStatus: QuoteDraft["status"];
+  quoteStatusLabel: QuoteDraft["statusLabel"];
+  customerSendEnabled: false;
+};
 
 export function buildIBirdOsCostingRequest(
   inquiry: EventInquiry,
