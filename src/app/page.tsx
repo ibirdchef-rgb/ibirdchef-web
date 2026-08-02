@@ -1,5 +1,6 @@
 import Image from "next/image";
 import InquiryForm from "@/components/InquiryForm";
+import MenuSection from "@/components/MenuSection";
 import SiteHeader from "@/components/SiteHeader";
 import { siteConfig } from "@/lib/site";
 
@@ -249,6 +250,8 @@ export default function Home() {
             </p>
           </div>
         </section>
+
+        <MenuSection />
 
         <section
           id="about"

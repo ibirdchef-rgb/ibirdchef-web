@@ -1,23 +1,13 @@
 import { createHmac, randomUUID } from "node:crypto";
+import type { EventInquiry } from "@/lib/event-inquiry";
 
 export const CLOW_INTAKE_TIMEOUT_MS = 8_000;
 
-export type ValidatedInquiry = {
-  name: string;
-  email: string;
-  phone: string;
-  eventDate: string;
-  guestCount: string;
-  eventLocation: string;
-  serviceType: string;
-  estimatedBudget: string;
-  dietaryNeeds: string;
-  message: string;
-};
+/** @deprecated Prefer EventInquiry — kept as an alias for existing tests/imports. */
+export type ValidatedInquiry = EventInquiry;
 
-export type ClowInquiryPayload = ValidatedInquiry & {
+export type ClowInquiryPayload = EventInquiry & {
   submissionId: string;
-  smsConsent: false;
 };
 
 export type ClowForwardResult =
@@ -38,7 +28,7 @@ export function createSubmissionId(): string {
 }
 
 export function buildClowInquiryPayload(
-  inquiry: ValidatedInquiry,
+  inquiry: EventInquiry,
   submissionId: string,
 ): ClowInquiryPayload {
   return {
@@ -46,14 +36,22 @@ export function buildClowInquiryPayload(
     name: inquiry.name,
     email: inquiry.email,
     phone: inquiry.phone,
+    eventCategory: inquiry.eventCategory,
+    eventType: inquiry.eventType,
     eventDate: inquiry.eventDate,
-    guestCount: inquiry.guestCount,
+    eventTime: inquiry.eventTime,
     eventLocation: inquiry.eventLocation,
+    guestCount: inquiry.guestCount,
+    cuisinePreference: inquiry.cuisinePreference,
+    serviceStyle: inquiry.serviceStyle,
     serviceType: inquiry.serviceType,
     estimatedBudget: inquiry.estimatedBudget,
     dietaryNeeds: inquiry.dietaryNeeds,
+    leadSource: inquiry.leadSource,
+    contactConsent: inquiry.contactConsent,
+    smsConsent: inquiry.smsConsent,
     message: inquiry.message,
-    smsConsent: false,
+    pageSource: inquiry.pageSource,
   };
 }
 

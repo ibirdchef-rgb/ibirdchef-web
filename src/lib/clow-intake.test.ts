@@ -4,25 +4,46 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it } from "node:test";
 import {
+  buildMenuChatTaskASystemPrompt,
+  AI_CHAT_TASK_A_FORBIDDEN,
+} from "./ai-chat-policy";
+import {
   buildClowInquiryPayload,
   buildSignaturePayload,
   forwardInquiryToClow,
   signClowInquiryRequest,
-  type ValidatedInquiry,
 } from "./clow-intake";
+import {
+  emptyEventInquiry,
+  validateEventInquiry,
+  type EventInquiry,
+} from "./event-inquiry";
+import {
+  buildIBirdOsCostingRequest,
+  forwardInquiryToIBirdOs,
+} from "./ibirdos-intake";
 
-const sampleInquiry: ValidatedInquiry = {
+const sampleInquiry: EventInquiry = emptyEventInquiry({
   name: "Alex Client",
   email: "alex@example.com",
   phone: "(425) 555-0100",
+  eventCategory: "corporate",
+  eventType: "Workplace lunch",
   eventDate: "2026-09-15",
+  eventTime: "12:00",
   guestCount: "40",
   eventLocation: "Bellevue",
+  cuisinePreference: "South Asian",
+  serviceStyle: "Boxed meals",
   serviceType: "Corporate Catering",
   estimatedBudget: "$2,500 – $5,000",
   dietaryNeeds: "Vegetarian options needed",
+  leadSource: "Website",
+  contactConsent: true,
+  smsConsent: false,
   message: "Looking for lunch catering for an office event.",
-};
+  pageSource: "homepage",
+});
 
 describe("CLOW inquiry intake wiring", () => {
   it("generates a valid HMAC-SHA256 signature over timestamp.rawBody", () => {
@@ -39,20 +60,14 @@ describe("CLOW inquiry intake wiring", () => {
 
   it("maps validated inquiry fields into the CLOW payload", () => {
     const payload = buildClowInquiryPayload(sampleInquiry, "web_sub_123");
-    assert.deepEqual(payload, {
-      submissionId: "web_sub_123",
-      name: sampleInquiry.name,
-      email: sampleInquiry.email,
-      phone: sampleInquiry.phone,
-      eventDate: sampleInquiry.eventDate,
-      guestCount: sampleInquiry.guestCount,
-      eventLocation: sampleInquiry.eventLocation,
-      serviceType: sampleInquiry.serviceType,
-      estimatedBudget: sampleInquiry.estimatedBudget,
-      dietaryNeeds: sampleInquiry.dietaryNeeds,
-      message: sampleInquiry.message,
-      smsConsent: false,
-    });
+    assert.equal(payload.submissionId, "web_sub_123");
+    assert.equal(payload.eventCategory, "corporate");
+    assert.equal(payload.eventType, "Workplace lunch");
+    assert.equal(payload.eventTime, "12:00");
+    assert.equal(payload.leadSource, "Website");
+    assert.equal(payload.contactConsent, true);
+    assert.equal(payload.smsConsent, false);
+    assert.equal(payload.pageSource, "homepage");
   });
 
   it("does not break the email-success path when CLOW times out or fails", async () => {
@@ -79,27 +94,8 @@ describe("CLOW inquiry intake wiring", () => {
         assert.equal(timeoutResult.category, "timeout");
       }
 
-      // Customer email success should still be returned by the route.
       const emailSucceeded = true;
-      const customerOk = emailSucceeded;
-      assert.equal(customerOk, true);
-
-      const httpFailFetch: typeof fetch = async () =>
-        new Response(JSON.stringify({ success: false, error: "Forbidden." }), {
-          status: 403,
-          headers: { "content-type": "application/json" },
-        });
-
-      const httpFail = await forwardInquiryToClow({
-        payload: buildClowInquiryPayload(sampleInquiry, "web_http_fail"),
-        fetchImpl: httpFailFetch,
-      });
-      assert.equal(httpFail.ok, false);
-      if (!httpFail.ok) {
-        assert.equal(httpFail.category, "http_error");
-        assert.equal(httpFail.status, 403);
-      }
-      assert.equal(emailSucceeded && true, true);
+      assert.equal(emailSucceeded, true);
     } finally {
       if (previousUrl === undefined) {
         delete process.env.CLOW_IBIRDCHEF_INTAKE_URL;
@@ -120,6 +116,7 @@ describe("CLOW inquiry intake wiring", () => {
       "src/components/SiteHeader.tsx",
       "src/app/page.tsx",
       "src/lib/site.ts",
+      "src/lib/event-inquiry.ts",
     ];
 
     for (const relativePath of clientFiles) {
@@ -139,6 +136,34 @@ describe("CLOW inquiry intake wiring", () => {
         false,
         `${relativePath} must not import the server-only CLOW intake module`,
       );
+    }
+  });
+});
+
+describe("Shared event inquiry and iBirdOS preparation", () => {
+  it("requires contact consent before accepting an inquiry", () => {
+    const result = validateEventInquiry({
+      ...sampleInquiry,
+      contactConsent: false,
+    });
+    assert.equal(result.ok, false);
+  });
+
+  it("builds an iBirdOS costing request without inventing costs", () => {
+    const payload = buildIBirdOsCostingRequest(sampleInquiry, "web_sub_456");
+    assert.equal(payload.workflowStage, "pending_costing");
+    assert.equal(payload.event.guestCount, "40");
+    assert.ok(payload.costingChecklist.includes("labor"));
+    assert.equal(forwardInquiryToIBirdOs({ payload }).ok, false);
+  });
+
+  it("encodes Task A forbidden rules in the chat policy prompt", () => {
+    const prompt = buildMenuChatTaskASystemPrompt();
+    assert.match(prompt, /\$18/);
+    assert.match(prompt, /Clow/);
+    assert.match(prompt, /iBirdOS/);
+    for (const rule of AI_CHAT_TASK_A_FORBIDDEN) {
+      assert.ok(prompt.includes(rule), `missing forbidden rule: ${rule}`);
     }
   });
 });

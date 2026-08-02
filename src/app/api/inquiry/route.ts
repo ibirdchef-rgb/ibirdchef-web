@@ -6,38 +6,18 @@ import {
   forwardInquiryToClow,
   logClowForwardResult,
 } from "@/lib/clow-intake";
+import {
+  eventCategoryLabel,
+  parseEventInquiry,
+  validateEventInquiry,
+  type EventInquiry,
+} from "@/lib/event-inquiry";
+import {
+  buildIBirdOsCostingRequest,
+  forwardInquiryToIBirdOs,
+} from "@/lib/ibirdos-intake";
 
 export const runtime = "nodejs";
-
-const MAX_LENGTH = {
-  name: 120,
-  email: 254,
-  phone: 40,
-  eventDate: 40,
-  guestCount: 20,
-  eventLocation: 200,
-  serviceType: 80,
-  estimatedBudget: 80,
-  dietaryNeeds: 500,
-  message: 4000,
-} as const;
-
-type InquiryBody = {
-  name: string;
-  email: string;
-  phone: string;
-  eventDate: string;
-  guestCount: string;
-  eventLocation: string;
-  serviceType: string;
-  estimatedBudget: string;
-  dietaryNeeds: string;
-  message: string;
-};
-
-function asTrimmedString(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
-}
 
 function escapeHtml(value: string): string {
   return value
@@ -48,81 +28,27 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;");
 }
 
-function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function parseBody(raw: unknown): InquiryBody | null {
-  if (!raw || typeof raw !== "object") {
-    return null;
-  }
-
-  const data = raw as Record<string, unknown>;
-
-  return {
-    name: asTrimmedString(data.name),
-    email: asTrimmedString(data.email),
-    phone: asTrimmedString(data.phone),
-    eventDate: asTrimmedString(data.eventDate),
-    guestCount: asTrimmedString(data.guestCount),
-    eventLocation: asTrimmedString(data.eventLocation),
-    serviceType: asTrimmedString(data.serviceType),
-    estimatedBudget: asTrimmedString(data.estimatedBudget),
-    dietaryNeeds: asTrimmedString(data.dietaryNeeds),
-    message: asTrimmedString(data.message),
-  };
-}
-
-function validate(body: InquiryBody): string | null {
-  const required: Array<keyof InquiryBody> = [
-    "name",
-    "email",
-    "phone",
-    "eventDate",
-    "guestCount",
-    "eventLocation",
-    "serviceType",
-    "message",
-  ];
-
-  for (const field of required) {
-    if (!body[field]) {
-      return `Missing required field: ${field}`;
-    }
-  }
-
-  if (!isValidEmail(body.email)) {
-    return "Please provide a valid email address.";
-  }
-
-  const guestCount = Number(body.guestCount);
-  if (!Number.isFinite(guestCount) || guestCount < 1) {
-    return "Guest count must be a positive number.";
-  }
-
-  for (const [key, max] of Object.entries(MAX_LENGTH) as Array<
-    [keyof InquiryBody, number]
-  >) {
-    if (body[key].length > max) {
-      return `${key} is too long.`;
-    }
-  }
-
-  return null;
-}
-
-function buildEmailHtml(body: InquiryBody, submissionId: string): string {
+function buildEmailHtml(body: EventInquiry, submissionId: string): string {
   const rows: Array<[string, string]> = [
     ["Submission ID", submissionId],
     ["Name", body.name],
     ["Email", body.email],
     ["Phone", body.phone],
+    ["Event category", eventCategoryLabel(body.eventCategory)],
+    ["Event type", body.eventType],
     ["Event date", body.eventDate],
+    ["Event time", body.eventTime || "Not provided"],
     ["Guest count", body.guestCount],
     ["Event location", body.eventLocation],
+    ["Cuisine preference", body.cuisinePreference || "Not provided"],
+    ["Service style", body.serviceStyle || "Not provided"],
     ["Service type", body.serviceType],
     ["Estimated budget", body.estimatedBudget || "Not provided"],
     ["Dietary needs", body.dietaryNeeds || "Not provided"],
+    ["Lead source", body.leadSource || "Not provided"],
+    ["Page source", body.pageSource || "Not provided"],
+    ["Contact consent", body.contactConsent ? "Yes" : "No"],
+    ["SMS consent", body.smsConsent ? "Yes" : "No"],
     ["Message", body.message],
   ];
 
@@ -142,6 +68,35 @@ function buildEmailHtml(body: InquiryBody, submissionId: string): string {
   `;
 }
 
+function buildEmailText(body: EventInquiry, submissionId: string): string {
+  return [
+    "New catering inquiry",
+    "",
+    `Submission ID: ${submissionId}`,
+    `Name: ${body.name}`,
+    `Email: ${body.email}`,
+    `Phone: ${body.phone}`,
+    `Event category: ${eventCategoryLabel(body.eventCategory)}`,
+    `Event type: ${body.eventType}`,
+    `Event date: ${body.eventDate}`,
+    `Event time: ${body.eventTime || "Not provided"}`,
+    `Guest count: ${body.guestCount}`,
+    `Event location: ${body.eventLocation}`,
+    `Cuisine preference: ${body.cuisinePreference || "Not provided"}`,
+    `Service style: ${body.serviceStyle || "Not provided"}`,
+    `Service type: ${body.serviceType}`,
+    `Estimated budget: ${body.estimatedBudget || "Not provided"}`,
+    `Dietary needs: ${body.dietaryNeeds || "Not provided"}`,
+    `Lead source: ${body.leadSource || "Not provided"}`,
+    `Page source: ${body.pageSource || "Not provided"}`,
+    `Contact consent: ${body.contactConsent ? "Yes" : "No"}`,
+    `SMS consent: ${body.smsConsent ? "Yes" : "No"}`,
+    "",
+    "Message:",
+    body.message,
+  ].join("\n");
+}
+
 export async function POST(request: Request) {
   let json: unknown;
 
@@ -151,15 +106,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const body = parseBody(json);
-  if (!body) {
+  const parsed = parseEventInquiry(json);
+  if (!parsed) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const validationError = validate(body);
-  if (validationError) {
-    return NextResponse.json({ error: validationError }, { status: 400 });
+  const validation = validateEventInquiry(parsed);
+  if (!validation.ok) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
   }
+
+  const body = validation.inquiry;
 
   const apiKey = process.env.RESEND_API_KEY;
   const toEmail = process.env.INQUIRY_TO_EMAIL;
@@ -185,23 +142,7 @@ export async function POST(request: Request) {
       replyTo: body.email,
       subject: `Catering inquiry from ${body.name}`,
       html: buildEmailHtml(body, submissionId),
-      text: [
-        "New catering inquiry",
-        "",
-        `Submission ID: ${submissionId}`,
-        `Name: ${body.name}`,
-        `Email: ${body.email}`,
-        `Phone: ${body.phone}`,
-        `Event date: ${body.eventDate}`,
-        `Guest count: ${body.guestCount}`,
-        `Event location: ${body.eventLocation}`,
-        `Service type: ${body.serviceType}`,
-        `Estimated budget: ${body.estimatedBudget || "Not provided"}`,
-        `Dietary needs: ${body.dietaryNeeds || "Not provided"}`,
-        "",
-        "Message:",
-        body.message,
-      ].join("\n"),
+      text: buildEmailText(body, submissionId),
     });
 
     if (error) {
@@ -216,6 +157,17 @@ export async function POST(request: Request) {
       payload: buildClowInquiryPayload(body, submissionId),
     });
     logClowForwardResult(submissionId, clowResult);
+
+    // Prepare iBirdOS handoff shape; forwarding stays disabled until configured.
+    const ibirdOsResult = forwardInquiryToIBirdOs({
+      payload: buildIBirdOsCostingRequest(body, submissionId),
+    });
+    if (!ibirdOsResult.ok) {
+      console.info("iBirdOS intake not configured; costing handoff skipped", {
+        submissionId,
+        category: ibirdOsResult.category,
+      });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {
