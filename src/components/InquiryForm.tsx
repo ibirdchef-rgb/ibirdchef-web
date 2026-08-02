@@ -1,6 +1,14 @@
 "use client";
 
-import { FormEvent, Suspense, useId, useMemo, useState } from "react";
+import {
+ FormEvent,
+ Suspense,
+ useEffect,
+ useId,
+ useMemo,
+ useState,
+} from "react";
+
 import { useSearchParams } from "next/navigation";
 import { useRegion } from "@/components/RegionProvider";
 import {
@@ -115,7 +123,12 @@ function InquiryFormInner({
       return [] as string[];
     }
     return [...regions[serviceRegion].cities];
-  }, [serviceRegion]);
+}, [serviceRegion]);
+
+    useEffect(() => {
+    setEventCity("");
+    setCustomCity("");
+}, [serviceRegion]);
 
   const showOutsideMessage =
     Boolean(serviceRegion) &&
