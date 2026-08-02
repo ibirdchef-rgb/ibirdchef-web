@@ -27,12 +27,15 @@ const sampleInquiry: EventInquiry = emptyEventInquiry({
   name: "Alex Client",
   email: "alex@example.com",
   phone: "(425) 555-0100",
+  serviceRegion: "seattle",
   eventCategory: "corporate",
   eventType: "Workplace lunch",
   eventDate: "2026-09-15",
   eventTime: "12:00",
   guestCount: "40",
-  eventLocation: "Bellevue",
+  eventCity: "Bellevue",
+  venueOrZip: "98004",
+  eventLocation: "Bellevue · 98004",
   cuisinePreference: "South Asian",
   serviceStyle: "Boxed meals",
   serviceType: "Corporate Catering",
@@ -61,9 +64,12 @@ describe("CLOW inquiry intake wiring", () => {
   it("maps validated inquiry fields into the CLOW payload", () => {
     const payload = buildClowInquiryPayload(sampleInquiry, "web_sub_123");
     assert.equal(payload.submissionId, "web_sub_123");
+    assert.equal(payload.serviceRegion, "seattle");
     assert.equal(payload.eventCategory, "corporate");
     assert.equal(payload.eventType, "Workplace lunch");
     assert.equal(payload.eventTime, "12:00");
+    assert.equal(payload.eventCity, "Bellevue");
+    assert.equal(payload.venueOrZip, "98004");
     assert.equal(payload.leadSource, "Website");
     assert.equal(payload.contactConsent, true);
     assert.equal(payload.smsConsent, false);
@@ -149,10 +155,20 @@ describe("Shared event inquiry and iBirdOS preparation", () => {
     assert.equal(result.ok, false);
   });
 
+  it("requires a service region before accepting an inquiry", () => {
+    const result = validateEventInquiry({
+      ...sampleInquiry,
+      serviceRegion: "",
+    });
+    assert.equal(result.ok, false);
+  });
+
   it("builds an iBirdOS costing request without inventing costs", () => {
     const payload = buildIBirdOsCostingRequest(sampleInquiry, "web_sub_456");
     assert.equal(payload.workflowStage, "pending_costing");
     assert.equal(payload.event.guestCount, "40");
+    assert.equal(payload.event.region, "seattle");
+    assert.equal(payload.event.city, "Bellevue");
     assert.ok(payload.costingChecklist.includes("labor"));
     assert.equal(forwardInquiryToIBirdOs({ payload }).ok, false);
   });

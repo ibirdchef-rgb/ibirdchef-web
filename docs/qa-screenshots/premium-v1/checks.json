@@ -1,0 +1,32 @@
+{
+  "checks": {
+    "greaterSeattle": true,
+    "bayArea": true,
+    "comingSoon": false,
+    "noHaywardStreet": true,
+    "planningLanguage": true,
+    "seasonalPrice": true
+  },
+  "screenshots": [
+    "docs\\qa-screenshots\\premium-v1\\home-390.png",
+    "docs\\qa-screenshots\\premium-v1\\home-768.png",
+    "docs\\qa-screenshots\\premium-v1\\home-1024.png",
+    "docs\\qa-screenshots\\premium-v1\\home-1280.png",
+    "docs\\qa-screenshots\\premium-v1\\home-1440.png",
+    "docs\\qa-screenshots\\premium-v1\\seattle-390.png",
+    "docs\\qa-screenshots\\premium-v1\\seattle-768.png",
+    "docs\\qa-screenshots\\premium-v1\\seattle-1024.png",
+    "docs\\qa-screenshots\\premium-v1\\seattle-1280.png",
+    "docs\\qa-screenshots\\premium-v1\\seattle-1440.png",
+    "docs\\qa-screenshots\\premium-v1\\bay-area-390.png",
+    "docs\\qa-screenshots\\premium-v1\\bay-area-768.png",
+    "docs\\qa-screenshots\\premium-v1\\bay-area-1024.png",
+    "docs\\qa-screenshots\\premium-v1\\bay-area-1280.png",
+    "docs\\qa-screenshots\\premium-v1\\bay-area-1440.png",
+    "docs\\qa-screenshots\\premium-v1\\private-events-390.png",
+    "docs\\qa-screenshots\\premium-v1\\private-events-768.png",
+    "docs\\qa-screenshots\\premium-v1\\private-events-1024.png",
+    "docs\\qa-screenshots\\premium-v1\\private-events-1280.png",
+    "docs\\qa-screenshots\\premium-v1\\private-events-1440.png"
+  ]
+}

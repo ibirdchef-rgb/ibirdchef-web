@@ -16,6 +16,9 @@ export type IBirdOsCostingRequest = {
     type: string;
     date: string;
     time: string;
+    region: EventInquiry["serviceRegion"];
+    city: string;
+    venueOrZip: string;
     location: string;
     guestCount: string;
     cuisinePreference: string;
@@ -70,6 +73,9 @@ export function buildIBirdOsCostingRequest(
       type: inquiry.eventType,
       date: inquiry.eventDate,
       time: inquiry.eventTime,
+      region: inquiry.serviceRegion,
+      city: inquiry.eventCity,
+      venueOrZip: inquiry.venueOrZip,
       location: inquiry.eventLocation,
       guestCount: inquiry.guestCount,
       cuisinePreference: inquiry.cuisinePreference,

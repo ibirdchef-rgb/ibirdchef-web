@@ -10,6 +10,13 @@
   --bronze: #b8892d;
   --bronze-dark: #8a6420;
   --ink-muted: #5a4f45;
+  --pacific: #1f3d32;
+  --pacific-soft: #dfe8e2;
+  --california: #c48a4a;
+  --california-soft: #f3e6d4;
+  --surface-elevated: rgba(255, 250, 242, 0.88);
+  --motion-fast: 180ms;
+  --motion-medium: 320ms;
 }
 
 @theme inline {
@@ -28,4 +35,53 @@ body {
 :focus-visible {
   outline: 2px solid var(--bronze);
   outline-offset: 2px;
+}
+
+.texture-ivory {
+  background-color: var(--ivory);
+  background-image:
+    radial-gradient(ellipse at top, rgba(184, 137, 45, 0.08), transparent 55%),
+    linear-gradient(180deg, rgba(255, 250, 242, 0.9), rgba(247, 241, 232, 1));
+}
+
+.texture-pacific {
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(31, 61, 50, 0.12), transparent 42%),
+    linear-gradient(160deg, #f4f7f5 0%, var(--ivory) 55%, #eef2ef 100%);
+}
+
+.texture-california {
+  background-image:
+    radial-gradient(circle at 88% 12%, rgba(196, 138, 74, 0.16), transparent 40%),
+    linear-gradient(165deg, #fff8ef 0%, var(--ivory) 50%, #f6ebe0 100%);
+}
+
+.reveal-up {
+  animation: reveal-up var(--motion-medium) ease-out both;
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-up {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
