@@ -15,6 +15,8 @@ export const AVAILABILITY_SAFE_RESPONSE =
 export const DIETARY_CONFIRMATION_NOTICE =
   "Dietary and allergen requirements are recorded for planning and require culinary confirmation before service.";
 
+export { CONTACT_PRIVACY_NOTICE } from "@/lib/concierge/contact";
+
 export type ConciergeTurnRole = "assistant" | "customer" | "system";
 
 export type ConciergeMessage = {
@@ -56,6 +58,7 @@ export type ConciergeSlots = {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
+  phoneSkipped: boolean;
 };
 
 export type ConciergePhase =

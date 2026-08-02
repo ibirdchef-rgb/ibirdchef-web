@@ -83,17 +83,27 @@ function preferredCategories(slots: ConciergeSlots): PublicMenuCategoryId[] {
   ];
 }
 
+function isRiceOrBiryani(item: CuratedMenuItem): boolean {
+  return item.categoryId === "rice-biryani";
+}
+
 /**
  * Recommend only from the approved public curated menu.
  * Never invent dishes, ingredients, dietary claims, or prices.
+ * At most one rice/biryani is suggested unless labeled as an alternative.
  */
 export function recommendApprovedDishes(
   slots: ConciergeSlots,
   limit = 6,
 ): ConciergeMenuSuggestion[] {
   const selected = new Set(slots.selectedDishIds);
+  const selectedHasRice = slots.selectedDishIds.some((id) => {
+    const item = curatedMenuItems.find((entry) => entry.id === id);
+    return item ? isRiceOrBiryani(item) : false;
+  });
   const categories = preferredCategories(slots);
   const suggestions: ConciergeMenuSuggestion[] = [];
+  let riceIncluded = selectedHasRice;
 
   for (const categoryId of categories) {
     const pool = curatedMenuItems.filter(
@@ -102,13 +112,16 @@ export function recommendApprovedDishes(
         !selected.has(item.id) &&
         matchesCuisine(item, slots.cuisinePreference),
     );
-    for (const item of pool.slice(0, 2)) {
-      suggestions.push(
-        toSuggestion(
-          item,
-          `Approved ${PUBLIC_MENU_CATEGORY_LABELS[item.categoryId]} option for a balanced event menu.`,
-        ),
-      );
+
+    // One rice/biryani max in a recommendation set (competing options need an alternative note).
+    const take = categoryId === "rice-biryani" ? (riceIncluded ? 0 : 1) : 2;
+    for (const item of pool.slice(0, take)) {
+      const reason =
+        categoryId === "rice-biryani"
+          ? "Rice or biryani option for a balanced menu. Other rice dishes are alternatives if you prefer a different style."
+          : `${PUBLIC_MENU_CATEGORY_LABELS[item.categoryId]} option for a balanced event menu.`;
+      suggestions.push(toSuggestion(item, reason));
+      if (isRiceOrBiryani(item)) riceIncluded = true;
       if (suggestions.length >= limit) {
         return suggestions;
       }
@@ -120,12 +133,16 @@ export function recommendApprovedDishes(
       if (selected.has(item.id)) continue;
       if (!matchesCuisine(item, slots.cuisinePreference)) continue;
       if (suggestions.some((entry) => entry.id === item.id)) continue;
+      if (isRiceOrBiryani(item) && riceIncluded) continue;
       suggestions.push(
         toSuggestion(
           item,
-          `Approved menu selection that can complement your current plan.`,
+          isRiceOrBiryani(item)
+            ? "Rice or biryani option for a balanced menu. Other rice dishes are alternatives if you prefer a different style."
+            : "Menu selection that can complement your current plan.",
         ),
       );
+      if (isRiceOrBiryani(item)) riceIncluded = true;
       if (suggestions.length >= limit) break;
     }
   }

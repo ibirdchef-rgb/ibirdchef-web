@@ -128,6 +128,7 @@ describe("AI catering concierge phase 1", () => {
         customerName: "",
         customerEmail: "",
         customerPhone: "",
+        phoneSkipped: false,
       },
       6,
     );
@@ -138,8 +139,24 @@ describe("AI catering concierge phase 1", () => {
       assert.ok(curatedMenuItems.some((item) => item.name === suggestion.name));
     }
 
+    const riceSuggestions = suggestions.filter(
+      (item) => item.categoryId === "rice-biryani",
+    );
+    assert.ok(riceSuggestions.length <= 1);
+    if (riceSuggestions[0]) {
+      assert.match(riceSuggestions[0].reason, /alternative/i);
+    }
+
     assert.equal(findApprovedDishesByText("Invented Magical Curry").length, 0);
     assert.ok(findApprovedDishesByText("Butter Chicken").length >= 1);
+  });
+
+  it("keeps Kadhai Paneer Sunchoke as an approved menu item", () => {
+    const dish = curatedMenuItems.find(
+      (item) => item.id === "kadhai-paneer-sunchoke",
+    );
+    assert.ok(dish);
+    assert.equal(dish?.name, "Kadhai Paneer Sunchoke");
   });
 
   it("supports multi-item selection without replacing prior dishes", () => {
@@ -212,20 +229,24 @@ describe("AI catering concierge phase 1", () => {
     session = selectDish(session, "garlic-naan").session;
     session = selectDish(session, "saffron-rice-kheer").session;
 
-    session = processConciergeMessage(
-      session,
-      "Alex Customer, alex@example.com, 425-555-0100",
-    ).session;
+    session = processConciergeMessage(session, "Alex Customer").session;
+    session = processConciergeMessage(session, "alex@example.com").session;
+    const phoneTurn = processConciergeMessage(session, "425-555-0100");
+    session = phoneTurn.session;
 
-    // Fill contact fields if still split across questions.
-    if (!session.slots.customerName) {
-      session = processConciergeMessage(session, "Alex Customer").session;
+    assert.equal(session.slots.customerEmail, "alex@example.com");
+    assert.equal(session.phase, "summary");
+    assert.match(phoneTurn.assistantReply, /Review My Event/i);
+    assert.doesNotMatch(phoneTurn.assistantReply, /alex@example\.com/);
+    assert.doesNotMatch(phoneTurn.assistantReply, /425-555-0100/);
+
+    for (const event of session.auditTrail) {
+      assert.doesNotMatch(event.detail, /alex@example\.com/);
+      assert.doesNotMatch(event.detail, /425-555-0100/);
     }
-    if (!session.slots.customerEmail) {
-      session = processConciergeMessage(session, "alex@example.com").session;
-    }
-    if (!session.slots.customerPhone) {
-      session = processConciergeMessage(session, "425-555-0100").session;
+    for (const message of session.messages) {
+      assert.doesNotMatch(message.content, /alex@example\.com/);
+      assert.doesNotMatch(message.content, /425-555-0100/);
     }
 
     const submitted = submitConciergeInquiry(session);
@@ -238,6 +259,7 @@ describe("AI catering concierge phase 1", () => {
     assert.match(submitted.assistantReply, /inquiry form/i);
     assert.match(submitted.assistantReply, /not Chef Simbu/i);
     assert.ok(submitted.session.inquiryHref?.includes("askDishes="));
+    assert.doesNotMatch(submitted.session.inquiryHref ?? "", /alex@|425-555|@example/);
     assert.ok(
       submitted.session.auditTrail.some(
         (event) =>
@@ -251,6 +273,31 @@ describe("AI catering concierge phase 1", () => {
       ),
     );
     assert.doesNotMatch(submitted.assistantReply, /booking confirmed/i);
+  });
+
+  it("allows skipping phone and still reaches the event summary", () => {
+    let session = createConciergeSession();
+    const turns = [
+      "Corporate team lunch",
+      "40 people",
+      "Bellevue, Seattle Area",
+      "Buffet",
+      "October 10, 2026 at 12pm",
+      "About $25 per person",
+      "Indian",
+      "None",
+      "Delivery only",
+    ];
+    for (const turn of turns) {
+      session = processConciergeMessage(session, turn).session;
+    }
+    session = selectDish(session, "butter-chicken").session;
+    session = processConciergeMessage(session, "Alex Customer").session;
+    session = processConciergeMessage(session, "alex@example.com").session;
+    const skipped = processConciergeMessage(session, "skip");
+    assert.equal(skipped.session.slots.phoneSkipped, true);
+    assert.equal(skipped.session.phase, "summary");
+    assert.match(skipped.assistantReply, /Review My Event/i);
   });
 
   it("explains dietary confirmation is required", () => {

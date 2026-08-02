@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test src/lib/clow-intake.test.ts src/lib/curated-menu.test.ts src/lib/quote-approval-workflow.test.ts src/lib/concierge/engine.test.ts"
+    "test": "tsx --test src/lib/clow-intake.test.ts src/lib/curated-menu.test.ts src/lib/quote-approval-workflow.test.ts src/lib/concierge/engine.test.ts src/lib/concierge/contact.test.ts"
   },
   "dependencies": {
     "next": "16.2.12",

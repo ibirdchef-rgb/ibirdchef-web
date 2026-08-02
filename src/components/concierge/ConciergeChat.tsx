@@ -2,7 +2,14 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import {
+  CONTACT_PRIVACY_NOTICE,
+  contactFieldError,
+  inputConfigForContactField,
+  maskContactText,
+} from "@/lib/concierge/contact";
+import {
   createConciergeSession,
+  getActiveContactField,
   getRecommendationCards,
   processConciergeMessage,
   removeDish,
@@ -10,6 +17,7 @@ import {
   submitConciergeInquiry,
 } from "@/lib/concierge/engine";
 import { listSelectedDishNames } from "@/lib/concierge/menu-retrieval";
+import { missingSlotKeys } from "@/lib/concierge/slots";
 import type { ConciergeSession } from "@/lib/concierge/types";
 import { openInquiryFormSection } from "@/lib/inquiry-form-gate";
 
@@ -52,18 +60,20 @@ function ActionButtons({
   hasReviewed,
   inquiryHref,
   onReview,
+  reviewPrimary,
 }: {
   hasReviewed: boolean;
   inquiryHref?: string;
   onReview: () => void;
+  reviewPrimary?: boolean;
 }) {
+  const reviewClass = reviewPrimary
+    ? "inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--bronze-dark)] px-5 text-sm font-semibold text-white transition hover:bg-[var(--bronze)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--bronze-dark)]"
+    : "inline-flex min-h-10 items-center justify-center rounded-full bg-[var(--bronze-dark)] px-4 text-xs font-semibold text-white transition hover:bg-[var(--bronze)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--bronze-dark)]";
+
   return (
     <div className="flex flex-wrap gap-2">
-      <button
-        type="button"
-        onClick={onReview}
-        className="inline-flex min-h-10 items-center justify-center rounded-full bg-[var(--bronze-dark)] px-4 text-xs font-semibold text-white transition hover:bg-[var(--bronze)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--bronze-dark)]"
-      >
+      <button type="button" onClick={onReview} className={reviewClass}>
         Review My Event
       </button>
       {hasReviewed && inquiryHref ? (
@@ -91,6 +101,7 @@ export default function ConciergeChat() {
     createConciergeSession(),
   );
   const [input, setInput] = useState("");
+  const [inlineError, setInlineError] = useState<string | null>(null);
 
   const recommendations = useMemo(
     () => getRecommendationCards(session),
@@ -100,7 +111,16 @@ export default function ConciergeChat() {
   const selectedCount = session.slots.selectedDishIds.length;
   const hasRecommendations = recommendations.length > 0;
   const hasReviewed = Boolean(session.inquiryHref);
-  const showExpandedPanel = selectedCount > 0 || hasRecommendations || hasReviewed;
+  const awaitingSummary =
+    session.phase === "summary" || session.phase === "ready_to_submit";
+  const showExpandedPanel =
+    selectedCount > 0 || hasRecommendations || hasReviewed || awaitingSummary;
+
+  const contactField =
+    missingSlotKeys(session.slots)[0] === "contact"
+      ? getActiveContactField(session.slots)
+      : null;
+  const inputConfig = inputConfigForContactField(contactField);
 
   function applyResult(result: { session: ConciergeSession }) {
     setSession(result.session);
@@ -108,8 +128,26 @@ export default function ConciergeChat() {
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!input.trim()) return;
-    const result = processConciergeMessage(session, input);
+    const value = input.trim();
+    if (!value && !(contactField === "phone")) return;
+
+    if (contactField) {
+      const error = contactFieldError(contactField, value);
+      if (error) {
+        setInlineError(error);
+        return;
+      }
+    }
+
+    setInlineError(null);
+    const result = processConciergeMessage(session, value || "skip");
+    setInput("");
+    applyResult(result);
+  }
+
+  function handleSkipPhone() {
+    setInlineError(null);
+    const result = processConciergeMessage(session, "skip");
     setInput("");
     applyResult(result);
   }
@@ -165,7 +203,9 @@ export default function ConciergeChat() {
                 <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] opacity-70">
                   {message.role === "customer" ? "You" : "iBirdChef Concierge"}
                 </p>
-                <p className="mt-1 whitespace-pre-wrap">{message.content}</p>
+                <p className="mt-1 whitespace-pre-wrap">
+                  {maskContactText(message.content)}
+                </p>
               </div>
             ))}
           </div>
@@ -174,15 +214,44 @@ export default function ConciergeChat() {
             onSubmit={handleSubmit}
             className="border-t border-white/10 px-6 py-4 sm:px-8"
           >
+            {contactField ? (
+              <p className="mb-3 text-xs leading-5 text-white/70">
+                {CONTACT_PRIVACY_NOTICE}
+              </p>
+            ) : null}
             <label htmlFor="concierge-input" className="sr-only">
-              Message the concierge
+              {inputConfig.label}
             </label>
             <div className="flex flex-col gap-3 sm:flex-row">
               <input
                 id="concierge-input"
+                type={inputConfig.type}
                 value={input}
-                onChange={(event) => setInput(event.target.value)}
-                placeholder="Tell me about your event…"
+                onChange={(event) => {
+                  setInput(event.target.value);
+                  if (inlineError) setInlineError(null);
+                }}
+                placeholder={inputConfig.placeholder}
+                autoComplete={
+                  contactField === "email"
+                    ? "email"
+                    : contactField === "phone"
+                      ? "tel"
+                      : contactField === "name"
+                        ? "name"
+                        : "off"
+                }
+                inputMode={
+                  contactField === "email"
+                    ? "email"
+                    : contactField === "phone"
+                      ? "tel"
+                      : "text"
+                }
+                aria-invalid={inlineError ? true : undefined}
+                aria-describedby={
+                  inlineError ? "concierge-input-error" : undefined
+                }
                 className="min-h-12 flex-1 rounded-full border border-white/20 bg-white/10 px-5 text-sm text-white outline-none placeholder:text-white/50 focus:border-[var(--bronze)] focus:ring-2 focus:ring-[var(--bronze)]/40"
               />
               <button
@@ -192,6 +261,24 @@ export default function ConciergeChat() {
                 Send
               </button>
             </div>
+            {contactField === "phone" ? (
+              <button
+                type="button"
+                onClick={handleSkipPhone}
+                className="mt-3 text-xs font-semibold text-white/80 underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                Skip phone — prefer email
+              </button>
+            ) : null}
+            {inlineError ? (
+              <p
+                id="concierge-input-error"
+                role="alert"
+                className="mt-2 text-sm text-[var(--bronze)]"
+              >
+                {inlineError}
+              </p>
+            ) : null}
           </form>
         </div>
 
@@ -218,6 +305,7 @@ export default function ConciergeChat() {
                 hasReviewed={hasReviewed}
                 inquiryHref={session.inquiryHref}
                 onReview={handleReviewEvent}
+                reviewPrimary={awaitingSummary}
               />
             ) : null}
           </div>
@@ -232,7 +320,7 @@ export default function ConciergeChat() {
               {hasRecommendations ? (
                 <div>
                   <h3 className="font-serif text-xl font-semibold text-[var(--navy)]">
-                    Suggested for your event
+                    You may also like.
                   </h3>
                   <p className="mt-1 text-xs leading-5 text-[var(--ink-muted)]">
                     Suggestions only—add a dish to include it in your inquiry.
@@ -256,6 +344,12 @@ export default function ConciergeChat() {
                           <p className="mt-1 text-xs font-semibold text-[var(--bronze-dark)]">
                             {item.pricingLabel}
                           </p>
+                          {item.categoryId === "rice-biryani" ? (
+                            <p className="mt-1 text-xs leading-5 text-[var(--ink-muted)]">
+                              Alternative rice options are available if you
+                              prefer a different style.
+                            </p>
+                          ) : null}
                           <button
                             type="button"
                             disabled={selected}
@@ -273,16 +367,24 @@ export default function ConciergeChat() {
                 </div>
               ) : null}
 
-              <div className="rounded-xl border border-[var(--navy)]/10 bg-white p-3">
+              <div
+                className={`rounded-xl border p-3 ${
+                  awaitingSummary || hasReviewed
+                    ? "border-[var(--bronze)] bg-white"
+                    : "border-[var(--navy)]/10 bg-white"
+                }`}
+              >
                 <p className="text-sm leading-6 text-[var(--ink-muted)]">
-                  When your details look right, review your event, then continue
-                  to the inquiry form to send it to our team.
+                  {awaitingSummary || hasReviewed
+                    ? "Your event summary is ready. Review My Event is the next step before the inquiry form."
+                    : "When your details look right, review your event, then continue to the inquiry form to send it to our team."}
                 </p>
                 <div className="mt-3">
                   <ActionButtons
                     hasReviewed={hasReviewed}
                     inquiryHref={session.inquiryHref}
                     onReview={handleReviewEvent}
+                    reviewPrimary={awaitingSummary || !hasReviewed}
                   />
                 </div>
               </div>

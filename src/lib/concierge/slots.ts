@@ -1,3 +1,4 @@
+import type { ContactField } from "@/lib/concierge/contact";
 import type { EventCategory } from "@/lib/event-inquiry";
 import type { ServiceRegion } from "@/lib/regions";
 import type { ConciergeServicePreference, ConciergeSlots } from "@/lib/concierge/types";
@@ -27,6 +28,7 @@ export function emptyConciergeSlots(
     customerName: "",
     customerEmail: "",
     customerPhone: "",
+    phoneSkipped: false,
     ...overrides,
   };
 }
@@ -145,10 +147,20 @@ export function missingSlotKeys(slots: ConciergeSlots): SlotKey[] {
     missing.push("operationalNeeds");
   }
   if (slots.selectedDishIds.length === 0) missing.push("selectedDishes");
-  if (!slots.customerName || !slots.customerEmail || !slots.customerPhone) {
+  // Phone is optional; name + email qualify the inquiry contact step.
+  if (!slots.customerName || !slots.customerEmail) {
+    missing.push("contact");
+  } else if (!slots.customerPhone && !slots.phoneSkipped) {
     missing.push("contact");
   }
   return missing;
+}
+
+export function getActiveContactField(slots: ConciergeSlots): ContactField | null {
+  if (!slots.customerName) return "name";
+  if (!slots.customerEmail) return "email";
+  if (!slots.customerPhone && !slots.phoneSkipped) return "phone";
+  return null;
 }
 
 export function questionForSlot(key: SlotKey, slots: ConciergeSlots): string {
@@ -175,14 +187,16 @@ export function questionForSlot(key: SlotKey, slots: ConciergeSlots): string {
       return "Will you need delivery, on-site setup, staffing, rentals, or equipment support?";
     case "selectedDishes":
       return "I can suggest a balanced menu from our menu. Would you like recommendations for entrées, sides, rice, breads, and dessert—or do you already have dishes in mind?";
-    case "contact":
-      if (!slots.customerName) {
-        return "What name should Chef Simbu’s team use for follow-up?";
+    case "contact": {
+      const field = getActiveContactField(slots);
+      if (field === "name") {
+        return "What name should our team use for follow-up?";
       }
-      if (!slots.customerEmail) {
+      if (field === "email") {
         return "What email should we use for the inquiry follow-up?";
       }
-      return "What phone number is best for coordination?";
+      return "What phone number is best for coordinating your event? You may skip this if you prefer email.";
+    }
     default: {
       const _exhaustive: never = key;
       return _exhaustive;

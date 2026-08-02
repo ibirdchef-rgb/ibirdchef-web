@@ -11,6 +11,15 @@ import {
   type QuoteIntake,
 } from "@/lib/quote-draft";
 import {
+  CONTACT_PRIVACY_NOTICE,
+  contactFieldError,
+  formatMaskedContactLine,
+  isValidEmail,
+  isValidPhone,
+  maskContactText,
+  wantsToSkipPhone,
+} from "@/lib/concierge/contact";
+import {
   AVAILABILITY_SAFE_RESPONSE,
   CONCIERGE_WELCOME,
   DIETARY_CONFIRMATION_NOTICE,
@@ -25,6 +34,7 @@ import {
   emptyConciergeSlots,
   extractEmail,
   extractPhone,
+  getActiveContactField,
   inferEventCategory,
   inferRegionFromLocation,
   looksLikeName,
@@ -41,6 +51,8 @@ import {
   listSelectedDishNames,
   recommendApprovedDishes,
 } from "@/lib/concierge/menu-retrieval";
+
+export { getActiveContactField } from "@/lib/concierge/slots";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -343,7 +355,7 @@ function summarizeEvent(slots: ConciergeSlots): string {
     `• Dietary: ${slots.dietaryRequirements || "None noted yet"}`,
     `• Operations: ${ops.length ? ops.join(", ") : "Pending"}`,
     `• Confirmed dish selections: ${dishes.length ? dishes.join("; ") : "None yet"}`,
-    `• Contact: ${slots.customerName || "Name pending"}, ${slots.customerEmail || "email pending"}, ${slots.customerPhone || "phone pending"}`,
+    `• Contact: ${formatMaskedContactLine(slots)}`,
     "",
     "I can prepare this as an inquiry for the iBirdChef team. Availability and pricing are confirmed only after Chef Simbu reviews the event.",
   ].join("\n");
@@ -445,10 +457,15 @@ export function selectDish(
     "dish_selected",
     `Added approved dish: ${dish.name}`,
   );
+  const nextSlot = missingSlotKeys(slots)[0] ?? "contact";
+  const nextQuestion =
+    nextSlot === "contact"
+      ? [questionForSlot("contact", slots), CONTACT_PRIVACY_NOTICE].join("\n\n")
+      : questionForSlot(nextSlot, slots);
   const reply = composeReply(
     `Added ${dish.name} to your inquiry selections.`,
     buildBalancedMenuNote(slots),
-    questionForSlot(missingSlotKeys(slots)[0] ?? "contact", slots),
+    nextQuestion,
   );
   next = pushMessage(next, "assistant", reply);
   next = pushAudit(next, "assistant_message", reply);
@@ -546,8 +563,46 @@ export function processConciergeMessage(
     };
   }
 
-  let next = pushMessage(session, "customer", text);
-  next = pushAudit(next, "customer_message", text);
+  const displayText = maskContactText(text);
+  let next = pushMessage(session, "customer", displayText);
+  next = pushAudit(next, "customer_message", displayText);
+
+  // Validate contact answers before mutating slots.
+  const contactFieldBefore = getActiveContactField(session.slots);
+  if (missingSlotKeys(session.slots)[0] === "contact" && contactFieldBefore) {
+    if (contactFieldBefore === "phone" && wantsToSkipPhone(text)) {
+      // Handled in slot capture below.
+    } else {
+      const error = contactFieldError(contactFieldBefore, text);
+      if (error) {
+        const reply = composeReply(error, questionForSlot("contact", session.slots));
+        next = pushMessage(next, "assistant", reply);
+        next = pushAudit(next, "assistant_message", maskContactText(reply));
+        return { session: next, assistantReply: reply };
+      }
+      if (contactFieldBefore === "email" && !extractEmail(text) && !isValidEmail(text)) {
+        const reply = composeReply(
+          "That email doesn’t look quite right. Please check it and try again.",
+          questionForSlot("contact", session.slots),
+        );
+        next = pushMessage(next, "assistant", reply);
+        return { session: next, assistantReply: reply };
+      }
+      if (
+        contactFieldBefore === "phone" &&
+        !wantsToSkipPhone(text) &&
+        !extractPhone(text) &&
+        !isValidPhone(text)
+      ) {
+        const reply = composeReply(
+          "That phone number doesn’t look quite right. Use a 10-digit number, or skip if you prefer email.",
+          questionForSlot("contact", session.slots),
+        );
+        next = pushMessage(next, "assistant", reply);
+        return { session: next, assistantReply: reply };
+      }
+    }
+  }
 
   if (wantsHuman(text)) {
     const reply =
@@ -702,11 +757,19 @@ export function processConciergeMessage(
       slots.equipmentNeeded = equipment ?? false;
     }
   } else if (activeKey === "contact") {
+    const field = getActiveContactField(slots);
+    if (field === "phone" && wantsToSkipPhone(text)) {
+      slots.phoneSkipped = true;
+    }
     const email = extractEmail(text);
     const phone = extractPhone(text);
-    if (email) slots.customerEmail = email;
-    if (phone) slots.customerPhone = phone;
-    if (!slots.customerName) {
+    if (field === "email") {
+      const candidate = email || (isValidEmail(text) ? text.trim() : "");
+      if (candidate) slots.customerEmail = candidate;
+    } else if (field === "phone") {
+      if (phone && isValidPhone(phone)) slots.customerPhone = phone;
+      else if (isValidPhone(text)) slots.customerPhone = text.trim();
+    } else if (field === "name") {
       const nameCandidate = text
         .replace(email, " ")
         .replace(phone, " ")
@@ -753,15 +816,24 @@ export function processConciergeMessage(
       "menu_recommended",
       `Recommended ${suggestions.length} menu dishes for customer review.`,
     );
+    const riceCount = suggestions.filter(
+      (item) => item.categoryId === "rice-biryani",
+    ).length;
     const lines = suggestions
       .map(
         (item, index) =>
           `${index + 1}. ${item.name} — ${item.categoryLabel} (${item.pricingLabel})`,
       )
       .join("\n");
+    const riceNote =
+      riceCount > 0
+        ? "I included one rice or biryani suggestion; other rice dishes are alternatives if you prefer a different style."
+        : "";
     const reply = composeReply(
       "Here are menu recommendations for a balanced plan. I will not replace any dishes you already chose unless you ask.",
-      lines || "I could not find additional matches in our menu for that preference.",
+      [lines || "I could not find additional matches in our menu for that preference.", riceNote]
+        .filter(Boolean)
+        .join("\n\n"),
       `${DIETARY_CONFIRMATION_NOTICE} Would you like to add any of these, or tell me specific dishes to include?`,
     );
     next = pushMessage(next, "assistant", reply);
@@ -782,13 +854,14 @@ export function processConciergeMessage(
     next = {
       ...next,
       phase: "summary",
+      pendingQuestionKeys: [],
     };
     const reply = composeReply(
       summarizeEvent(slots),
-      "If this looks right, choose “Review My Event” and then continue to the inquiry form. I will not send a quote or confirm a booking.",
+      "If this looks right, choose “Review My Event” as your next step, then continue to the inquiry form. I will not send a quote or confirm a booking.",
     );
     next = pushMessage(next, "assistant", reply);
-    next = pushAudit(next, "summary_shown", "Event summary shown.");
+    next = pushAudit(next, "summary_shown", "Event summary shown with masked contact details.");
     return { session: next, assistantReply: reply };
   }
 
@@ -817,6 +890,11 @@ export function processConciergeMessage(
     lead = `Understood. ${DIETARY_CONFIRMATION_NOTICE}`;
   } else if (missing[0] === "selectedDishes" && slots.selectedDishIds.length) {
     lead = buildBalancedMenuNote(slots);
+  } else if (missing[0] === "contact") {
+    lead = "Thanks—I've noted that.";
+    followUp = [questionForSlot("contact", slots), CONTACT_PRIVACY_NOTICE].join(
+      "\n\n",
+    );
   }
 
   const reply = composeReply(lead, followUp);
@@ -825,7 +903,7 @@ export function processConciergeMessage(
     pendingQuestionKeys: missing,
   };
   next = pushMessage(next, "assistant", reply);
-  next = pushAudit(next, "assistant_message", reply);
+  next = pushAudit(next, "assistant_message", maskContactText(reply));
   return { session: next, assistantReply: reply };
 }
 
