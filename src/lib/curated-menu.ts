@@ -948,25 +948,92 @@ export function getSeasonalBoxForItem(
 }
 
 export function buildAskAboutDishHref(item: CuratedMenuItem): string {
-  const params = new URLSearchParams({
-    askDish: item.name,
-    askCategory: PUBLIC_MENU_CATEGORY_LABELS[item.categoryId],
-  });
-  return `/?${params.toString()}#contact`;
+  return buildInquiryHrefForItemIds([item.id]);
+}
+
+export function buildInquiryHrefForItemIds(itemIds: readonly string[]): string {
+  const params = new URLSearchParams();
+  const uniqueIds = [...new Set(itemIds.filter(Boolean))];
+  if (uniqueIds.length === 1) {
+    const item = curatedMenuItems.find((entry) => entry.id === uniqueIds[0]);
+    if (item) {
+      params.set("askDish", item.name);
+      params.set("askCategory", PUBLIC_MENU_CATEGORY_LABELS[item.categoryId]);
+    }
+  } else if (uniqueIds.length > 1) {
+    params.set("askDishes", uniqueIds.join(","));
+  }
+  const query = params.toString();
+  return query ? `/?${query}#contact` : "/#contact";
+}
+
+export function resolveMenuItemsFromInquiryParams(input: {
+  askDish?: string | null;
+  askCategory?: string | null;
+  askDishes?: string | null;
+}): CuratedMenuItem[] {
+  const ids = (input.askDishes ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  if (ids.length) {
+    const byId = new Map(curatedMenuItems.map((item) => [item.id, item]));
+    return ids
+      .map((id) => byId.get(id))
+      .filter((item): item is CuratedMenuItem => Boolean(item));
+  }
+
+  const dishName = input.askDish?.trim();
+  if (!dishName) {
+    return [];
+  }
+  const match = curatedMenuItems.find(
+    (item) => item.name.toLowerCase() === dishName.toLowerCase(),
+  );
+  return match ? [match] : [];
 }
 
 export function buildDishInquiryMessage(
   dishName: string,
   categoryLabel: string,
 ): string {
+  return buildMultiDishInquiryMessage([
+    { name: dishName, categoryLabel },
+  ]);
+}
+
+export function buildMultiDishInquiryMessage(
+  dishes: readonly { name: string; categoryLabel: string }[],
+): string {
+  if (!dishes.length) {
+    return "";
+  }
+
+  if (dishes.length === 1) {
+    const only = dishes[0]!;
+    return [
+      `I would like to ask about this dish: ${only.name}.`,
+      `Menu category: ${only.categoryLabel}.`,
+      "",
+      "Please follow up with a custom, chef-approved proposal after reviewing our event details.",
+      "This inquiry is not a booking or price confirmation.",
+    ].join("\n");
+  }
+
   return [
-    `I would like to ask about this dish: ${dishName}.`,
-    `Menu category: ${categoryLabel}.`,
+    `I would like to ask about these ${dishes.length} menu selections:`,
+    ...dishes.map(
+      (dish, index) =>
+        `${index + 1}. ${dish.name} (${dish.categoryLabel})`,
+    ),
     "",
     "Please follow up with a custom, chef-approved proposal after reviewing our event details.",
     "This inquiry is not a booking or price confirmation.",
   ].join("\n");
 }
+
+export const MENU_INQUIRY_NOTICE =
+  "Menu selections, pricing and availability are confirmed after event review. Adding a dish to your inquiry does not create a booking.";
 
 export type MenuFilterState = {
   query: string;

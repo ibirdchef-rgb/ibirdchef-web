@@ -3,7 +3,11 @@
 import { FormEvent, Suspense, useId, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRegion } from "@/components/RegionProvider";
-import { buildDishInquiryMessage } from "@/lib/curated-menu";
+import {
+  PUBLIC_MENU_CATEGORY_LABELS,
+  buildMultiDishInquiryMessage,
+  resolveMenuItemsFromInquiryParams,
+} from "@/lib/curated-menu";
 import {
   BUDGET_RANGES,
   CORPORATE_EVENT_TYPES,
@@ -75,13 +79,30 @@ function InquiryFormInner({
   const [messageOverride, setMessageOverride] = useState<string | null>(null);
 
   const dishPrefill = useMemo(() => {
+    const resolved = resolveMenuItemsFromInquiryParams({
+      askDish: searchParams.get("askDish"),
+      askCategory: searchParams.get("askCategory"),
+      askDishes: searchParams.get("askDishes"),
+    });
+    if (resolved.length) {
+      return buildMultiDishInquiryMessage(
+        resolved.map((item) => ({
+          name: item.name,
+          categoryLabel: PUBLIC_MENU_CATEGORY_LABELS[item.categoryId],
+        })),
+      );
+    }
+
+    // Legacy single-dish query with an unknown/custom name.
     const askDish = searchParams.get("askDish")?.trim();
     if (!askDish) {
       return "";
     }
     const askCategory =
       searchParams.get("askCategory")?.trim() || "Curated menu";
-    return buildDishInquiryMessage(askDish, askCategory);
+    return buildMultiDishInquiryMessage([
+      { name: askDish, categoryLabel: askCategory },
+    ]);
   }, [searchParams]);
 
   const serviceRegion =

@@ -1,0 +1,57 @@
+[
+  {
+    "width": 390,
+    "hasNotice": true,
+    "noRepeatedPrefill": true,
+    "hasAddToInquiry": true,
+    "showing78": true,
+    "overflow": false,
+    "cols": 1,
+    "selectedCount": true,
+    "continueVisible": true
+  },
+  {
+    "width": 768,
+    "hasNotice": true,
+    "noRepeatedPrefill": true,
+    "hasAddToInquiry": true,
+    "showing78": true,
+    "overflow": false,
+    "cols": 2,
+    "selectedCount": true,
+    "continueVisible": true
+  },
+  {
+    "width": 1024,
+    "hasNotice": true,
+    "noRepeatedPrefill": true,
+    "hasAddToInquiry": true,
+    "showing78": true,
+    "overflow": false,
+    "cols": 2,
+    "selectedCount": true,
+    "continueVisible": true
+  },
+  {
+    "width": 1280,
+    "hasNotice": true,
+    "noRepeatedPrefill": true,
+    "hasAddToInquiry": true,
+    "showing78": true,
+    "overflow": false,
+    "cols": 3,
+    "selectedCount": true,
+    "continueVisible": true
+  },
+  {
+    "width": 1440,
+    "hasNotice": true,
+    "noRepeatedPrefill": true,
+    "hasAddToInquiry": true,
+    "showing78": true,
+    "overflow": false,
+    "cols": 3,
+    "selectedCount": true,
+    "continueVisible": true
+  }
+]

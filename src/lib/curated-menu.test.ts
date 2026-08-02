@@ -3,10 +3,13 @@ import { describe, it } from "node:test";
 import {
   PUBLIC_MENU_CATEGORIES,
   PUBLIC_MENU_ITEM_COUNT,
+  buildInquiryHrefForItemIds,
+  buildMultiDishInquiryMessage,
   curatedMenuItems,
   countByCategory,
   filterCuratedMenu,
   formatPricingLabel,
+  resolveMenuItemsFromInquiryParams,
 } from "@/lib/curated-menu";
 
 describe("curated menu V1", () => {
@@ -98,5 +101,34 @@ describe("curated menu V1", () => {
     });
     assert.equal(butter.length, 1);
     assert.equal(butter[0]?.name, "Butter Chicken");
+  });
+
+  it("supports multi-dish inquiry prefills without inventing items", () => {
+    const butter = curatedMenuItems.find((item) => item.id === "butter-chicken");
+    const shrimp = curatedMenuItems.find((item) => item.id === "tandoori-shrimp");
+    assert.ok(butter);
+    assert.ok(shrimp);
+
+    const href = buildInquiryHrefForItemIds([butter.id, shrimp.id]);
+    assert.match(href, /askDishes=/);
+    assert.match(href, /#contact$/);
+
+    const resolved = resolveMenuItemsFromInquiryParams({
+      askDishes: `${butter.id},${shrimp.id}`,
+    });
+    assert.equal(resolved.length, 2);
+    assert.equal(resolved[0]?.name, "Butter Chicken");
+    assert.equal(resolved[1]?.name, "Tandoori Shrimp");
+
+    const message = buildMultiDishInquiryMessage(
+      resolved.map((item) => ({
+        name: item.name,
+        categoryLabel: item.categoryId,
+      })),
+    );
+    assert.match(message, /these 2 menu selections/);
+    assert.match(message, /Butter Chicken/);
+    assert.match(message, /Tandoori Shrimp/);
+    assert.match(message, /not a booking or price confirmation/);
   });
 });

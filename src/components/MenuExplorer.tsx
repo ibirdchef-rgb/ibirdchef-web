@@ -4,16 +4,14 @@ import Link from "next/link";
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { useRegion } from "@/components/RegionProvider";
 import {
-  AVAILABILITY_NOTICE,
   DIETARY_ALLERGEN_NOTICE,
-  LIVE_STATION_NOTICE,
+  MENU_INQUIRY_NOTICE,
   PUBLIC_MENU_CATEGORIES,
   PUBLIC_MENU_CATEGORY_LABELS,
-  buildAskAboutDishHref,
+  buildInquiryHrefForItemIds,
   curatedMenuItems,
   filterCuratedMenu,
   formatPricingLabel,
-  getSeasonalBoxForItem,
   type CuratedMenuItem,
   type PublicMenuCategoryId,
 } from "@/lib/curated-menu";
@@ -27,109 +25,53 @@ import { formatBoxPrice } from "@/lib/menu";
 import { regions, type ServiceRegion } from "@/lib/regions";
 
 const selectClassName =
-  "min-h-12 w-full rounded-xl border border-[var(--navy)]/15 bg-white px-4 py-3 text-sm text-[var(--navy)] outline-none transition focus:border-[var(--bronze)] focus:ring-2 focus:ring-[var(--bronze)]/30";
+  "min-h-11 w-full rounded-xl border border-[var(--navy)]/15 bg-white px-3.5 py-2.5 text-sm text-[var(--navy)] outline-none transition focus:border-[var(--bronze)] focus:ring-2 focus:ring-[var(--bronze)]/30";
 
-function SeasonalBoxDetails({ item }: { item: CuratedMenuItem }) {
-  const box = getSeasonalBoxForItem(item);
-  if (!box) {
-    return null;
-  }
-
-  const veg = box.entrée.vegetarian;
-  const protein = box.entrée.protein;
-
-  return (
-    <div className="mt-3 space-y-3 text-sm leading-6 text-[var(--ink-muted)]">
-      <p>
-        16oz lunch box with rice, lentil, hot entrée, and side. Choose
-        vegetarian or protein when you inquire.
-      </p>
-      <dl className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <dt className="font-semibold text-[var(--navy)]">Rice</dt>
-          <dd>{box.rice}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold text-[var(--navy)]">Lentil</dt>
-          <dd>{box.lentil}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold text-[var(--navy)]">Side</dt>
-          <dd>{box.side}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold text-[var(--navy)]">Entrée choice</dt>
-          <dd>
-            <ul className="mt-1 list-disc space-y-1 pl-5">
-              <li>
-                Vegetarian: {veg.name}
-                {veg.includedInBoxPrice ? "" : " (priced separately)"}
-              </li>
-              <li>
-                Protein: {protein.name}
-                {protein.includedInBoxPrice ? "" : " (priced separately)"}
-              </li>
-            </ul>
-          </dd>
-        </div>
-      </dl>
-      {box.notes?.length ? (
-        <ul className="list-disc space-y-1 pl-5">
-          {box.notes.map((note) => (
-            <li key={note}>{note}</li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
-  );
+function pricingText(item: CuratedMenuItem): string {
+  return item.pricing === "seasonal_18"
+    ? formatBoxPrice(18)
+    : formatPricingLabel(item.pricing);
 }
 
-function MenuItemCard({ item }: { item: CuratedMenuItem }) {
-  const pricing = formatPricingLabel(item.pricing);
-  const askHref = buildAskAboutDishHref(item);
-  const isSeasonal = item.categoryId === "seasonal-boxed-lunches";
-  const isLive = item.categoryId === "live-cooking-stations";
-
+function MenuItemCard({
+  item,
+  selected,
+  onToggle,
+}: {
+  item: CuratedMenuItem;
+  selected: boolean;
+  onToggle: () => void;
+}) {
   return (
-    <article className="flex h-full flex-col border-t border-[var(--navy)]/10 pt-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--bronze-dark)]">
-            {PUBLIC_MENU_CATEGORY_LABELS[item.categoryId]}
-          </p>
-          <h3 className="mt-2 font-serif text-xl font-semibold text-[var(--navy)]">
-            {item.name}
-          </h3>
-        </div>
-        <p className="shrink-0 text-sm font-semibold text-[var(--bronze-dark)]">
-          {isSeasonal ? formatBoxPrice(18) : pricing}
-        </p>
-      </div>
-
-      {isSeasonal ? <SeasonalBoxDetails item={item} /> : null}
-
-      {item.publicNote ? (
-        <p className="mt-3 text-sm leading-6 text-[var(--ink-muted)]">
-          {item.publicNote}
-        </p>
-      ) : null}
-
-      {isLive ? (
-        <p className="mt-3 text-sm leading-6 text-[var(--ink-muted)]">
-          {LIVE_STATION_NOTICE}
-        </p>
-      ) : null}
-
-      <div className="mt-auto flex flex-wrap items-center gap-3 pt-5">
-        <Link
-          href={askHref}
-          className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--navy)] px-5 text-sm font-semibold text-white transition hover:bg-[var(--navy-deep)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--bronze-dark)]"
+    <article
+      className={`flex h-full flex-col rounded-2xl border bg-[var(--ivory-soft)]/90 p-4 shadow-[0_1px_0_rgba(6,43,53,0.04)] transition ${
+        selected
+          ? "border-[var(--bronze)] ring-1 ring-[var(--bronze)]/35"
+          : "border-[var(--navy)]/10"
+      }`}
+    >
+      <p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-[var(--bronze-dark)]">
+        {PUBLIC_MENU_CATEGORY_LABELS[item.categoryId]}
+      </p>
+      <h3 className="mt-2 font-serif text-lg font-semibold leading-snug text-[var(--navy)]">
+        {item.name}
+      </h3>
+      <p className="mt-2 text-sm font-semibold text-[var(--bronze-dark)]">
+        {pricingText(item)}
+      </p>
+      <div className="mt-auto pt-4">
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-pressed={selected}
+          className={`inline-flex min-h-10 w-full items-center justify-center rounded-full px-4 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--bronze-dark)] ${
+            selected
+              ? "border border-[var(--navy)]/20 bg-white text-[var(--navy)] hover:border-[var(--bronze)]"
+              : "bg-[var(--navy)] text-white hover:bg-[var(--navy-deep)]"
+          }`}
         >
-          Ask About This Dish
-        </Link>
-        <span className="text-xs leading-5 text-[var(--ink-muted)]">
-          Prefills an inquiry — not a booking or price confirmation.
-        </span>
+          {selected ? "Added — Remove" : "Add to Inquiry"}
+        </button>
       </div>
     </article>
   );
@@ -149,7 +91,7 @@ function FilterField({
       <label htmlFor={id} className="block text-sm font-semibold text-[var(--navy)]">
         {label}
       </label>
-      <div className="mt-2">{children}</div>
+      <div className="mt-1.5">{children}</div>
     </div>
   );
 }
@@ -168,6 +110,7 @@ export default function MenuExplorer() {
   const [eventCategory, setEventCategory] = useState<EventCategory | "all">(
     "all",
   );
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const effectiveRegion = region === "all" ? preferredRegion : region;
 
@@ -198,31 +141,45 @@ export default function MenuExplorer() {
     })).filter((group) => group.items.length > 0);
   }, [filtered]);
 
+  const selectedCount = selectedIds.length;
+  const inquiryHref = buildInquiryHrefForItemIds(selectedIds);
+
+  function toggleSelected(id: string) {
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((entry) => entry !== id)
+        : [...current, id],
+    );
+  }
+
   return (
     <section
       id="menu"
       className="border-y border-[var(--navy)]/10 texture-ivory"
       aria-labelledby="menu-heading"
     >
-      <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
+      <div className="mx-auto max-w-7xl px-6 py-14 lg:px-10 lg:py-16">
         <div className="max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze-dark)]">
             Curated Menu
           </p>
           <h2
             id="menu-heading"
-            className="mt-4 font-serif text-4xl font-semibold tracking-tight text-[var(--navy)] sm:text-5xl"
+            className="mt-3 font-serif text-4xl font-semibold tracking-tight text-[var(--navy)] sm:text-5xl"
           >
             A multi-cuisine menu for thoughtfully planned events.
           </h2>
-          <p className="mt-5 text-lg leading-8 text-[var(--ink-muted)]">
+          <p className="mt-4 text-lg leading-7 text-[var(--ink-muted)]">
             Explore seasonal boxed lunches, signature dishes, and live cooking
-            stations. Search and filter to shortlist ideas, then ask about a
-            dish to start a custom, chef-approved proposal.
+            stations. Add selections to one inquiry for a custom, chef-approved
+            proposal.
+          </p>
+          <p className="mt-4 max-w-3xl text-sm leading-6 text-[var(--navy)]">
+            {MENU_INQUIRY_NOTICE}
           </p>
         </div>
 
-        <div className="mt-10 grid gap-4 rounded-3xl border border-[var(--navy)]/10 bg-white/80 p-5 sm:p-6 lg:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-8 grid gap-3 rounded-2xl border border-[var(--navy)]/10 bg-white/80 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-5">
           <FilterField id={`${baseId}-search`} label="Search dishes">
             <input
               id={`${baseId}-search`}
@@ -294,9 +251,7 @@ export default function MenuExplorer() {
               id={`${baseId}-event-type`}
               value={eventCategory}
               onChange={(event) =>
-                setEventCategory(
-                  event.target.value as EventCategory | "all",
-                )
+                setEventCategory(event.target.value as EventCategory | "all")
               }
               className={selectClassName}
             >
@@ -310,7 +265,7 @@ export default function MenuExplorer() {
           </FilterField>
         </div>
 
-        <div className="mt-4 flex flex-col gap-2 text-sm leading-6 text-[var(--ink-muted)] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-[var(--navy)]/10 bg-white/70 px-4 py-3 text-sm leading-6 text-[var(--ink-muted)] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <p>
             Showing{" "}
             <span className="font-semibold text-[var(--navy)]">
@@ -328,12 +283,38 @@ export default function MenuExplorer() {
             ) : null}
             .
           </p>
-          <p className="font-medium text-[var(--navy)]">{AVAILABILITY_NOTICE}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p
+              className="font-semibold text-[var(--navy)]"
+              aria-live="polite"
+            >
+              {selectedCount === 0
+                ? "No dishes selected"
+                : `${selectedCount} ${selectedCount === 1 ? "dish" : "dishes"} selected`}
+            </p>
+            {selectedCount > 0 ? (
+              <>
+                <Link
+                  href={inquiryHref}
+                  className="inline-flex min-h-10 items-center justify-center rounded-full bg-[var(--bronze-dark)] px-5 text-sm font-semibold text-white transition hover:bg-[var(--bronze)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--bronze-dark)]"
+                >
+                  Continue to Inquiry
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds([])}
+                  className="text-sm font-semibold text-[var(--navy)] underline decoration-[var(--bronze)]/40 underline-offset-4 transition hover:decoration-[var(--bronze)]"
+                >
+                  Clear selection
+                </button>
+              </>
+            ) : null}
+          </div>
         </div>
 
-        <div className="mt-12 space-y-14">
+        <div className="mt-8 space-y-8">
           {grouped.length === 0 ? (
-            <p className="rounded-2xl border border-[var(--navy)]/10 bg-white/70 px-5 py-8 text-[var(--ink-muted)]">
+            <p className="rounded-2xl border border-[var(--navy)]/10 bg-white/70 px-5 py-6 text-[var(--ink-muted)]">
               No dishes match these filters. Clear search or broaden category,
               service style, or event type.
             </p>
@@ -343,21 +324,26 @@ export default function MenuExplorer() {
                 key={group.id}
                 aria-labelledby={`${baseId}-${group.id}-heading`}
               >
-                <div className="max-w-3xl border-b border-[var(--navy)]/15 pb-4">
+                <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--navy)]/12 pb-2">
                   <h3
                     id={`${baseId}-${group.id}-heading`}
-                    className="font-serif text-3xl font-semibold text-[var(--navy)]"
+                    className="font-serif text-2xl font-semibold text-[var(--navy)] sm:text-3xl"
                   >
                     {group.label}
                   </h3>
-                  <p className="mt-2 text-sm text-[var(--ink-muted)]">
+                  <p className="text-sm text-[var(--ink-muted)]">
                     {group.items.length}{" "}
                     {group.items.length === 1 ? "selection" : "selections"}
                   </p>
                 </div>
-                <div className="mt-2 grid gap-8 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {group.items.map((menuItem) => (
-                    <MenuItemCard key={menuItem.id} item={menuItem} />
+                    <MenuItemCard
+                      key={menuItem.id}
+                      item={menuItem}
+                      selected={selectedIds.includes(menuItem.id)}
+                      onToggle={() => toggleSelected(menuItem.id)}
+                    />
                   ))}
                 </div>
               </section>
@@ -365,23 +351,13 @@ export default function MenuExplorer() {
           )}
         </div>
 
-        <div className="mt-12 max-w-3xl space-y-4 text-sm leading-6 text-[var(--ink-muted)]">
+        <div className="mt-10 max-w-3xl space-y-3 text-sm leading-6 text-[var(--ink-muted)]">
           <p>
             Pricing shown applies only to seasonal boxed lunches at{" "}
             {formatBoxPrice(18)}. Other items use custom quote, market pricing,
-            or a chef-approved custom proposal. Final menus and pricing are
-            confirmed after event review.
+            or a chef-approved custom proposal.
           </p>
           <p>{DIETARY_ALLERGEN_NOTICE}</p>
-          <p>
-            <a
-              href="#contact"
-              className="font-semibold text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4 transition hover:decoration-[var(--bronze)]"
-            >
-              Send an inquiry
-            </a>{" "}
-            to share event details and receive a custom, chef-approved quote.
-          </p>
         </div>
       </div>
     </section>
