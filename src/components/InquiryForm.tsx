@@ -3,7 +3,6 @@
 import {
  FormEvent,
  Suspense,
- useEffect,
  useId,
  useMemo,
  useState,
@@ -125,10 +124,6 @@ function InquiryFormInner({
     return [...regions[serviceRegion].cities];
 }, [serviceRegion]);
 
-    useEffect(() => {
-    setEventCity("");
-    setCustomCity("");
-}, [serviceRegion]);
 
   const showOutsideMessage =
     Boolean(serviceRegion) &&
