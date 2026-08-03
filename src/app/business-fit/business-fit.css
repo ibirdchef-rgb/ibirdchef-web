@@ -1,0 +1,32 @@
+.ans-fit {
+  --ans-navy: #0b1f33;
+  --ans-navy-soft: #15304a;
+  --ans-gold: #b8892d;
+  --ans-gold-soft: #e8d7a8;
+  --ans-paper: #f5f7fa;
+  --ans-ink: #1a2433;
+  min-height: 100vh;
+  color: var(--ans-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  background:
+    radial-gradient(ellipse at top, rgba(184, 137, 45, 0.12), transparent 45%),
+    linear-gradient(180deg, #eef3f8 0%, #f5f7fa 40%, #e8eef5 100%);
+}
+
+.ans-fit .sans {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@media print {
+  .ans-fit {
+    background: white !important;
+  }
+
+  .ans-no-print {
+    display: none !important;
+  }
+
+  .ans-print-block {
+    break-inside: avoid;
+  }
+}

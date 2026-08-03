@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" role="img" aria-label="ANS Food Service OS">
+  <title>ANS Food Service OS</title>
+  <rect width="640" height="200" fill="none"/>
+  <text
+    x="320"
+    y="92"
+    text-anchor="middle"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="72"
+    font-weight="700"
+    letter-spacing="14"
+    fill="#0B1F33"
+  >ANS</text>
+  <line x1="190" y1="118" x2="450" y2="118" stroke="#B8892D" stroke-width="2"/>
+  <circle cx="320" cy="118" r="2.5" fill="#B8892D"/>
+  <text
+    x="320"
+    y="152"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="18"
+    font-weight="500"
+    letter-spacing="6"
+    fill="#0B1F33"
+  >FOOD SERVICE OS</text>
+</svg>
