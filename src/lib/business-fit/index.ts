@@ -4,9 +4,12 @@ export {
   type CompareConcept,
 } from "@/lib/business-fit/compare";
 export {
+  BUDGET_CATEGORY_NAMES,
   buildDataSources,
   buildEquipmentCategories,
+  buildInputSummary,
   buildLicensingChecklist,
+  buildNextStepGroups,
   buildNextSteps,
   estimateOpeningTimeline,
   estimateStartupBudget,
@@ -27,6 +30,7 @@ export {
   conceptCostMidThousands,
   fitBandForScore,
   scoreBusinessFit,
+  scoreInterpretation,
 } from "@/lib/business-fit/scoring";
 export {
   BUSINESS_TYPES,
@@ -36,6 +40,7 @@ export {
   INVESTMENT_BUDGETS,
   OWNER_EXPERIENCE,
   REPORT_VERSION,
+  SCORE_BAND_COPY,
   SERVICE_MODELS,
   type BusinessFitInput,
   type BusinessFitReport,

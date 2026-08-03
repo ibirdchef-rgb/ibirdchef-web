@@ -1,5 +1,7 @@
 .ans-fit {
   --ans-navy: #0b1f33;
+  --ans-blue: #0b4f9c;
+  --ans-blue-soft: #2f7fd1;
   --ans-navy-soft: #15304a;
   --ans-gold: #b8892d;
   --ans-gold-soft: #e8d7a8;
@@ -9,7 +11,7 @@
   color: var(--ans-ink);
   font-family: Georgia, "Times New Roman", serif;
   background:
-    radial-gradient(ellipse at top, rgba(184, 137, 45, 0.12), transparent 45%),
+    radial-gradient(ellipse at top, rgba(47, 127, 209, 0.12), transparent 45%),
     linear-gradient(180deg, #eef3f8 0%, #f5f7fa 40%, #e8eef5 100%);
 }
 
@@ -17,16 +19,77 @@
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.ans-fit :focus-visible {
+  outline: 2px solid var(--ans-blue-soft);
+  outline-offset: 2px;
+}
+
+.ans-logo {
+  display: block;
+  width: min(280px, 70vw);
+  height: auto;
+  max-height: 88px;
+}
+
+.ans-helper {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--ans-navy-soft);
+  font-weight: 400;
+}
+
+@media (max-width: 640px) {
+  .ans-fit .ans-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 @media print {
+  @page {
+    margin: 0.6in;
+  }
+
+  body {
+    background: white !important;
+  }
+
   .ans-fit {
     background: white !important;
+    color: #111 !important;
   }
 
   .ans-no-print {
     display: none !important;
   }
 
+  .ans-print-only {
+    display: block !important;
+  }
+
   .ans-print-block {
     break-inside: avoid;
+    page-break-inside: avoid;
   }
+
+  .ans-fit header,
+  .ans-fit article,
+  .ans-fit section {
+    background: white !important;
+    box-shadow: none !important;
+    border-color: #999 !important;
+  }
+
+  .ans-fit .ans-logo {
+    max-height: 72px;
+    width: 240px;
+  }
+
+  .ans-fit a {
+    text-decoration: none !important;
+  }
+}
+
+.ans-print-only {
+  display: none;
 }

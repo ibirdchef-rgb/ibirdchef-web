@@ -1,26 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" role="img" aria-label="ANS Food Service OS">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220" role="img" aria-label="ANS Food Service OS">
   <title>ANS Food Service OS</title>
-  <rect width="640" height="200" fill="none"/>
+  <!-- Approved blue wordmark: transparent background, FOOD SERVICE OS subtitle -->
   <text
-    x="320"
-    y="92"
-    text-anchor="middle"
-    font-family="Georgia, 'Times New Roman', serif"
-    font-size="72"
-    font-weight="700"
-    letter-spacing="14"
-    fill="#0B1F33"
-  >ANS</text>
-  <line x1="190" y1="118" x2="450" y2="118" stroke="#B8892D" stroke-width="2"/>
-  <circle cx="320" cy="118" r="2.5" fill="#B8892D"/>
-  <text
-    x="320"
-    y="152"
+    x="360"
+    y="100"
     text-anchor="middle"
     font-family="Arial, Helvetica, sans-serif"
-    font-size="18"
-    font-weight="500"
-    letter-spacing="6"
-    fill="#0B1F33"
+    font-size="92"
+    font-weight="700"
+    letter-spacing="10"
+    fill="#0B4F9C"
+  >ANS</text>
+  <line x1="210" y1="122" x2="510" y2="122" stroke="#2F7FD1" stroke-width="3"/>
+  <text
+    x="360"
+    y="168"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="26"
+    font-weight="600"
+    letter-spacing="7"
+    fill="#0B4F9C"
   >FOOD SERVICE OS</text>
 </svg>

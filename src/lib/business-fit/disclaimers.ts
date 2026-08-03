@@ -1,10 +1,10 @@
 export const PHASE1_DISCLAIMERS = [
-  "This is a Phase 1 planning estimate only. It is not a feasibility study, appraisal, or investment recommendation.",
+  "This is a Phase 1.1 planning estimate only. It is not a feasibility study, appraisal, or investment recommendation.",
   "ANS does not claim access to live demographic, rent, competition, permit, licensing, labor-cost, or vendor data in this version.",
   "Licensing, legal, financing, insurance, investment, and real-estate decisions require qualified local professional review.",
   "Budget ranges and timelines are deterministic planning models based on concept inputs, not quotes or guarantees.",
   "No vendor referral, quote request, lead creation, payment, lease, or purchase is initiated by this report.",
-  "Do not treat scores as predictions of profit, demand, or business success.",
+  "Do not treat scores as predictions of profit, demand, or business success. No outcome is guaranteed.",
 ] as const;
 
 export const PHASE1_ASSUMPTIONS = [

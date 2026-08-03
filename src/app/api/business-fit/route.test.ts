@@ -31,7 +31,13 @@ describe("POST /api/business-fit", () => {
     assert.equal(json.ok, true);
     assert.equal(json.report.planningEstimateOnly, true);
     assert.ok(json.report.fitScore >= 0);
+    assert.ok(json.report.scoreBreakdown);
+    assert.equal(json.report.scoreBreakdown.total, json.report.fitScore);
+    assert.ok(json.report.nextStepGroups.doNow.length > 0);
+    assert.ok(json.report.printSummary.inputSummary.length > 0);
+    assert.ok(json.report.fitInterpretation);
     assert.ok(!JSON.stringify(json).toLowerCase().includes("password"));
+    assert.ok(!JSON.stringify(json).includes("@"));
   });
 
   it("rejects missing required fields", async () => {

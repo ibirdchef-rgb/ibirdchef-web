@@ -29,6 +29,8 @@ describe("MCP tools", () => {
     if (result.ok) {
       assert.equal(result.result.planningEstimateOnly, true);
       assert.ok("fitScore" in result.result);
+      assert.ok("scoreBreakdown" in result.result);
+      assert.ok("nextStepGroups" in result.result);
     }
   });
 
@@ -51,6 +53,7 @@ describe("MCP tools", () => {
           (category) => category.requiresLocalReview,
         ),
       );
+      assert.ok(result.result.nextStepGroups.validateBeforeLease.length > 0);
     }
   });
 

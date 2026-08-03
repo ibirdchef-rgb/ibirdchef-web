@@ -4,6 +4,16 @@
 
 Before a customer invests in a food business, ANS helps clarify the concept, preliminary startup range, likely opening timeline, major risks, and the validation work still required.
 
+## Phase 1.1 report improvements
+
+- Score contribution breakdown that reconciles to the fit score
+- Explicit score-band interpretation language (no success guarantees)
+- Ten-category startup budget that reconciles to total low/high
+- Phased opening timeline with aggressive/unrealistic target-date status
+- Structured next steps: do now / validate before lease / complete before opening
+- Expanded missing-information guidance (rent, working capital, seating, etc.)
+- Print/PDF-safe layout data and blue ANS Food Service OS wordmark
+
 ## Phase 1 vertical slice
 
 | Surface | Path / command |

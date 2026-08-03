@@ -1,7 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import { FormEvent, useId, useState } from "react";
+import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import type { BusinessFitReport } from "@/lib/business-fit/types";
 import {
   BUSINESS_TYPES,
@@ -9,6 +8,7 @@ import {
   FACILITY_SIZES,
   INVESTMENT_BUDGETS,
   OWNER_EXPERIENCE,
+  SCORE_BAND_COPY,
   SERVICE_MODELS,
 } from "@/lib/business-fit/types";
 import "./business-fit.css";
@@ -89,31 +89,43 @@ const initialForm: FormState = {
 
 export default function BusinessFitPage() {
   const formId = useId();
+  const reportHeadingRef = useRef<HTMLHeadingElement>(null);
   const [form, setForm] = useState<FormState>(initialForm);
-  const [clientError, setClientError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<BusinessFitReport | null>(null);
 
   const fieldClass =
-    "mt-1 w-full rounded-md border border-[var(--ans-navy)]/20 bg-white px-3 py-2 text-[var(--ans-navy)] shadow-sm focus:border-[var(--ans-gold)] focus:outline-none";
+    "mt-1 w-full rounded-md border border-[var(--ans-blue)]/25 bg-white px-3 py-2 text-[var(--ans-navy)] shadow-sm focus:border-[var(--ans-blue-soft)] focus:outline-none";
+
+  useEffect(() => {
+    if (report && reportHeadingRef.current) {
+      reportHeadingRef.current.focus();
+    }
+  }, [report]);
+
+  function validateClient(next: FormState): Partial<Record<keyof FormState, string>> {
+    const errors: Partial<Record<keyof FormState, string>> = {};
+    if (!/^\d{5}$/.test(next.zipCode.trim())) {
+      errors.zipCode = "Enter a valid 5-digit U.S. ZIP code (for example, 98101).";
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(next.targetOpeningDate)) {
+      errors.targetOpeningDate = "Choose a valid target opening date.";
+    }
+    return errors;
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setClientError(null);
     setApiError(null);
-
-    if (!/^\d{5}$/.test(form.zipCode.trim())) {
-      setClientError("Enter a valid 5-digit U.S. ZIP code.");
-      return;
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(form.targetOpeningDate)) {
-      setClientError("Choose a valid target opening date.");
+    const errors = validateClient(form);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
       return;
     }
 
     setLoading(true);
-    setReport(null);
     try {
       const response = await fetch("/api/business-fit", {
         method: "POST",
@@ -142,19 +154,19 @@ export default function BusinessFitPage() {
 
   return (
     <div className="ans-fit text-[var(--ans-navy)]">
-      <header className="border-b border-[var(--ans-navy)]/10 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center gap-4 px-5 py-4 sm:px-8">
-          <Image
-            src="/ans-food-service-os-logo.png"
+      <header className="border-b border-[var(--ans-blue)]/15 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-4 px-5 py-4 sm:px-8">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/ans-food-service-os-logo.svg"
             alt="ANS Food Service OS"
-            width={220}
-            height={70}
-            priority
-            className="h-14 w-auto"
+            width={280}
+            height={88}
+            className="ans-logo"
           />
           <div className="sans min-w-0">
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--ans-gold)]">
-              Phase 1 planning prototype
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--ans-blue)]">
+              Phase 1.1 planning prototype
             </p>
             <p className="truncate text-sm text-[var(--ans-navy-soft)]">
               Food Business Fit Report
@@ -165,23 +177,23 @@ export default function BusinessFitPage() {
 
       <main className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-12">
         <section className="ans-no-print mb-10 max-w-3xl">
-          <h1 className="text-3xl font-semibold tracking-tight text-[var(--ans-navy)] sm:text-4xl">
+          <h1 className="text-3xl font-semibold tracking-tight text-[var(--ans-blue)] sm:text-4xl">
             ANS Food Business Fit
           </h1>
           <p className="sans mt-3 text-base leading-relaxed text-[var(--ans-navy-soft)]">
             Clarify your concept, a preliminary startup range, likely opening timeline, major
             risks, and the validation work still required—before you invest. All outputs are
-            planning estimates, not live market data or financial advice.
+            planning estimates, not live market data, guarantees, or financial advice.
           </p>
         </section>
 
         <form
           onSubmit={onSubmit}
-          className="ans-no-print grid gap-5 rounded-xl border border-[var(--ans-navy)]/10 bg-white/90 p-5 shadow-sm sm:p-8"
+          className="ans-no-print grid gap-5 rounded-xl border border-[var(--ans-blue)]/15 bg-white/90 p-5 shadow-sm sm:p-8"
           noValidate
-          aria-describedby={clientError || apiError ? `${formId}-error` : undefined}
+          aria-describedby={apiError ? `${formId}-api-error` : undefined}
         >
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="ans-form-grid grid gap-5 sm:grid-cols-2">
             <label className="sans text-sm font-medium">
               ZIP code
               <input
@@ -192,14 +204,23 @@ export default function BusinessFitPage() {
                 maxLength={5}
                 required
                 value={form.zipCode}
+                aria-invalid={Boolean(fieldErrors.zipCode)}
+                aria-describedby={`${formId}-zip-help${fieldErrors.zipCode ? ` ${formId}-zip-error` : ""}`}
                 onChange={(event) =>
                   setForm((prev) => ({
                     ...prev,
                     zipCode: event.target.value.replace(/\D/g, "").slice(0, 5),
                   }))
                 }
-                aria-invalid={Boolean(clientError?.includes("ZIP"))}
               />
+              <span id={`${formId}-zip-help`} className="ans-helper">
+                Used only for planning context. No live demographic feed is connected.
+              </span>
+              {fieldErrors.zipCode ? (
+                <span id={`${formId}-zip-error`} className="ans-helper text-red-700" role="alert">
+                  {fieldErrors.zipCode}
+                </span>
+              ) : null}
             </label>
 
             <label className="sans text-sm font-medium">
@@ -210,10 +231,20 @@ export default function BusinessFitPage() {
                 name="targetOpeningDate"
                 required
                 value={form.targetOpeningDate}
+                aria-invalid={Boolean(fieldErrors.targetOpeningDate)}
+                aria-describedby={`${formId}-date-help${fieldErrors.targetOpeningDate ? ` ${formId}-date-error` : ""}`}
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, targetOpeningDate: event.target.value }))
                 }
               />
+              <span id={`${formId}-date-help`} className="ans-helper">
+                Compared against a typical planning timeline for your concept.
+              </span>
+              {fieldErrors.targetOpeningDate ? (
+                <span id={`${formId}-date-error`} className="ans-helper text-red-700" role="alert">
+                  {fieldErrors.targetOpeningDate}
+                </span>
+              ) : null}
             </label>
 
             <label className="sans text-sm font-medium">
@@ -221,6 +252,7 @@ export default function BusinessFitPage() {
               <select
                 className={fieldClass}
                 value={form.businessType}
+                aria-describedby={`${formId}-type-help`}
                 onChange={(event) =>
                   setForm((prev) => ({
                     ...prev,
@@ -234,6 +266,9 @@ export default function BusinessFitPage() {
                   </option>
                 ))}
               </select>
+              <span id={`${formId}-type-help`} className="ans-helper">
+                Drives budget bands, equipment categories, and timeline length.
+              </span>
             </label>
 
             <label className="sans text-sm font-medium">
@@ -261,6 +296,7 @@ export default function BusinessFitPage() {
               <select
                 className={fieldClass}
                 value={form.investmentBudget}
+                aria-describedby={`${formId}-budget-help`}
                 onChange={(event) =>
                   setForm((prev) => ({
                     ...prev,
@@ -274,6 +310,9 @@ export default function BusinessFitPage() {
                   </option>
                 ))}
               </select>
+              <span id={`${formId}-budget-help`} className="ans-helper">
+                Total available capital band before financing structure is defined.
+              </span>
             </label>
 
             <label className="sans text-sm font-medium">
@@ -337,49 +376,57 @@ export default function BusinessFitPage() {
             </label>
           </div>
 
-          {(clientError || apiError) && (
+          {apiError ? (
             <p
-              id={`${formId}-error`}
+              id={`${formId}-api-error`}
               role="alert"
               className="sans rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
             >
-              {clientError || apiError}
+              {apiError}
             </p>
-          )}
+          ) : null}
 
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="submit"
               disabled={loading}
-              className="sans rounded-md bg-[var(--ans-navy)] px-5 py-2.5 text-sm font-semibold text-white transition enabled:hover:bg-[var(--ans-navy-soft)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="sans rounded-md bg-[var(--ans-blue)] px-5 py-2.5 text-sm font-semibold text-white transition enabled:hover:bg-[var(--ans-blue-soft)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? "Generating report…" : "Generate Fit Report"}
             </button>
             <p className="sans text-xs text-[var(--ans-navy-soft)]">
-              No contact details collected. No leads or vendor requests are created.
+              No names, email, or phone collected. No leads or vendor requests are created.
             </p>
           </div>
         </form>
 
-        {loading && (
-          <p className="sans ans-no-print mt-6 text-sm text-[var(--ans-navy-soft)]" aria-live="polite">
-            Building your Phase 1 planning estimate…
-          </p>
-        )}
+        <div className="sans ans-no-print mt-4 min-h-6 text-sm text-[var(--ans-navy-soft)]" aria-live="polite">
+          {loading ? "Building your Phase 1.1 planning estimate…" : null}
+        </div>
 
-        {report && (
+        {report ? (
           <article
-            className="mt-10 space-y-8 rounded-xl border border-[var(--ans-navy)]/10 bg-white p-5 sm:p-8"
+            className="mt-6 space-y-8 rounded-xl border border-[var(--ans-blue)]/15 bg-white p-5 sm:p-8"
             aria-labelledby="fit-report-heading"
           >
-            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--ans-gold-soft)] pb-5">
+            <div className="ans-print-block flex flex-wrap items-start justify-between gap-4 border-b border-[var(--ans-blue)]/20 pb-5">
               <div>
-                <p className="sans text-xs uppercase tracking-[0.18em] text-[var(--ans-gold)]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/ans-food-service-os-logo.svg"
+                  alt="ANS Food Service OS"
+                  width={240}
+                  height={74}
+                  className="ans-logo mb-3"
+                />
+                <p className="sans text-xs uppercase tracking-[0.18em] text-[var(--ans-blue)]">
                   Planning estimate · v{report.reportVersion}
                 </p>
                 <h2
                   id="fit-report-heading"
-                  className="mt-1 text-2xl font-semibold text-[var(--ans-navy)]"
+                  ref={reportHeadingRef}
+                  tabIndex={-1}
+                  className="mt-1 text-2xl font-semibold text-[var(--ans-blue)] outline-none"
                 >
                   Food Business Fit Report
                 </h2>
@@ -390,50 +437,107 @@ export default function BusinessFitPage() {
               </div>
               <button
                 type="button"
-                className="ans-no-print sans rounded-md border border-[var(--ans-navy)]/20 px-4 py-2 text-sm font-medium text-[var(--ans-navy)] hover:bg-[var(--ans-paper)]"
+                className="ans-no-print sans rounded-md border border-[var(--ans-blue)]/25 px-4 py-2 text-sm font-medium text-[var(--ans-blue)] hover:bg-[var(--ans-paper)]"
                 onClick={() => window.print()}
               >
                 Print / Save PDF
               </button>
             </div>
 
+            <section className="ans-print-only ans-print-block sans text-sm">
+              <h3 className="mb-2 text-base font-semibold">Input summary</h3>
+              <ul className="list-disc pl-5">
+                {report.printSummary.inputSummary.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </section>
+
             <section className="ans-print-block grid gap-4 sm:grid-cols-3">
               <div className="rounded-lg bg-[var(--ans-paper)] p-4">
                 <p className="sans text-xs uppercase tracking-wide text-[var(--ans-navy-soft)]">
                   Fit score
                 </p>
-                <p className="mt-1 text-4xl font-semibold text-[var(--ans-navy)]">
-                  {report.fitScore}
+                <p className="mt-1 text-4xl font-semibold text-[var(--ans-blue)]">{report.fitScore}</p>
+                <p className="sans mt-1 text-sm text-[var(--ans-navy)]">
+                  {report.fitInterpretation}
                 </p>
-                <p className="sans mt-1 text-sm capitalize text-[var(--ans-gold)]">
-                  {report.fitBand} · {report.confidence} confidence
+                <p className="sans mt-1 text-xs text-[var(--ans-navy-soft)]">
+                  Band {report.fitBandLabel} · {report.confidence} confidence · planning estimate only
                 </p>
               </div>
               <div className="rounded-lg bg-[var(--ans-paper)] p-4 sm:col-span-2">
                 <p className="sans text-xs uppercase tracking-wide text-[var(--ans-navy-soft)]">
                   Startup budget range
                 </p>
-                <p className="mt-2 text-xl font-semibold text-[var(--ans-navy)]">
+                <p className="mt-2 text-xl font-semibold text-[var(--ans-blue)]">
                   {report.startupBudget.total.label}
                 </p>
                 <p className="sans mt-2 text-sm text-[var(--ans-navy-soft)]">
                   {report.openingTimeline.summary}
                 </p>
+                <p className="sans mt-1 text-sm text-[var(--ans-navy)]">
+                  Target date status: {report.openingTimeline.targetDateStatus} —{" "}
+                  {report.openingTimeline.targetDateNote}
+                </p>
               </div>
             </section>
 
-            <ReportList title="Major risks" items={report.majorRisks} />
-            <ReportList title="Missing information" items={report.missingInformation} />
-            <ReportList title="Assumptions" items={report.assumptions} />
-            <ReportList title="Suggested next steps" items={report.nextSteps} />
+            <section className="ans-print-block">
+              <h3 className="text-lg font-semibold text-[var(--ans-blue)]">
+                How this score was calculated
+              </h3>
+              <p className="sans mt-1 text-sm text-[var(--ans-navy-soft)]">
+                Contributions below sum exactly to the displayed fit score. This is not a prediction
+                of business success.
+              </p>
+              <ul className="sans mt-3 space-y-2 text-sm">
+                {report.scoreBreakdown.contributions.map((row) => (
+                  <li
+                    key={row.key}
+                    className="flex flex-col gap-1 border-b border-[var(--ans-blue)]/10 py-2 sm:flex-row sm:justify-between"
+                  >
+                    <span>
+                      <span className="font-medium text-[var(--ans-navy)]">{row.label}</span>
+                      <span className="mt-0.5 block text-[var(--ans-navy-soft)]">{row.detail}</span>
+                    </span>
+                    <span className="font-semibold text-[var(--ans-blue)]">
+                      {row.points > 0 ? `+${row.points}` : row.points}
+                    </span>
+                  </li>
+                ))}
+                <li className="flex justify-between pt-2 font-semibold text-[var(--ans-navy)]">
+                  <span>Total fit score</span>
+                  <span>{report.scoreBreakdown.total}</span>
+                </li>
+              </ul>
+            </section>
 
             <section className="ans-print-block">
-              <h3 className="text-lg font-semibold text-[var(--ans-navy)]">Budget categories</h3>
+              <h3 className="text-lg font-semibold text-[var(--ans-blue)]">Score interpretation</h3>
+              <ul className="sans mt-2 space-y-1 text-sm text-[var(--ans-navy-soft)]">
+                {(Object.keys(SCORE_BAND_COPY) as Array<keyof typeof SCORE_BAND_COPY>).map((band) => (
+                  <li key={band}>
+                    <span className="font-medium text-[var(--ans-navy)]">
+                      {SCORE_BAND_COPY[band].rangeLabel}:
+                    </span>{" "}
+                    {SCORE_BAND_COPY[band].interpretation}
+                    {report.fitBand === band ? " (current report)" : ""}
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section className="ans-print-block">
+              <h3 className="text-lg font-semibold text-[var(--ans-blue)]">Budget categories</h3>
+              <p className="sans mt-1 text-sm text-[var(--ans-navy-soft)]">
+                Category low/high totals reconcile to the startup range above.
+              </p>
               <ul className="sans mt-3 space-y-2 text-sm">
                 {report.startupBudget.categories.map((category) => (
                   <li
                     key={category.category}
-                    className="flex flex-col gap-1 border-b border-[var(--ans-navy)]/5 py-2 sm:flex-row sm:justify-between"
+                    className="flex flex-col gap-1 border-b border-[var(--ans-blue)]/10 py-2 sm:flex-row sm:justify-between"
                   >
                     <span>{category.category}</span>
                     <span className="text-[var(--ans-navy-soft)]">{category.range.label}</span>
@@ -443,7 +547,40 @@ export default function BusinessFitPage() {
             </section>
 
             <section className="ans-print-block">
-              <h3 className="text-lg font-semibold text-[var(--ans-navy)]">
+              <h3 className="text-lg font-semibold text-[var(--ans-blue)]">Opening timeline</h3>
+              <ol className="sans mt-3 space-y-2 text-sm">
+                {report.openingTimeline.phases.map((phase) => (
+                  <li key={phase.name} className="border-b border-[var(--ans-blue)]/10 py-2">
+                    <span className="font-medium text-[var(--ans-navy)]">
+                      {phase.name} · ~{phase.approximateMonths} mo
+                    </span>
+                    <span className="mt-0.5 block text-[var(--ans-navy-soft)]">{phase.detail}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+
+            <section className="ans-print-block">
+              <h3 className="text-lg font-semibold text-[var(--ans-blue)]">Actionable next steps</h3>
+              <div className="sans mt-3 grid gap-4 sm:grid-cols-3">
+                <NextStepColumn title="Do now" items={report.nextStepGroups.doNow} />
+                <NextStepColumn
+                  title="Validate before signing a lease"
+                  items={report.nextStepGroups.validateBeforeLease}
+                />
+                <NextStepColumn
+                  title="Complete before opening"
+                  items={report.nextStepGroups.completeBeforeOpening}
+                />
+              </div>
+            </section>
+
+            <ReportList title="Major risks" items={report.majorRisks} />
+            <ReportList title="Missing information" items={report.missingInformation} />
+            <ReportList title="Assumptions" items={report.assumptions} />
+
+            <section className="ans-print-block">
+              <h3 className="text-lg font-semibold text-[var(--ans-blue)]">
                 Licensing & checklist categories
               </h3>
               <div className="sans mt-3 space-y-4 text-sm">
@@ -464,7 +601,7 @@ export default function BusinessFitPage() {
             </section>
 
             <section className="ans-print-block">
-              <h3 className="text-lg font-semibold text-[var(--ans-navy)]">Equipment categories</h3>
+              <h3 className="text-lg font-semibold text-[var(--ans-blue)]">Equipment categories</h3>
               <ul className="sans mt-3 list-disc pl-5 text-sm text-[var(--ans-navy-soft)]">
                 {report.equipmentCategories.map((item) => (
                   <li key={item}>{item}</li>
@@ -473,7 +610,7 @@ export default function BusinessFitPage() {
             </section>
 
             <section className="ans-print-block">
-              <h3 className="text-lg font-semibold text-[var(--ans-navy)]">Data sources</h3>
+              <h3 className="text-lg font-semibold text-[var(--ans-blue)]">Data sources</h3>
               <ul className="sans mt-3 space-y-2 text-sm text-[var(--ans-navy-soft)]">
                 {report.dataSources.map((source) => (
                   <li key={source.domain}>
@@ -488,22 +625,30 @@ export default function BusinessFitPage() {
               </ul>
             </section>
 
-            <section className="ans-print-block rounded-lg border border-[var(--ans-gold)]/40 bg-[var(--ans-gold-soft)]/30 p-4">
-              <h3 className="text-lg font-semibold text-[var(--ans-navy)]">Disclaimers</h3>
+            <section className="ans-print-block rounded-lg border border-[var(--ans-blue)]/30 bg-[var(--ans-paper)] p-4">
+              <h3 className="text-lg font-semibold text-[var(--ans-blue)]">Disclaimers</h3>
               <ul className="sans mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--ans-navy-soft)]">
                 {report.disclaimers.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-              <p className="sans mt-4 text-sm text-[var(--ans-navy)]">
-                Optional ANS consultation is available only after explicit consent in a later
-                step. This Phase 1 report does not collect email or phone and does not create a
-                lead.
-              </p>
             </section>
           </article>
-        )}
+        ) : null}
       </main>
+    </div>
+  );
+}
+
+function NextStepColumn({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div>
+      <h4 className="font-semibold text-[var(--ans-navy)]">{title}</h4>
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-[var(--ans-navy-soft)]">
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -512,7 +657,7 @@ function ReportList({ title, items }: { title: string; items: string[] }) {
   if (items.length === 0) {
     return (
       <section className="ans-print-block">
-        <h3 className="text-lg font-semibold text-[var(--ans-navy)]">{title}</h3>
+        <h3 className="text-lg font-semibold text-[var(--ans-blue)]">{title}</h3>
         <p className="sans mt-2 text-sm text-[var(--ans-navy-soft)]">None flagged for this input set.</p>
       </section>
     );
@@ -520,7 +665,7 @@ function ReportList({ title, items }: { title: string; items: string[] }) {
 
   return (
     <section className="ans-print-block">
-      <h3 className="text-lg font-semibold text-[var(--ans-navy)]">{title}</h3>
+      <h3 className="text-lg font-semibold text-[var(--ans-blue)]">{title}</h3>
       <ul className="sans mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--ans-navy-soft)]">
         {items.map((item) => (
           <li key={item}>{item}</li>

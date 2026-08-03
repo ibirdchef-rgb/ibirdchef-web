@@ -1,5 +1,5 @@
-export const REPORT_VERSION = "1.0.0" as const;
-export const ESTIMATOR_VERSION = "phase1-deterministic-v1" as const;
+export const REPORT_VERSION = "1.1.0" as const;
+export const ESTIMATOR_VERSION = "phase1-deterministic-v1.1" as const;
 
 export const BUSINESS_TYPES = [
   "restaurant",
@@ -79,6 +79,31 @@ export const DATA_SOURCE_KINDS = [
 
 export type DataSourceKind = (typeof DATA_SOURCE_KINDS)[number];
 
+export const FIT_BANDS = ["weak", "moderate", "promising", "strong"] as const;
+export type FitBand = (typeof FIT_BANDS)[number];
+
+export const SCORE_BAND_COPY: Record<
+  FitBand,
+  { rangeLabel: string; interpretation: string }
+> = {
+  strong: {
+    rangeLabel: "80–100",
+    interpretation: "Strong preliminary fit",
+  },
+  promising: {
+    rangeLabel: "65–79",
+    interpretation: "Promising, with validation required",
+  },
+  moderate: {
+    rangeLabel: "50–64",
+    interpretation: "Significant planning gaps",
+  },
+  weak: {
+    rangeLabel: "Below 50",
+    interpretation: "High-risk preliminary fit",
+  },
+};
+
 export type BusinessFitInput = {
   zipCode: string;
   businessType: BusinessType;
@@ -97,13 +122,46 @@ export type MoneyRange = {
   label: string;
 };
 
+export type ScoreContribution = {
+  key:
+    | "base"
+    | "budget_alignment"
+    | "timeline_feasibility"
+    | "owner_experience"
+    | "facility_service_alignment"
+    | "concept_complexity"
+    | "bounds_adjustment";
+  label: string;
+  points: number;
+  detail: string;
+};
+
+export type ScoreBreakdown = {
+  contributions: ScoreContribution[];
+  total: number;
+};
+
+export type TimelinePhase = {
+  name: string;
+  approximateMonths: number;
+  detail: string;
+};
+
+export type TargetDateStatus =
+  | "realistic"
+  | "aggressive"
+  | "unrealistic"
+  | "past";
+
 export type TimelineEstimate = {
   optimisticMonths: number;
   typicalMonths: number;
   conservativeMonths: number;
   summary: string;
   targetDateFeasible: boolean;
+  targetDateStatus: TargetDateStatus;
   targetDateNote: string;
+  phases: TimelinePhase[];
 };
 
 export type DataSourceNote = {
@@ -125,18 +183,28 @@ export type ChecklistCategory = {
   requiresLocalReview: boolean;
 };
 
+export type NextStepGroups = {
+  doNow: string[];
+  validateBeforeLease: string[];
+  completeBeforeOpening: string[];
+};
+
 export type BusinessFitReport = {
   reportVersion: typeof REPORT_VERSION;
   estimatorVersion: typeof ESTIMATOR_VERSION;
   generatedAt: string;
   input: BusinessFitInput;
   fitScore: number;
-  fitBand: "weak" | "moderate" | "promising" | "strong";
+  fitBand: FitBand;
+  fitBandLabel: string;
+  fitInterpretation: string;
   confidence: ConfidenceLevel;
+  scoreBreakdown: ScoreBreakdown;
   assumptions: string[];
   missingInformation: string[];
   majorRisks: string[];
   nextSteps: string[];
+  nextStepGroups: NextStepGroups;
   startupBudget: {
     total: MoneyRange;
     categories: BudgetBreakdownCategory[];
@@ -146,6 +214,11 @@ export type BusinessFitReport = {
   equipmentCategories: string[];
   disclaimers: string[];
   dataSources: DataSourceNote[];
+  printSummary: {
+    inputSummary: string[];
+    includeLogo: true;
+    hideControls: true;
+  };
   planningEstimateOnly: true;
 };
 
@@ -157,7 +230,7 @@ export type ConceptComparisonResult = {
     label: string;
     input: BusinessFitInput;
     fitScore: number;
-    fitBand: BusinessFitReport["fitBand"];
+    fitBand: FitBand;
     startupBudget: MoneyRange;
     typicalMonths: number;
     topRisks: string[];
@@ -187,6 +260,7 @@ export type OpeningChecklistResult = {
   licensingChecklistCategories: ChecklistCategory[];
   equipmentCategories: string[];
   nextSteps: string[];
+  nextStepGroups: NextStepGroups;
   disclaimers: string[];
   planningEstimateOnly: true;
 };

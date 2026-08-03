@@ -5,9 +5,25 @@ import type {
   ChecklistCategory,
   FacilitySize,
   MoneyRange,
+  NextStepGroups,
+  TargetDateStatus,
   TimelineEstimate,
+  TimelinePhase,
 } from "@/lib/business-fit/types";
 import { budgetMidThousands, conceptCostMidThousands } from "@/lib/business-fit/scoring";
+
+export const BUDGET_CATEGORY_NAMES = [
+  "Lease deposit and initial occupancy",
+  "Construction and improvements",
+  "Kitchen equipment",
+  "Furniture, fixtures, and technology",
+  "Permits and professional fees",
+  "Opening inventory",
+  "Pre-opening payroll and training",
+  "Marketing and signage",
+  "Working-capital reserve",
+  "Contingency",
+] as const;
 
 function moneyRange(lowUsd: number, highUsd: number): MoneyRange {
   const low = Math.round(lowUsd);
@@ -38,69 +54,90 @@ function baseTotalRange(input: BusinessFitInput): MoneyRange {
   return moneyRange(center * 0.78, center * 1.28);
 }
 
+function categoryWeights(type: BusinessType): number[] {
+  // Order matches BUDGET_CATEGORY_NAMES; sums to 1.
+  switch (type) {
+    case "food_truck":
+      return [0.18, 0.08, 0.24, 0.08, 0.08, 0.08, 0.07, 0.06, 0.08, 0.05];
+    case "ghost_kitchen":
+      return [0.16, 0.14, 0.22, 0.08, 0.08, 0.08, 0.07, 0.05, 0.07, 0.05];
+    case "catering":
+      return [0.14, 0.12, 0.2, 0.1, 0.08, 0.09, 0.08, 0.06, 0.08, 0.05];
+    default:
+      return [0.14, 0.18, 0.16, 0.1, 0.07, 0.07, 0.08, 0.05, 0.1, 0.05];
+  }
+}
+
+function allocateByWeights(total: number, weights: number[]): number[] {
+  const raw = weights.map((weight) => total * weight);
+  const rounded = raw.map((value) => Math.floor(value));
+  const remainder = total - rounded.reduce((sum, value) => sum + value, 0);
+  // Distribute remainder to largest fractional parts for stable reconciliation.
+  const order = raw
+    .map((value, index) => ({ index, frac: value - Math.floor(value) }))
+    .sort((a, b) => b.frac - a.frac);
+  for (let i = 0; i < remainder; i += 1) {
+    rounded[order[i % order.length].index] += 1;
+  }
+  return rounded;
+}
+
 export function estimateStartupBudget(input: BusinessFitInput): {
   total: MoneyRange;
   categories: BudgetBreakdownCategory[];
 } {
   const total = baseTotalRange(input);
-  const span = total.highUsd - total.lowUsd;
-  const mid = (total.lowUsd + total.highUsd) / 2;
-
   const weights = categoryWeights(input.businessType);
-  const categories: BudgetBreakdownCategory[] = Object.entries(weights).map(
-    ([category, weight]) => {
-      const catMid = mid * weight;
-      const half = (span * weight) / 2;
-      return {
-        category,
-        range: moneyRange(catMid - half, catMid + half),
-        notes: "Planning estimate only; not a vendor quote.",
-      };
-    },
-  );
+  const lows = allocateByWeights(total.lowUsd, weights);
+  const highs = allocateByWeights(total.highUsd, weights);
+
+  const categories: BudgetBreakdownCategory[] = BUDGET_CATEGORY_NAMES.map((category, index) => ({
+    category,
+    range: moneyRange(lows[index], highs[index]),
+    notes: "Planning estimate only; not a vendor quote or bid.",
+  }));
 
   return { total, categories };
 }
 
-function categoryWeights(type: BusinessType): Record<string, number> {
-  switch (type) {
-    case "food_truck":
-      return {
-        "Vehicle / commissary": 0.34,
-        "Kitchen equipment": 0.24,
-        "Licenses, insurance, deposits": 0.12,
-        "Initial inventory & packaging": 0.1,
-        "Working capital reserve": 0.12,
-        "Brand, POS, soft costs": 0.08,
-      };
-    case "ghost_kitchen":
-      return {
-        "Lease / deposit / build-out": 0.28,
-        "Kitchen equipment": 0.3,
-        "Licenses, insurance, deposits": 0.1,
-        "Initial inventory & packaging": 0.1,
-        "Working capital reserve": 0.14,
-        "Brand, POS, soft costs": 0.08,
-      };
-    case "catering":
-      return {
-        "Production space / deposit": 0.22,
-        "Kitchen & transport equipment": 0.28,
-        "Licenses, insurance, deposits": 0.12,
-        "Initial inventory & packaging": 0.12,
-        "Working capital reserve": 0.16,
-        "Brand, sales, soft costs": 0.1,
-      };
-    default:
-      return {
-        "Lease / deposit / build-out": 0.32,
-        "Kitchen & front-of-house equipment": 0.26,
-        "Licenses, insurance, deposits": 0.1,
-        "Furniture, FF&E, smallwares": 0.1,
-        "Initial inventory": 0.08,
-        "Working capital reserve": 0.14,
-      };
+function phasePlan(typicalMonths: number, type: BusinessType): TimelinePhase[] {
+  const weights =
+    type === "food_truck" || type === "ghost_kitchen"
+      ? [0.15, 0.15, 0.2, 0.25, 0.15, 0.1]
+      : [0.12, 0.18, 0.22, 0.25, 0.13, 0.1];
+
+  const names = [
+    "Concept validation",
+    "Site search and lease review",
+    "Design and permitting",
+    "Construction and equipment",
+    "Hiring and training",
+    "Inspection and opening",
+  ];
+  const details = [
+    "Clarify menu, service model, and capital assumptions with customer and advisor feedback.",
+    "Compare locations or commissary options; review lease terms with qualified local counsel.",
+    "Complete plan review packages and jurisdiction-specific permit pathways.",
+    "Execute build-out and procure kitchen / FFE packages against approved plans.",
+    "Hire key roles, train service standards, and finalize opening inventory.",
+    "Complete inspections, soft opening readiness, and launch checklist close-out.",
+  ];
+
+  const months = allocateByWeights(typicalMonths, weights).map((value) => Math.max(1, value));
+  // Re-normalize if min floors increased total.
+  let overflow = months.reduce((sum, value) => sum + value, 0) - typicalMonths;
+  while (overflow > 0) {
+    const idx = months.indexOf(Math.max(...months));
+    if (months[idx] <= 1) break;
+    months[idx] -= 1;
+    overflow -= 1;
   }
+
+  return names.map((name, index) => ({
+    name,
+    approximateMonths: months[index],
+    detail: details[index],
+  }));
 }
 
 export function estimateOpeningTimeline(
@@ -130,12 +167,32 @@ export function estimateOpeningTimeline(
     (target.getUTCMonth() - asOfDate.getUTCMonth()) +
     (target.getUTCDate() - asOfDate.getUTCDate()) / 30;
 
-  const targetDateFeasible = monthsToTarget >= optimisticMonths;
-  const targetDateNote = targetDateFeasible
-    ? monthsToTarget >= typical
-      ? "Target date is within a typical planning window under this estimate model."
-      : "Target date may be achievable only with an accelerated, well-resourced plan."
-    : "Target date appears earlier than the optimistic Phase 1 timeline estimate.";
+  let targetDateStatus: TargetDateStatus = "realistic";
+  let targetDateNote =
+    "Target date is within a typical planning window under this estimate model.";
+  let targetDateFeasible = true;
+
+  if (Number.isNaN(target.getTime()) || monthsToTarget < 0) {
+    targetDateStatus = "past";
+    targetDateFeasible = false;
+    targetDateNote = "Target date is in the past or invalid relative to today.";
+  } else if (monthsToTarget + 0.5 < optimisticMonths * 0.75) {
+    targetDateStatus = "unrealistic";
+    targetDateFeasible = false;
+    targetDateNote =
+      "Target date appears unrealistic versus even an optimistic Phase 1 timeline estimate.";
+  } else if (monthsToTarget + 0.5 < typical) {
+    targetDateStatus = "aggressive";
+    targetDateFeasible = monthsToTarget >= optimisticMonths;
+    targetDateNote =
+      "Target date appears aggressive and may require an accelerated, well-resourced plan.";
+  } else if (monthsToTarget >= typical) {
+    targetDateStatus = "realistic";
+    targetDateFeasible = true;
+    targetDateNote = "Target date is within a typical planning window under this estimate model.";
+  }
+
+  const phases = phasePlan(typical, input.businessType);
 
   return {
     optimisticMonths,
@@ -143,7 +200,9 @@ export function estimateOpeningTimeline(
     conservativeMonths,
     summary: `Planning estimate: about ${optimisticMonths}–${conservativeMonths} months to opening (typical ~${typical}).`,
     targetDateFeasible,
+    targetDateStatus,
     targetDateNote,
+    phases,
   };
 }
 
@@ -259,29 +318,69 @@ export function buildEquipmentCategories(input: BusinessFitInput): string[] {
   return shared;
 }
 
-export function buildNextSteps(input: BusinessFitInput): string[] {
-  const steps = [
-    "Validate concept positioning and menu prototype with target customers (not yet modeled with live demand data).",
-    "Obtain local jurisdiction checklists for permits and plan review before signing a lease or vehicle purchase.",
-    "Build a capital stack worksheet that separates build-out, equipment, deposits, and 3–6 months working capital.",
-    "Define service-model priorities so hybrid channels do not expand scope before unit economics are clear.",
+export function buildNextStepGroups(input: BusinessFitInput): NextStepGroups {
+  const doNow = [
+    "Write a one-page concept brief covering cuisine, service model, and target guest.",
+    "List assumptions behind the selected investment budget band and opening date.",
   ];
-
   if (budgetMidThousands(input.investmentBudget) === null) {
-    steps.unshift("Set a firm investment budget range before vendor or site conversations.");
+    doNow.unshift("Set a firm investment budget range before vendor or site conversations.");
+  }
+  if (input.cuisine === "other") {
+    doNow.push("Choose a primary cuisine positioning before expanding into multi-cuisine scope.");
   }
 
+  const validateBeforeLease = [
+    "Validate concept positioning with target customers (live demand data is not connected in Phase 1).",
+    "Obtain local jurisdiction checklists for permits and plan review before signing a lease or vehicle purchase.",
+    "Confirm expected monthly rent, deposit structure, and exclusive-use terms with qualified local review.",
+    "Pressure-test working capital for at least 3–6 months of operating burn (planning estimate).",
+  ];
+  if (input.serviceModel === "hybrid") {
+    validateBeforeLease.push(
+      "Rank service channels so hybrid launch scope does not expand before unit economics are clear.",
+    );
+  }
+  if (
+    input.facilitySize === "unknown" ||
+    !["under_1000", "1000_2000", "2000_4000", "over_4000", "mobile_or_shared"].includes(
+      input.facilitySize,
+    )
+  ) {
+    validateBeforeLease.push("Confirm facility size, seating capacity, and kitchen infrastructure condition.");
+  }
+
+  const completeBeforeOpening = [
+    "Finalize staffing plan, training schedule, and opening inventory levels.",
+    "Complete inspections, insurance binders, and soft-opening readiness checks.",
+    "Set average-check and daily-transaction targets for the first 90 days (planning targets, not forecasts).",
+    "Optional: request an ANS consultation only after explicit consent to share contact details (not performed by this Phase 1 tool).",
+  ];
   if (input.ownerExperience === "none") {
-    steps.push(
+    completeBeforeOpening.unshift(
       "Identify an experienced operator mentor or manager candidate before major capital commitments.",
     );
   }
 
-  steps.push(
-    "Optional: request an ANS consultation only after you explicitly consent to share contact details (not performed by this Phase 1 tool).",
-  );
+  return { doNow, validateBeforeLease, completeBeforeOpening };
+}
 
-  return steps;
+export function buildNextSteps(input: BusinessFitInput): string[] {
+  const groups = buildNextStepGroups(input);
+  return [...groups.doNow, ...groups.validateBeforeLease, ...groups.completeBeforeOpening];
+}
+
+export function buildInputSummary(input: BusinessFitInput): string[] {
+  return [
+    `ZIP: ${input.zipCode}`,
+    `Business type: ${input.businessType}`,
+    `Cuisine: ${input.cuisine}`,
+    `Investment budget: ${input.investmentBudget}`,
+    `Owner experience: ${input.ownerExperience}`,
+    `Facility size: ${input.facilitySize}`,
+    `Service model: ${input.serviceModel}`,
+    `Target opening date: ${input.targetOpeningDate}`,
+  ];
 }
 
 export function buildDataSources(generatedAt: string) {
@@ -313,7 +412,7 @@ export function buildDataSources(generatedAt: string) {
     {
       domain: "phase1_estimator",
       kind: "planning_estimate" as const,
-      note: "Deterministic Phase 1 planning model based on user concept inputs.",
+      note: "Deterministic Phase 1.1 planning model based on user concept inputs.",
       asOf: generatedAt,
     },
     {

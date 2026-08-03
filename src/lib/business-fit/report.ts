@@ -2,7 +2,9 @@ import { PHASE1_ASSUMPTIONS, PHASE1_DISCLAIMERS } from "@/lib/business-fit/discl
 import {
   buildDataSources,
   buildEquipmentCategories,
+  buildInputSummary,
   buildLicensingChecklist,
+  buildNextStepGroups,
   buildNextSteps,
   estimateOpeningTimeline,
   estimateStartupBudget,
@@ -26,6 +28,7 @@ export function buildBusinessFitReport(
   const scored = scoreBusinessFit(input, now);
   const startupBudget = estimateStartupBudget(input);
   const openingTimeline = estimateOpeningTimeline(input, now);
+  const nextStepGroups = buildNextStepGroups(input);
 
   return {
     reportVersion: REPORT_VERSION,
@@ -34,17 +37,26 @@ export function buildBusinessFitReport(
     input,
     fitScore: scored.fitScore,
     fitBand: scored.fitBand,
+    fitBandLabel: scored.fitBandLabel,
+    fitInterpretation: scored.fitInterpretation,
     confidence: scored.confidence,
+    scoreBreakdown: scored.scoreBreakdown,
     assumptions: [...PHASE1_ASSUMPTIONS],
     missingInformation: scored.missingInformation,
     majorRisks: scored.majorRisks,
     nextSteps: buildNextSteps(input),
+    nextStepGroups,
     startupBudget,
     openingTimeline,
     licensingChecklistCategories: buildLicensingChecklist(input),
     equipmentCategories: buildEquipmentCategories(input),
     disclaimers: [...PHASE1_DISCLAIMERS],
     dataSources: buildDataSources(generatedAt),
+    printSummary: {
+      inputSummary: buildInputSummary(input),
+      includeLogo: true,
+      hideControls: true,
+    },
     planningEstimateOnly: true,
   };
 }
@@ -76,6 +88,7 @@ export function buildOpeningChecklistResult(
 ): OpeningChecklistResult {
   const now = options?.now ?? new Date();
   const generatedAt = now.toISOString();
+  const nextStepGroups = buildNextStepGroups(input);
 
   return {
     reportVersion: REPORT_VERSION,
@@ -85,6 +98,7 @@ export function buildOpeningChecklistResult(
     licensingChecklistCategories: buildLicensingChecklist(input),
     equipmentCategories: buildEquipmentCategories(input),
     nextSteps: buildNextSteps(input),
+    nextStepGroups,
     disclaimers: [...PHASE1_DISCLAIMERS],
     planningEstimateOnly: true,
   };
