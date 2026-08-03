@@ -767,7 +767,7 @@ export function processConciergeMessage(
       if (!keyword.test(text)) return null;
       if (
         new RegExp(
-          `\\b(no|without|not needing|don't need|do not need)\\s+[\\w\\s]{0,12}${keyword.source}`,
+          `\\b(no|without|not needing|don['\\u2019]?t need|do not need)\\b[^.!?]{0,100}${keyword.source}`,
           "i",
         ).test(text) ||
         new RegExp(

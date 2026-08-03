@@ -286,11 +286,16 @@ describe("AI catering concierge phase 1", () => {
       "About $25 per person",
       "Indian",
       "None",
-      "Delivery only",
+      "Delivery only. No staffing, setup, rentals, or equipment needed.",
     ];
     for (const turn of turns) {
       session = processConciergeMessage(session, turn).session;
     }
+    assert.equal(session.slots.deliveryNeeded, true);
+    assert.equal(session.slots.setupNeeded, false);
+    assert.equal(session.slots.staffingNeeded, false);
+    assert.equal(session.slots.rentalsNeeded, false);
+    assert.equal(session.slots.equipmentNeeded, false);
     session = selectDish(session, "butter-chicken").session;
     session = processConciergeMessage(session, "Alex Customer").session;
     session = processConciergeMessage(session, "alex@example.com").session;
