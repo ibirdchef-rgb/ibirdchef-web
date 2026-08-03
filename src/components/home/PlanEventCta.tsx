@@ -1,7 +1,7 @@
 "use client";
 
-import { startTransition, useEffect, useState } from "react";
 import InquiryForm from "@/components/InquiryForm";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { OPEN_INQUIRY_FORM_EVENT } from "@/lib/inquiry-form-gate";
 import { siteConfig } from "@/lib/site";
 import type { PageSource } from "@/lib/event-inquiry";
@@ -17,13 +17,32 @@ type PlanEventCtaProps = {
 };
 
 function shouldOpenFromLocation(): boolean {
-  if (typeof window === "undefined") return false;
+  if (typeof window === "undefined") {
+    return false;
+  }
+
   const params = new URLSearchParams(window.location.search);
-  if (params.get("inquiry") === "open") return true;
-  if (params.get("askDishes")?.trim()) return true;
-  if (params.get("askDish")?.trim()) return true;
-  if (params.get("conciergeSession")?.trim()) return true;
-  if (window.location.hash === "#contact") return true;
+
+  if (params.get("inquiry") === "open") {
+    return true;
+  }
+
+  if (params.get("askDishes")?.trim()) {
+    return true;
+  }
+
+  if (params.get("askDish")?.trim()) {
+    return true;
+  }
+
+  if (params.get("conciergeSession")?.trim()) {
+    return true;
+  }
+
+  if (window.location.hash === "#contact") {
+    return true;
+  }
+
   return false;
 }
 
@@ -35,13 +54,19 @@ export default function PlanEventCta({
   gateInquiryForm = false,
 }: PlanEventCtaProps) {
   const [formOpen, setFormOpen] = useState(!gateInquiryForm);
+  const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!gateInquiryForm) return;
+    if (!gateInquiryForm) {
+      return;
+    }
 
     const openForm = () => {
-      startTransition(() => setFormOpen(true));
+      startTransition(() => {
+        setFormOpen(true);
+      });
     };
+
     const syncOpenState = () => {
       if (shouldOpenFromLocation()) {
         openForm();
@@ -49,15 +74,34 @@ export default function PlanEventCta({
     };
 
     syncOpenState();
+
     window.addEventListener("hashchange", syncOpenState);
     window.addEventListener("popstate", syncOpenState);
     window.addEventListener(OPEN_INQUIRY_FORM_EVENT, openForm);
+
     return () => {
       window.removeEventListener("hashchange", syncOpenState);
       window.removeEventListener("popstate", syncOpenState);
       window.removeEventListener(OPEN_INQUIRY_FORM_EVENT, openForm);
     };
   }, [gateInquiryForm]);
+
+  useEffect(() => {
+    if (!gateInquiryForm || !formOpen) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [gateInquiryForm, formOpen]);
 
   const showForm = !gateInquiryForm || formOpen;
 
@@ -71,15 +115,18 @@ export default function PlanEventCta({
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze)]">
           Plan Your Event
         </p>
+
         <h2
           id="contact-heading"
           className="mt-5 max-w-3xl font-serif text-4xl font-semibold tracking-tight sm:text-5xl"
         >
           {heading}
         </h2>
+
         <p className="mt-5 max-w-2xl text-lg leading-8 text-white/80">
           {description}
         </p>
+
         <div className="mt-8 flex flex-col gap-3 text-base sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-8 sm:gap-y-3">
           <a
             href={siteConfig.phoneHref}
@@ -87,6 +134,7 @@ export default function PlanEventCta({
           >
             {siteConfig.phoneDisplay}
           </a>
+
           <a
             href={siteConfig.emailHref}
             className="inline-flex min-h-11 items-center font-semibold text-[var(--ivory-soft)] underline decoration-[var(--bronze)] underline-offset-4 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--bronze)]"
@@ -97,7 +145,7 @@ export default function PlanEventCta({
       </div>
 
       {showForm ? (
-        <div className="mt-8">
+        <div ref={formRef} className="mt-8">
           <InquiryForm
             pageSource={pageSource}
             defaultServiceRegion={defaultServiceRegion}
@@ -109,6 +157,7 @@ export default function PlanEventCta({
             Prefer to start with the Catering Concierge above, or open the
             inquiry form when you are ready to send your event details.
           </p>
+
           <button
             type="button"
             onClick={() => setFormOpen(true)}
