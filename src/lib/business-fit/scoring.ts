@@ -265,7 +265,7 @@ export function scoreBusinessFit(
   }
   contributions.push({
     key: "timeline_feasibility",
-    label: "Opening timeline feasibility",
+    label: "Timeline readiness",
     points: timelinePoints,
     detail: timelineDetail,
   });

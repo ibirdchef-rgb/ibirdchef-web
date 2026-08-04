@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import type { BusinessFitReport } from "@/lib/business-fit/types";
 import {
@@ -153,262 +154,297 @@ export default function BusinessFitPage() {
   }
 
   return (
-    <div className="ans-fit text-[var(--ans-navy)]">
-      <header className="border-b border-[var(--ans-blue)]/15 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-4 px-5 py-4 sm:px-8">
+    <div className="ans-fit">
+      <header className="ans-topbar ans-no-print">
+        <div className="mx-auto flex max-w-6xl items-center px-5 py-3.5 sm:px-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/ans-food-service-os-logo.svg"
             alt="ANS Food Service OS"
-            width={280}
-            height={88}
+            width={260}
+            height={82}
             className="ans-logo"
           />
-          <div className="sans min-w-0">
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--ans-blue)]">
-              Phase 1.1 planning prototype
-            </p>
-            <p className="truncate text-sm text-[var(--ans-navy-soft)]">
-              Food Business Fit Report
-            </p>
-          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-12">
-        <section className="ans-no-print mb-10 max-w-3xl">
-          <h1 className="text-3xl font-semibold tracking-tight text-[var(--ans-blue)] sm:text-4xl">
-            ANS Food Business Fit
-          </h1>
-          <p className="sans mt-3 text-base leading-relaxed text-[var(--ans-navy-soft)]">
-            Clarify your concept, a preliminary startup range, likely opening timeline, major
-            risks, and the validation work still required—before you invest. All outputs are
-            planning estimates, not live market data, guarantees, or financial advice.
-          </p>
-        </section>
-
-        <form
-          onSubmit={onSubmit}
-          className="ans-no-print grid gap-5 rounded-xl border border-[var(--ans-blue)]/15 bg-white/90 p-5 shadow-sm sm:p-8"
-          noValidate
-          aria-describedby={apiError ? `${formId}-api-error` : undefined}
-        >
-          <div className="ans-form-grid grid gap-5 sm:grid-cols-2">
-            <label className="sans text-sm font-medium">
-              ZIP code
-              <input
-                className={fieldClass}
-                name="zipCode"
-                inputMode="numeric"
-                autoComplete="postal-code"
-                maxLength={5}
-                required
-                value={form.zipCode}
-                aria-invalid={Boolean(fieldErrors.zipCode)}
-                aria-describedby={`${formId}-zip-help${fieldErrors.zipCode ? ` ${formId}-zip-error` : ""}`}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    zipCode: event.target.value.replace(/\D/g, "").slice(0, 5),
-                  }))
-                }
-              />
-              <span id={`${formId}-zip-help`} className="ans-helper">
-                Used only for planning context. No live demographic feed is connected.
-              </span>
-              {fieldErrors.zipCode ? (
-                <span id={`${formId}-zip-error`} className="ans-helper text-red-700" role="alert">
-                  {fieldErrors.zipCode}
-                </span>
-              ) : null}
-            </label>
-
-            <label className="sans text-sm font-medium">
-              Target opening date
-              <input
-                className={fieldClass}
-                type="date"
-                name="targetOpeningDate"
-                required
-                value={form.targetOpeningDate}
-                aria-invalid={Boolean(fieldErrors.targetOpeningDate)}
-                aria-describedby={`${formId}-date-help${fieldErrors.targetOpeningDate ? ` ${formId}-date-error` : ""}`}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, targetOpeningDate: event.target.value }))
-                }
-              />
-              <span id={`${formId}-date-help`} className="ans-helper">
-                Compared against a typical planning timeline for your concept.
-              </span>
-              {fieldErrors.targetOpeningDate ? (
-                <span id={`${formId}-date-error`} className="ans-helper text-red-700" role="alert">
-                  {fieldErrors.targetOpeningDate}
-                </span>
-              ) : null}
-            </label>
-
-            <label className="sans text-sm font-medium">
-              Business type
-              <select
-                className={fieldClass}
-                value={form.businessType}
-                aria-describedby={`${formId}-type-help`}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    businessType: event.target.value as FormState["businessType"],
-                  }))
-                }
-              >
-                {BUSINESS_TYPES.map((value) => (
-                  <option key={value} value={value}>
-                    {LABELS.businessType[value]}
-                  </option>
-                ))}
-              </select>
-              <span id={`${formId}-type-help`} className="ans-helper">
-                Drives budget bands, equipment categories, and timeline length.
-              </span>
-            </label>
-
-            <label className="sans text-sm font-medium">
-              Cuisine
-              <select
-                className={fieldClass}
-                value={form.cuisine}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    cuisine: event.target.value as FormState["cuisine"],
-                  }))
-                }
-              >
-                {CUISINES.map((value) => (
-                  <option key={value} value={value}>
-                    {LABELS.cuisine[value]}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="sans text-sm font-medium">
-              Investment budget
-              <select
-                className={fieldClass}
-                value={form.investmentBudget}
-                aria-describedby={`${formId}-budget-help`}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    investmentBudget: event.target.value as FormState["investmentBudget"],
-                  }))
-                }
-              >
-                {INVESTMENT_BUDGETS.map((value) => (
-                  <option key={value} value={value}>
-                    {LABELS.investmentBudget[value]}
-                  </option>
-                ))}
-              </select>
-              <span id={`${formId}-budget-help`} className="ans-helper">
-                Total available capital band before financing structure is defined.
-              </span>
-            </label>
-
-            <label className="sans text-sm font-medium">
-              Owner experience
-              <select
-                className={fieldClass}
-                value={form.ownerExperience}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    ownerExperience: event.target.value as FormState["ownerExperience"],
-                  }))
-                }
-              >
-                {OWNER_EXPERIENCE.map((value) => (
-                  <option key={value} value={value}>
-                    {LABELS.ownerExperience[value]}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="sans text-sm font-medium">
-              Facility size
-              <select
-                className={fieldClass}
-                value={form.facilitySize}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    facilitySize: event.target.value as FormState["facilitySize"],
-                  }))
-                }
-              >
-                {FACILITY_SIZES.map((value) => (
-                  <option key={value} value={value}>
-                    {LABELS.facilitySize[value]}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="sans text-sm font-medium">
-              Service model
-              <select
-                className={fieldClass}
-                value={form.serviceModel}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    serviceModel: event.target.value as FormState["serviceModel"],
-                  }))
-                }
-              >
-                {SERVICE_MODELS.map((value) => (
-                  <option key={value} value={value}>
-                    {LABELS.serviceModel[value]}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          {apiError ? (
-            <p
-              id={`${formId}-api-error`}
-              role="alert"
-              className="sans rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
-            >
-              {apiError}
-            </p>
-          ) : null}
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="submit"
-              disabled={loading}
-              className="sans rounded-md bg-[var(--ans-blue)] px-5 py-2.5 text-sm font-semibold text-white transition enabled:hover:bg-[var(--ans-blue-soft)] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading ? "Generating report…" : "Generate Fit Report"}
-            </button>
-            <p className="sans text-xs text-[var(--ans-navy-soft)]">
-              No names, email, or phone collected. No leads or vendor requests are created.
-            </p>
-          </div>
-        </form>
-
-        <div className="sans ans-no-print mt-4 min-h-6 text-sm text-[var(--ans-navy-soft)]" aria-live="polite">
-          {loading ? "Building your Phase 1.1 planning estimate…" : null}
+      <section className="ans-hero ans-no-print" aria-labelledby="business-fit-hero-heading">
+        <div className="ans-hero-media" aria-hidden="true">
+          <Image
+            src="/seattle-skyline-hero.webp"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            quality={82}
+            className="object-cover object-[center_35%]"
+          />
         </div>
+        <div className="ans-hero-overlay" aria-hidden="true" />
 
-        {report ? (
-          <article
-            className="mt-6 space-y-8 rounded-xl border border-[var(--ans-blue)]/15 bg-white p-5 sm:p-8"
-            aria-labelledby="fit-report-heading"
+        <div className="ans-hero-content">
+          <div className="ans-hero-grid">
+            <div className="ans-hero-copy">
+              <p className="ans-eyebrow sans">Food business planning</p>
+              <h1 id="business-fit-hero-heading" className="ans-hero-title">
+                Is your concept built to thrive?
+              </h1>
+              <p className="ans-hero-support sans">
+                Get a structured preliminary assessment of your concept’s budget, timeline,
+                operating complexity, and planning readiness.
+              </p>
+              <ul className="ans-trust sans">
+                <li>Deterministic estimates</li>
+                <li>No personal data</li>
+                <li>Print-ready report</li>
+              </ul>
+              <ul className="ans-pillars sans">
+                <li>Budget alignment</li>
+                <li>Timeline readiness</li>
+                <li>Operational fit</li>
+                <li>Planning risks</li>
+              </ul>
+            </div>
+
+            <form
+              onSubmit={onSubmit}
+              className="ans-form-card grid gap-5"
+              noValidate
+              aria-describedby={apiError ? `${formId}-api-error` : undefined}
+            >
+              <div>
+                <h2>Build your preliminary fit report</h2>
+                <p className="lede sans">
+                  Planning estimates only—not live market demand, competition, revenue, or ROI
+                  analysis.
+                </p>
+              </div>
+
+              <div className="ans-form-grid grid gap-5 sm:grid-cols-2">
+                <label className="sans text-sm font-medium">
+                  ZIP code
+                  <input
+                    className={fieldClass}
+                    name="zipCode"
+                    inputMode="numeric"
+                    autoComplete="postal-code"
+                    maxLength={5}
+                    required
+                    value={form.zipCode}
+                    aria-invalid={Boolean(fieldErrors.zipCode)}
+                    aria-describedby={`${formId}-zip-help${fieldErrors.zipCode ? ` ${formId}-zip-error` : ""}`}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        zipCode: event.target.value.replace(/\D/g, "").slice(0, 5),
+                      }))
+                    }
+                  />
+                  <span id={`${formId}-zip-help`} className="ans-helper">
+                    Used only for planning context. No live demographic feed is connected.
+                  </span>
+                  {fieldErrors.zipCode ? (
+                    <span id={`${formId}-zip-error`} className="ans-helper text-red-700" role="alert">
+                      {fieldErrors.zipCode}
+                    </span>
+                  ) : null}
+                </label>
+
+                <label className="sans text-sm font-medium">
+                  Target opening date
+                  <input
+                    className={fieldClass}
+                    type="date"
+                    name="targetOpeningDate"
+                    required
+                    value={form.targetOpeningDate}
+                    aria-invalid={Boolean(fieldErrors.targetOpeningDate)}
+                    aria-describedby={`${formId}-date-help${fieldErrors.targetOpeningDate ? ` ${formId}-date-error` : ""}`}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, targetOpeningDate: event.target.value }))
+                    }
+                  />
+                  <span id={`${formId}-date-help`} className="ans-helper">
+                    Compared against a typical planning timeline for your concept.
+                  </span>
+                  {fieldErrors.targetOpeningDate ? (
+                    <span id={`${formId}-date-error`} className="ans-helper text-red-700" role="alert">
+                      {fieldErrors.targetOpeningDate}
+                    </span>
+                  ) : null}
+                </label>
+
+                <label className="sans text-sm font-medium">
+                  Business type
+                  <select
+                    className={fieldClass}
+                    value={form.businessType}
+                    aria-describedby={`${formId}-type-help`}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        businessType: event.target.value as FormState["businessType"],
+                      }))
+                    }
+                  >
+                    {BUSINESS_TYPES.map((value) => (
+                      <option key={value} value={value}>
+                        {LABELS.businessType[value]}
+                      </option>
+                    ))}
+                  </select>
+                  <span id={`${formId}-type-help`} className="ans-helper">
+                    Drives budget bands, equipment categories, and timeline length.
+                  </span>
+                </label>
+
+                <label className="sans text-sm font-medium">
+                  Cuisine
+                  <select
+                    className={fieldClass}
+                    value={form.cuisine}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        cuisine: event.target.value as FormState["cuisine"],
+                      }))
+                    }
+                  >
+                    {CUISINES.map((value) => (
+                      <option key={value} value={value}>
+                        {LABELS.cuisine[value]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="sans text-sm font-medium">
+                  Investment budget
+                  <select
+                    className={fieldClass}
+                    value={form.investmentBudget}
+                    aria-describedby={`${formId}-budget-help`}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        investmentBudget: event.target.value as FormState["investmentBudget"],
+                      }))
+                    }
+                  >
+                    {INVESTMENT_BUDGETS.map((value) => (
+                      <option key={value} value={value}>
+                        {LABELS.investmentBudget[value]}
+                      </option>
+                    ))}
+                  </select>
+                  <span id={`${formId}-budget-help`} className="ans-helper">
+                    Total available capital band before financing structure is defined.
+                  </span>
+                </label>
+
+                <label className="sans text-sm font-medium">
+                  Owner experience
+                  <select
+                    className={fieldClass}
+                    value={form.ownerExperience}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        ownerExperience: event.target.value as FormState["ownerExperience"],
+                      }))
+                    }
+                  >
+                    {OWNER_EXPERIENCE.map((value) => (
+                      <option key={value} value={value}>
+                        {LABELS.ownerExperience[value]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="sans text-sm font-medium">
+                  Facility size
+                  <select
+                    className={fieldClass}
+                    value={form.facilitySize}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        facilitySize: event.target.value as FormState["facilitySize"],
+                      }))
+                    }
+                  >
+                    {FACILITY_SIZES.map((value) => (
+                      <option key={value} value={value}>
+                        {LABELS.facilitySize[value]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="sans text-sm font-medium">
+                  Service model
+                  <select
+                    className={fieldClass}
+                    value={form.serviceModel}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        serviceModel: event.target.value as FormState["serviceModel"],
+                      }))
+                    }
+                  >
+                    {SERVICE_MODELS.map((value) => (
+                      <option key={value} value={value}>
+                        {LABELS.serviceModel[value]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {apiError ? (
+                <p
+                  id={`${formId}-api-error`}
+                  role="alert"
+                  className="sans rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+                >
+                  {apiError}
+                </p>
+              ) : null}
+
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="sans rounded-md bg-[var(--ans-blue)] px-5 py-2.5 text-sm font-semibold text-white transition enabled:hover:bg-[var(--ans-blue-soft)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {loading ? "Generating report…" : "Generate my fit report"}
+                </button>
+                <p className="sans text-xs text-[#5b6b7c]">
+                  No names, email, or phone collected. No leads or vendor requests are created.
+                </p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {(loading || report) ? (
+      <main className="ans-report-shell">
+        <div className="mx-auto max-w-5xl">
+          <div
+            className="sans ans-no-print min-h-6 px-1 text-sm text-[var(--ans-navy)]/70"
+            aria-live="polite"
           >
+            {loading ? "Building your Phase 1.1 planning estimate…" : null}
+          </div>
+
+          {report ? (
+            <article
+              className="mt-2 space-y-8 rounded-xl border border-[var(--ans-blue)]/15 bg-white p-5 shadow-sm sm:p-8"
+              aria-labelledby="fit-report-heading"
+            >
             <div className="ans-print-block flex flex-wrap items-start justify-between gap-4 border-b border-[var(--ans-blue)]/20 pb-5">
               <div>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -633,9 +669,11 @@ export default function BusinessFitPage() {
                 ))}
               </ul>
             </section>
-          </article>
-        ) : null}
+            </article>
+          ) : null}
+        </div>
       </main>
+      ) : null}
     </div>
   );
 }
