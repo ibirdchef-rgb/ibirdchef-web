@@ -45,6 +45,14 @@ describe("business-fit input validation", () => {
     const parsed = parseBusinessFitInput({ ...baseInput, email: "x@y.com" });
     assert.equal(parsed.ok, false);
   });
+
+  it("rejects invalid calendar dates", () => {
+    const parsed = parseBusinessFitInput({
+      ...baseInput,
+      targetOpeningDate: "2027-02-30",
+    });
+    assert.equal(parsed.ok, false);
+  });
 });
 
 describe("deterministic scoring and breakdown", () => {
@@ -117,10 +125,33 @@ describe("budget calculations", () => {
     );
     assert.equal(lowSum, budget.total.lowUsd);
     assert.equal(highSum, budget.total.highUsd);
+    assert.match(budget.total.label, /planning estimate/i);
+  });
+
+  it("increases restaurant totals vs food truck for similar facility assumptions", () => {
+    const truck = estimateStartupBudget({
+      ...baseInput,
+      businessType: "food_truck",
+      facilitySize: "mobile_or_shared",
+      serviceModel: "food_truck",
+    });
+    const restaurant = estimateStartupBudget({
+      ...baseInput,
+      businessType: "restaurant",
+      facilitySize: "2000_4000",
+      serviceModel: "dine_in",
+    });
+    assert.ok(restaurant.total.lowUsd > truck.total.lowUsd);
   });
 });
 
 describe("timeline generation", () => {
+  it("produces optimistic < typical < conservative months", () => {
+    const timeline = estimateOpeningTimeline(baseInput, FIXED_NOW);
+    assert.ok(timeline.optimisticMonths < timeline.typicalMonths);
+    assert.ok(timeline.typicalMonths < timeline.conservativeMonths);
+  });
+
   it("marks aggressive and unrealistic target dates", () => {
     const aggressive = estimateOpeningTimeline(
       { ...baseInput, businessType: "restaurant", targetOpeningDate: "2026-12-01" },
@@ -171,6 +202,21 @@ describe("next steps and missing information", () => {
     assert.ok(scored.missingInformation.some((item) => /daily transactions/i.test(item)));
     assert.ok(scored.missingInformation.some((item) => /permit requirements/i.test(item)));
     assert.ok(scored.missingInformation.some((item) => /Competitive-market/i.test(item)));
+  });
+
+  it("surfaces missing information for unknown budget and facility", () => {
+    const scored = scoreBusinessFit(
+      {
+        ...baseInput,
+        investmentBudget: "unknown",
+        facilitySize: "unknown",
+        ownerExperience: "none",
+        cuisine: "other",
+      },
+      FIXED_NOW,
+    );
+    assert.ok(scored.missingInformation.length >= 3);
+    assert.equal(scored.confidence, "low");
   });
 });
 
