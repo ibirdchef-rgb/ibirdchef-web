@@ -35,9 +35,13 @@
 
 .ans-logo {
   display: block;
-  width: min(260px, 68vw);
+  width: min(340px, 78vw);
   height: auto;
-  max-height: 78px;
+  max-height: none;
+}
+
+.ans-logo-report {
+  width: min(300px, 70vw);
 }
 
 .ans-hero {
@@ -293,8 +297,8 @@
   }
 
   .ans-fit .ans-logo {
-    max-height: 72px;
-    width: 240px;
+    width: 280px;
+    max-height: none;
   }
 
   .ans-fit a {

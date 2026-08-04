@@ -80,7 +80,7 @@ Phase 1 website prototype does **not** collect name, email, or phone.
 | Long description | Expand from MVP promise; list tools and disclaimers | Draft after hosting URL exists |
 | Categories | Business / Productivity (confirm OpenAI taxonomy) | TBD at submission |
 | Screenshots | Desktop + mobile `/business-fit` captures | `tmp/business-fit-screenshots/` (internal) |
-| Logo / wordmark | Blue ANS Food Service OS (transparent) | `public/ans-food-service-os-logo.svg` |
+| Logo / wordmark | Original blue ANS Food Service OS (transparent PNG) | `public/ans-food-service-os-logo.png` (source: `public/brand/ans-food-service-os-logo-source.png`) |
 | Square app icon | Matching ANS blue mark for directory | `public/ans-food-service-os-app-icon.svg`, `-512.png`, `-1024.png`, `-180.png` |
 | Hero imagery | Custom-generated Seattle skyline (Space Needle) for web UI only | Not required for MCP listing; assets in `public/seattle-skyline-hero.*` (WebP/AVIF/JPG + source PNG). Not scraped from an unlicensed stock site. |
 

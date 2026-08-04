@@ -159,10 +159,10 @@ export default function BusinessFitPage() {
         <div className="mx-auto flex max-w-6xl items-center px-5 py-3.5 sm:px-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/ans-food-service-os-logo.svg"
+            src="/ans-food-service-os-logo.png"
             alt="ANS Food Service OS"
-            width={260}
-            height={82}
+            width={960}
+            height={344}
             className="ans-logo"
           />
         </div>
@@ -449,11 +449,11 @@ export default function BusinessFitPage() {
               <div>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/ans-food-service-os-logo.svg"
+                  src="/ans-food-service-os-logo.png"
                   alt="ANS Food Service OS"
-                  width={240}
-                  height={74}
-                  className="ans-logo mb-3"
+                  width={960}
+                  height={344}
+                  className="ans-logo ans-logo-report mb-3"
                 />
                 <p className="sans text-xs uppercase tracking-[0.18em] text-[var(--ans-blue)]">
                   Planning estimate · v{report.reportVersion}
