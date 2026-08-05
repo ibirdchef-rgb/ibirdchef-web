@@ -1,108 +1,18 @@
 /**
- * ANS Food Service OS — Phase 1 MCP development server.
- * Local/private testing only. Do not publish this unauthenticated endpoint.
+ * ANS Food Business Fit — local MCP development server.
+ * Prefer production endpoint at /api/mcp after deploy.
+ * Do not expose this unauthenticated local listener publicly.
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { z } from "zod";
-import { runMcpTool } from "./tools";
+import { createAnsFoodBusinessFitMcpServer } from "../src/lib/ans-mcp/create-mcp-server";
 
 const HOST = process.env.ANS_MCP_HOST ?? "127.0.0.1";
 const PORT = Number(process.env.ANS_MCP_PORT ?? "8787");
 
-const businessFitShape = {
-  zipCode: z.string(),
-  businessType: z.string(),
-  cuisine: z.string(),
-  investmentBudget: z.string(),
-  ownerExperience: z.string(),
-  facilitySize: z.string(),
-  serviceModel: z.string(),
-  targetOpeningDate: z.string(),
-};
-
-function textResult(payload: unknown) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify(payload, null, 2),
-      },
-    ],
-  };
-}
-
-function createMcpServer() {
-  const server = new McpServer({
-    name: "ans-food-service-os",
-    version: "1.0.0",
-  });
-
-  server.registerTool(
-    "analyze_business_fit",
-    {
-      title: "Analyze Business Fit",
-      description:
-        "Generate a Phase 1 ANS Food Business Fit Report from concept inputs. Planning estimates only; no live market data.",
-      inputSchema: businessFitShape,
-    },
-    async (args) => textResult(runMcpTool("analyze_business_fit", args)),
-  );
-
-  server.registerTool(
-    "build_startup_budget",
-    {
-      title: "Build Startup Budget",
-      description:
-        "Build a deterministic Phase 1 startup budget range and category breakdown. Planning estimates only.",
-      inputSchema: businessFitShape,
-    },
-    async (args) => textResult(runMcpTool("build_startup_budget", args)),
-  );
-
-  server.registerTool(
-    "generate_opening_checklist",
-    {
-      title: "Generate Opening Checklist",
-      description:
-        "Generate generic licensing/checklist and equipment categories. Requires local professional review.",
-      inputSchema: businessFitShape,
-    },
-    async (args) => textResult(runMcpTool("generate_opening_checklist", args)),
-  );
-
-  server.registerTool(
-    "compare_food_service_concepts",
-    {
-      title: "Compare Food Service Concepts",
-      description:
-        "Compare 2–3 food-service concepts with the same deterministic Phase 1 model. Read-only planning estimates.",
-      inputSchema: {
-        concepts: z
-          .array(
-            z.object({
-              label: z.string(),
-              input: z.object(businessFitShape),
-            }),
-          )
-          .min(2)
-          .max(3),
-      },
-    },
-    async (args) => textResult(runMcpTool("compare_food_service_concepts", args)),
-  );
-
-  return server;
-}
-
-async function handleMcp(
-  req: IncomingMessage,
-  res: ServerResponse,
-  body: string,
-) {
-  const server = createMcpServer();
+async function handleMcp(req: IncomingMessage, res: ServerResponse, body: string) {
+  const server = createAnsFoodBusinessFitMcpServer();
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
     enableJsonResponse: true,
@@ -114,7 +24,6 @@ async function handleMcp(
   });
 
   await server.connect(transport);
-
   const parsedBody = body ? JSON.parse(body) : undefined;
   await transport.handleRequest(req, res, parsedBody);
 }
@@ -122,7 +31,18 @@ async function handleMcp(
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
-    req.on("data", (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+    let total = 0;
+    const max = 64 * 1024;
+    req.on("data", (chunk) => {
+      const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      total += buf.length;
+      if (total > max) {
+        reject(new Error("payload_too_large"));
+        req.destroy();
+        return;
+      }
+      chunks.push(buf);
+    });
     req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
     req.on("error", reject);
   });
@@ -136,9 +56,9 @@ const httpServer = createServer(async (req, res) => {
     res.end(
       JSON.stringify({
         ok: true,
-        service: "ans-food-service-os-mcp",
+        service: "ans-food-business-fit-mcp",
         mcpPath: "/mcp",
-        note: "Development server only. Do not expose publicly without auth.",
+        note: "Development server only. Production path is /api/mcp.",
       }),
     );
     return;
@@ -160,15 +80,25 @@ const httpServer = createServer(async (req, res) => {
     const body = req.method === "POST" ? await readBody(req) : "";
     await handleMcp(req, res, body);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "MCP handler error";
     if (!res.headersSent) {
-      res.writeHead(500, { "content-type": "application/json" });
-      res.end(JSON.stringify({ ok: false, error: message }));
+      const isLarge = error instanceof Error && error.message === "payload_too_large";
+      res.writeHead(isLarge ? 413 : 500, { "content-type": "application/json" });
+      res.end(
+        JSON.stringify({
+          ok: false,
+          error: {
+            code: isLarge ? "payload_too_large" : "internal_error",
+            message: isLarge
+              ? "Request body exceeds 65536 bytes."
+              : "Unable to process MCP request.",
+          },
+        }),
+      );
     }
   }
 });
 
 httpServer.listen(PORT, HOST, () => {
   console.log(`ANS MCP development server listening at http://${HOST}:${PORT}/mcp`);
-  console.log("Private/local testing only. Do not publish this unauthenticated endpoint.");
+  console.log("Local testing only. Production endpoint target: https://ibirdchef.com/api/mcp");
 });
