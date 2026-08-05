@@ -9,7 +9,7 @@
 | Short description | Preliminary food-business planning estimates for budget alignment, timeline readiness, operational fit, and planning risks. |
 | Full description | ANS Food Business Fit helps food-business operators evaluate whether a concept is ready to plan further. It provides deterministic preliminary estimates for startup budget ranges, opening timeline readiness, operational complexity signals, major planning risks, missing information, and next steps. It is a planning and qualification app—not a live feasibility study, market-demand product, quoting engine, or the full CLOW/iBirdOS Lead-to-Profit platform. Results require local professional verification. |
 | MCP production URL | https://ibirdchef.com/api/mcp |
-| Privacy URL | https://ibirdchef.com/privacy |
+| Privacy URL | https://ibirdchef.com/business-fit/privacy |
 | Terms URL | https://ibirdchef.com/terms |
 | Support URL | https://ibirdchef.com/support |
 | Support email | support@prosperityaxis.com (`mailto:support@prosperityaxis.com`) — general Marketplace support only; not approved for privacy/data-deletion requests yet |

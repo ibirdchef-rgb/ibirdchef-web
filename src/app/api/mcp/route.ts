@@ -2,6 +2,7 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { createAnsFoodBusinessFitMcpServer } from "@/lib/ans-mcp/create-mcp-server";
 import {
   checkAuth,
+  checkPreAuthRateLimit,
   checkRateLimit,
   getClientKey,
   logMcpEvent,
@@ -14,6 +15,21 @@ export const dynamic = "force-dynamic";
 
 async function handleMcp(request: Request): Promise<Response> {
   const clientKey = getClientKey(request);
+
+  const preAuthRate = checkPreAuthRateLimit(clientKey);
+  if (!preAuthRate.ok) {
+    logMcpEvent({
+      level: "warn",
+      message: "mcp_pre_auth_rate_limited",
+      clientKey,
+      status: preAuthRate.status,
+    });
+    return safeErrorResponse(
+      preAuthRate.status,
+      preAuthRate.error.code,
+      preAuthRate.error.message,
+    );
+  }
 
   const auth = checkAuth(request);
   if (!auth.ok) {

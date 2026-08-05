@@ -10,9 +10,15 @@ export function getRateLimitMax(): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 60;
 }
 
+export function getPreAuthRateLimitMax(): number {
+  const parsed = Number(process.env.ANS_MCP_PRE_AUTH_RATE_LIMIT_MAX ?? "30");
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 30;
+}
+
 type Bucket = { count: number; resetAt: number };
 
 const rateBuckets = new Map<string, Bucket>();
+const preAuthRateBuckets = new Map<string, Bucket>();
 
 export type SecurityFailure = {
   ok: false;
@@ -55,9 +61,41 @@ export function checkRateLimit(clientKey: string, now = Date.now()): SecuritySuc
   return { ok: true };
 }
 
+/**
+ * Limits every request before authentication. This bucket is intentionally
+ * separate from the authenticated-client limiter so rejected auth attempts
+ * cannot consume a valid client's post-auth allowance.
+ */
+export function checkPreAuthRateLimit(
+  clientKey: string,
+  now = Date.now(),
+): SecuritySuccess | SecurityFailure {
+  const existing = preAuthRateBuckets.get(clientKey);
+  if (!existing || now >= existing.resetAt) {
+    preAuthRateBuckets.set(clientKey, {
+      count: 1,
+      resetAt: now + MCP_RATE_LIMIT_WINDOW_MS,
+    });
+    return { ok: true };
+  }
+  if (existing.count >= getPreAuthRateLimitMax()) {
+    return {
+      ok: false,
+      status: 429,
+      error: {
+        code: "rate_limited",
+        message: "Too many requests. Please retry later.",
+      },
+    };
+  }
+  existing.count += 1;
+  return { ok: true };
+}
+
 /** Test helper — clear in-memory buckets between tests. */
 export function resetRateLimitBuckets(): void {
   rateBuckets.clear();
+  preAuthRateBuckets.clear();
 }
 
 export function checkAuth(request: Request): SecuritySuccess | SecurityFailure {

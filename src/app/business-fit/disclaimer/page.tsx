@@ -46,7 +46,7 @@ export default function BusinessFitDisclaimerPage() {
           Terms of Use
         </a>{" "}
         and{" "}
-        <a className="text-[#0b4f9c] underline" href="/privacy">
+        <a className="text-[#0b4f9c] underline" href="/business-fit/privacy">
           Privacy Policy
         </a>
         .

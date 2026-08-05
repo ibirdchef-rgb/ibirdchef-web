@@ -37,7 +37,7 @@ export default function AnsPolicyShell({
           {children}
         </div>
         <nav className="mt-12 flex flex-wrap gap-4 border-t border-[#0b4f9c]/15 pt-6 text-sm">
-          <Link className="text-[#0b4f9c] underline-offset-4 hover:underline" href="/privacy">
+          <Link className="text-[#0b4f9c] underline-offset-4 hover:underline" href="/business-fit/privacy">
             Privacy
           </Link>
           <Link className="text-[#0b4f9c] underline-offset-4 hover:underline" href="/terms">

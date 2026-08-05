@@ -17,6 +17,7 @@ See `.env.example`. Critical production values:
 - `ANS_MCP_AUTH_TOKEN` — bearer token required when auth is enforced
 - `ANS_MCP_REQUIRE_AUTH=true` — force auth outside production detection if needed
 - `ANS_MCP_RATE_LIMIT_MAX` — requests per client per minute (default 60)
+- `ANS_MCP_PRE_AUTH_RATE_LIMIT_MAX` — all requests per source IP per minute before authentication (default 30)
 - `ANS_MCP_PRODUCTION_URL` — optional override reported in docs/metadata
 - Approved support email default: `support@prosperityaxis.com` (override with `ANS_SUPPORT_EMAIL` if needed; not for privacy/data-deletion yet)
 - Remaining owner/legal placeholders: `ANS_SUPPORT_URL`, `ANS_PRIVACY_CONTACT_EMAIL`, `ANS_BUSINESS_ADDRESS`, `ANS_GOVERNING_JURISDICTION`, `ANS_DATA_RETENTION_STATEMENT`, `ANS_SUPPORTED_COUNTRIES`

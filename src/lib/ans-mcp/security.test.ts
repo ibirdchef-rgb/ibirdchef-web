@@ -4,6 +4,7 @@ import {
   MCP_MAX_BODY_BYTES,
   checkAuth,
   checkContentLength,
+  checkPreAuthRateLimit,
   checkRateLimit,
   readLimitedBody,
   resetRateLimitBuckets,
@@ -15,6 +16,7 @@ afterEach(() => {
   delete process.env.ANS_MCP_AUTH_TOKEN;
   delete process.env.ANS_MCP_REQUIRE_AUTH;
   delete process.env.ANS_MCP_RATE_LIMIT_MAX;
+  delete process.env.ANS_MCP_PRE_AUTH_RATE_LIMIT_MAX;
   delete process.env.VERCEL_ENV;
 });
 
@@ -30,6 +32,30 @@ describe("ANS MCP security guards", () => {
       assert.equal(blocked.status, 429);
       assert.equal(blocked.error.code, "rate_limited");
     }
+  });
+
+  it("rate limits pre-auth attempts independently by client and recovers", () => {
+    process.env.ANS_MCP_PRE_AUTH_RATE_LIMIT_MAX = "2";
+    const start = 1_000;
+
+    assert.equal(checkPreAuthRateLimit("client-a", start).ok, true);
+    assert.equal(checkPreAuthRateLimit("client-a", start).ok, true);
+    const blocked = checkPreAuthRateLimit("client-a", start);
+    assert.equal(blocked.ok, false);
+    if (!blocked.ok) assert.equal(blocked.status, 429);
+
+    assert.equal(checkPreAuthRateLimit("client-b", start).ok, true);
+    assert.equal(
+      checkPreAuthRateLimit("client-a", start + 60_000).ok,
+      true,
+    );
+  });
+
+  it("keeps pre-auth and authenticated rate-limit buckets separate", () => {
+    process.env.ANS_MCP_PRE_AUTH_RATE_LIMIT_MAX = "1";
+    process.env.ANS_MCP_RATE_LIMIT_MAX = "1";
+    assert.equal(checkPreAuthRateLimit("client-a").ok, true);
+    assert.equal(checkRateLimit("client-a").ok, true);
   });
 
   it("requires bearer auth when enforced", () => {
