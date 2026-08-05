@@ -16,16 +16,20 @@
 | Disclaimer URL | https://ibirdchef.com/business-fit/disclaimer |
 | Data request URL | https://ibirdchef.com/data-request |
 | Authentication | Bearer token via `ANS_MCP_AUTH_TOKEN` (required in production). Exact ChatGPT connector auth mechanism to be confirmed against current OpenAI Apps SDK requirements before submission. |
-| Supported countries | Placeholder — owner confirmation required (`ANS_SUPPORTED_COUNTRIES`) |
+| Supported countries | United States (approved) |
 | Rectangular logo | `public/ans-food-service-os-logo.png` (source: `public/brand/ans-food-service-os-logo-source.png`) |
 | Square Marketplace icon | `public/ans-food-service-os-app-icon.svg` (+ 512/1024 PNG) |
+| Domain verification | `/.well-known/openai-apps-challenge` (token from env; never commit) |
 
 ## Tool descriptions
+
+All tools advertise MCP annotations: `readOnlyHint`, `destructiveHint: false`, `idempotentHint`, `openWorldHint: false`.
 
 1. **analyze_business_fit** — Preliminary Business Fit report (budget alignment, timeline readiness, operational fit, planning risks).
 2. **compare_food_service_concepts** — Compare 2–3 concepts with the same planning model.
 3. **build_startup_budget** — Preliminary startup budget planning range and categories.
 4. **generate_opening_checklist** — Generic opening checklist categories requiring local review.
+5. **simulate_event_profit** — Read-only event-profit simulation for iBirdChef catering pilots (Seattle / Bay Area). Always requires human approval; never sends quotes, accepts payments, books events, or confirms capacity.
 
 ## Suggested prompts
 
@@ -33,6 +37,7 @@
 - “Compare a catering company, food truck, and café for my budget.”
 - “Build a preliminary startup budget for a corporate catering business.”
 - “Create an opening checklist for a personal-chef business.”
+- “Simulate profit for a 150-guest Seattle catering event with these costs and a $3,500 budget.”
 
 ## Intended users
 

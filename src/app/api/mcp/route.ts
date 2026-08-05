@@ -16,23 +16,26 @@ export const dynamic = "force-dynamic";
 async function handleMcp(request: Request): Promise<Response> {
   const clientKey = getClientKey(request);
 
-  const preAuthRate = checkPreAuthRateLimit(clientKey);
-  if (!preAuthRate.ok) {
-    logMcpEvent({
-      level: "warn",
-      message: "mcp_pre_auth_rate_limited",
-      clientKey,
-      status: preAuthRate.status,
-    });
-    return safeErrorResponse(
-      preAuthRate.status,
-      preAuthRate.error.code,
-      preAuthRate.error.message,
-    );
-  }
-
+  // Authenticate first. Failed-auth traffic is limited separately so it cannot
+  // consume the authenticated client allowance, and authenticated traffic is
+  // not capped by the lower pre-auth bucket.
   const auth = checkAuth(request);
   if (!auth.ok) {
+    const preAuthRate = checkPreAuthRateLimit(clientKey);
+    if (!preAuthRate.ok) {
+      logMcpEvent({
+        level: "warn",
+        message: "mcp_pre_auth_rate_limited",
+        clientKey,
+        status: preAuthRate.status,
+      });
+      return safeErrorResponse(
+        preAuthRate.status,
+        preAuthRate.error.code,
+        preAuthRate.error.message,
+        { retryAfterSeconds: preAuthRate.retryAfterSeconds },
+      );
+    }
     logMcpEvent({
       level: "warn",
       message: "mcp_auth_rejected",
@@ -50,7 +53,9 @@ async function handleMcp(request: Request): Promise<Response> {
       clientKey,
       status: rate.status,
     });
-    return safeErrorResponse(rate.status, rate.error.code, rate.error.message);
+    return safeErrorResponse(rate.status, rate.error.code, rate.error.message, {
+      retryAfterSeconds: rate.retryAfterSeconds,
+    });
   }
 
   try {
@@ -98,7 +103,6 @@ async function handleMcp(request: Request): Promise<Response> {
       status: response.status,
     });
 
-    // Ensure security headers on successful transport responses.
     const headers = new Headers(response.headers);
     headers.set("cache-control", "no-store");
     headers.set("x-content-type-options", "nosniff");

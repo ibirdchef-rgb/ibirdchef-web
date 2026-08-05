@@ -32,9 +32,12 @@ export default function SupportPage() {
         </li>
         <li>
           Support URL:{" "}
-          <strong>
-            {ownerFieldOrPlaceholder(ansOwnerConfig.supportUrl, "ANS_SUPPORT_URL")}
-          </strong>
+          <a
+            className="font-semibold text-[#0b4f9c] underline underline-offset-4"
+            href={ansOwnerConfig.supportUrl}
+          >
+            {ansOwnerConfig.supportUrl}
+          </a>
         </li>
         <li>
           Business address:{" "}

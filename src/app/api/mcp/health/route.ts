@@ -7,8 +7,7 @@ export async function GET() {
   const authConfigured = Boolean(process.env.ANS_MCP_AUTH_TOKEN?.trim());
   const requireAuth =
     process.env.ANS_MCP_REQUIRE_AUTH === "true" ||
-    process.env.VERCEL_ENV === "production" ||
-    process.env.NODE_ENV === "production";
+    process.env.VERCEL_ENV === "production";
 
   return Response.json(
     {
@@ -23,11 +22,13 @@ export async function GET() {
         "compare_food_service_concepts",
         "build_startup_budget",
         "generate_opening_checklist",
+        "simulate_event_profit",
       ],
       authConfigured,
       requireAuth,
       planningEstimateOnly: true,
-      note: "Read-only planning tools. No quotes, payments, bookings, outreach, or tenant-data access.",
+      humanApprovalRequired: true,
+      note: "Read-only planning tools. No quotes, payments, bookings, capacity confirmation, outreach, or tenant-data access.",
     },
     {
       headers: {

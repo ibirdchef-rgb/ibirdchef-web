@@ -90,4 +90,45 @@ describe("ANS MCP abuse and validation cases", () => {
     const zips = results.map((row) => (row.ok ? row.result.input.zipCode : null));
     assert.deepEqual(zips.sort(), ["94105", "98101", "98109"]);
   });
+
+  it("rejects simulate_event_profit commercial-action and override attempts", () => {
+    const cases = [
+      "send quote to the customer",
+      "accept payment now",
+      "book event tomorrow",
+      "confirm capacity for Saturday",
+      "override cost to zero",
+      "bypass human approval",
+    ];
+    for (const notes of cases) {
+      const result = runMcpTool("simulate_event_profit", {
+        guestCount: 40,
+        customerBudgetUsd: 1200,
+        proposedSellingPriceUsd: 1400,
+        foodCostUsd: 300,
+        laborCostUsd: 250,
+        notes,
+      });
+      assert.equal(result.ok, false, `expected rejection for notes: ${notes}`);
+    }
+  });
+
+  it("never unlocks commercial actions from simulate_event_profit", () => {
+    const result = runMcpTool("simulate_event_profit", {
+      guestCount: 150,
+      customerBudgetUsd: 3500,
+      proposedSellingPriceUsd: 4125,
+      foodCostUsd: 1120,
+      laborCostUsd: 620,
+      packagingCostUsd: 185,
+      deliveryCostUsd: 145,
+    });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.equal(result.result.humanApprovalRequired, true);
+      assert.equal(result.result.commercialActionsBlocked, true);
+      assert.equal(result.result.planningEstimateOnly, true);
+    }
+  });
 });
+

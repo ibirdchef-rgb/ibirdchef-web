@@ -8,17 +8,22 @@
 - [x] Production-capable remote MCP path: `/api/mcp` (target `https://ibirdchef.com/api/mcp`)
 - [x] Streamable HTTP transport (Web Standard)
 - [x] Health endpoint: `/api/mcp/health`
-- [x] Four read-only tools registered
+- [x] Five read-only tools registered (includes `simulate_event_profit`)
+- [x] Tool annotations: read-only, non-destructive, idempotent, closed-world
 - [x] Request size limits + rate limiting + safe errors
-- [x] Auth hook via `ANS_MCP_AUTH_TOKEN` (enforced in production)
+- [x] Auth via `ANS_MCP_AUTH_TOKEN` (enforced on `VERCEL_ENV=production` or `ANS_MCP_REQUIRE_AUTH=true`; not bare `NODE_ENV`)
+- [x] Pre-auth rate limit applies only to failed-auth traffic; authenticated traffic uses post-auth limit
+- [x] Domain-verification challenge endpoint: `/.well-known/openai-apps-challenge`
 - [x] Privacy / terms / support / data-request / disclaimer pages
 - [x] Marketplace metadata draft
 - [x] Deployment guide + env template placeholders
-- [x] Security/abuse tests
+- [x] Security/abuse tests + Marketplace evaluation cases (5 positive / 3 negative)
 - [x] Owner approved Marketplace support email: `support@prosperityaxis.com`
-- [ ] Owner fills remaining privacy/legal env values (privacy contact, address, jurisdiction, retention, countries, support URL)
-- [ ] Owner sets production MCP bearer token
-- [ ] Owner confirms country availability
+- [x] Owner approved support URL: `https://ibirdchef.com/support`
+- [x] Owner approved supported countries: United States
+- [ ] Owner fills remaining privacy/legal env values (privacy contact, address, jurisdiction, retention)
+- [ ] Owner sets production MCP bearer token (`ANS_MCP_AUTH_TOKEN`)
+- [ ] Owner sets domain challenge token (`OPENAI_APPS_DOMAIN_CHALLENGE`)
 - [ ] Authenticated reviewer walkthrough in ChatGPT
 - [ ] Owner approval to submit
 
@@ -26,6 +31,8 @@
 
 - `docs/ans-mcp-deployment.md`
 - `docs/ans-marketplace-metadata.md`
+- `docs/ans-marketplace-evaluation-cases.md`
+- `docs/ans-mcp-developer-mode-runbook.md`
 - `docs/ans-privacy-data-flow.md`
 - `docs/ans-security-abuse-checklist.md`
 - `docs/ans-reviewer-test-instructions.md`
@@ -35,4 +42,5 @@
 - No Revenue Bridge
 - No menu import
 - No ChatGPT directory submission
+- No Chef World marketplace features
 - No unauthenticated public local MCP exposure

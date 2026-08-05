@@ -11,6 +11,8 @@ import {
   safeErrorResponse,
 } from "./security";
 
+const originalNodeEnv = process.env.NODE_ENV;
+
 afterEach(() => {
   resetRateLimitBuckets();
   delete process.env.ANS_MCP_AUTH_TOKEN;
@@ -18,7 +20,9 @@ afterEach(() => {
   delete process.env.ANS_MCP_RATE_LIMIT_MAX;
   delete process.env.ANS_MCP_PRE_AUTH_RATE_LIMIT_MAX;
   delete process.env.VERCEL_ENV;
+  process.env.NODE_ENV = originalNodeEnv;
 });
+
 
 describe("ANS MCP security guards", () => {
   it("rate limits repeated clients", () => {
@@ -71,6 +75,21 @@ describe("ANS MCP security guards", () => {
       }),
     );
     assert.equal(ok.ok, true);
+  });
+
+  it("does not enforce auth from NODE_ENV=production alone", () => {
+    process.env.NODE_ENV = "production";
+    delete process.env.ANS_MCP_REQUIRE_AUTH;
+    delete process.env.VERCEL_ENV;
+    delete process.env.ANS_MCP_AUTH_TOKEN;
+    assert.equal(checkAuth(new Request("http://localhost/api/mcp")).ok, true);
+  });
+
+  it("safeErrorResponse can include Retry-After", async () => {
+    const response = safeErrorResponse(429, "rate_limited", "Too many requests.", {
+      retryAfterSeconds: 12,
+    });
+    assert.equal(response.headers.get("retry-after"), "12");
   });
 
   it("rejects oversized content-length", () => {

@@ -2,6 +2,8 @@
  * Production MCP request guards: auth, size limits, rate limiting, safe errors.
  */
 
+import { timingSafeEqual } from "node:crypto";
+
 export const MCP_MAX_BODY_BYTES = 64 * 1024; // 64 KiB
 export const MCP_RATE_LIMIT_WINDOW_MS = 60_000;
 
@@ -27,30 +29,58 @@ export type SecurityFailure = {
     code: string;
     message: string;
   };
+  retryAfterSeconds?: number;
 };
 
 export type SecuritySuccess = {
   ok: true;
 };
 
+/**
+ * Prefer platform-provided client IPs. Do not trust a bare client-supplied
+ * X-Forwarded-For list when not running behind Vercel.
+ */
 export function getClientKey(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0]?.trim() || "unknown";
+  const vercelForwarded = request.headers.get("x-vercel-forwarded-for");
+  if (vercelForwarded) {
+    return vercelForwarded.split(",")[0]?.trim() || "unknown";
   }
-  return request.headers.get("x-real-ip")?.trim() || "unknown";
+
+  const realIp = request.headers.get("x-real-ip")?.trim();
+  if (realIp) {
+    return realIp;
+  }
+
+  if (process.env.VERCEL) {
+    const forwarded = request.headers.get("x-forwarded-for");
+    if (forwarded) {
+      return forwarded.split(",")[0]?.trim() || "unknown";
+    }
+  }
+
+  return "unknown";
 }
 
-export function checkRateLimit(clientKey: string, now = Date.now()): SecuritySuccess | SecurityFailure {
-  const existing = rateBuckets.get(clientKey);
+function touchBucket(
+  buckets: Map<string, Bucket>,
+  clientKey: string,
+  max: number,
+  now: number,
+): SecuritySuccess | SecurityFailure {
+  const existing = buckets.get(clientKey);
   if (!existing || now >= existing.resetAt) {
-    rateBuckets.set(clientKey, { count: 1, resetAt: now + MCP_RATE_LIMIT_WINDOW_MS });
+    buckets.set(clientKey, { count: 1, resetAt: now + MCP_RATE_LIMIT_WINDOW_MS });
     return { ok: true };
   }
-  if (existing.count >= getRateLimitMax()) {
+  if (existing.count >= max) {
+    const retryAfterSeconds = Math.max(
+      1,
+      Math.ceil((existing.resetAt - now) / 1000),
+    );
     return {
       ok: false,
       status: 429,
+      retryAfterSeconds,
       error: {
         code: "rate_limited",
         message: "Too many requests. Please retry later.",
@@ -61,35 +91,18 @@ export function checkRateLimit(clientKey: string, now = Date.now()): SecuritySuc
   return { ok: true };
 }
 
+export function checkRateLimit(clientKey: string, now = Date.now()): SecuritySuccess | SecurityFailure {
+  return touchBucket(rateBuckets, clientKey, getRateLimitMax(), now);
+}
+
 /**
- * Limits every request before authentication. This bucket is intentionally
- * separate from the authenticated-client limiter so rejected auth attempts
- * cannot consume a valid client's post-auth allowance.
+ * Limits failed-auth traffic only. Authenticated traffic must use checkRateLimit.
  */
 export function checkPreAuthRateLimit(
   clientKey: string,
   now = Date.now(),
 ): SecuritySuccess | SecurityFailure {
-  const existing = preAuthRateBuckets.get(clientKey);
-  if (!existing || now >= existing.resetAt) {
-    preAuthRateBuckets.set(clientKey, {
-      count: 1,
-      resetAt: now + MCP_RATE_LIMIT_WINDOW_MS,
-    });
-    return { ok: true };
-  }
-  if (existing.count >= getPreAuthRateLimitMax()) {
-    return {
-      ok: false,
-      status: 429,
-      error: {
-        code: "rate_limited",
-        message: "Too many requests. Please retry later.",
-      },
-    };
-  }
-  existing.count += 1;
-  return { ok: true };
+  return touchBucket(preAuthRateBuckets, clientKey, getPreAuthRateLimitMax(), now);
 }
 
 /** Test helper — clear in-memory buckets between tests. */
@@ -98,12 +111,22 @@ export function resetRateLimitBuckets(): void {
   preAuthRateBuckets.clear();
 }
 
+function tokensEqual(presented: string, required: string): boolean {
+  const a = Buffer.from(presented);
+  const b = Buffer.from(required);
+  if (a.length !== b.length) {
+    return false;
+  }
+  return timingSafeEqual(a, b);
+}
+
 export function checkAuth(request: Request): SecuritySuccess | SecurityFailure {
   const required = process.env.ANS_MCP_AUTH_TOKEN?.trim();
+  // Enforce in Vercel Production or when explicitly required.
+  // Do not treat local `next start` (NODE_ENV=production) as marketplace production.
   const enforce =
     process.env.ANS_MCP_REQUIRE_AUTH === "true" ||
-    process.env.VERCEL_ENV === "production" ||
-    process.env.NODE_ENV === "production";
+    process.env.VERCEL_ENV === "production";
 
   if (!enforce) {
     return { ok: true };
@@ -123,7 +146,7 @@ export function checkAuth(request: Request): SecuritySuccess | SecurityFailure {
   const header = request.headers.get("authorization") ?? "";
   const match = /^Bearer\s+(.+)$/i.exec(header);
   const presented = match?.[1]?.trim() ?? "";
-  if (!presented || presented !== required) {
+  if (!presented || !tokensEqual(presented, required)) {
     return {
       ok: false,
       status: 401,
@@ -210,7 +233,19 @@ export async function readLimitedBody(request: Request): Promise<
   return { ok: true, text: new TextDecoder("utf-8").decode(merged) };
 }
 
-export function safeErrorResponse(status: number, code: string, message: string): Response {
+export function safeErrorResponse(
+  status: number,
+  code: string,
+  message: string,
+  options?: { retryAfterSeconds?: number },
+): Response {
+  const headers: Record<string, string> = {
+    "cache-control": "no-store",
+    "x-content-type-options": "nosniff",
+  };
+  if (options?.retryAfterSeconds) {
+    headers["retry-after"] = String(options.retryAfterSeconds);
+  }
   return Response.json(
     {
       ok: false,
@@ -218,10 +253,7 @@ export function safeErrorResponse(status: number, code: string, message: string)
     },
     {
       status,
-      headers: {
-        "cache-control": "no-store",
-        "x-content-type-options": "nosniff",
-      },
+      headers,
     },
   );
 }
@@ -238,7 +270,6 @@ export function logMcpEvent(event: {
     ts: new Date().toISOString(),
     ...event,
   };
-  // Structured logs only — never log tokens, bodies, or PII fields.
   if (event.level === "error") {
     console.error(JSON.stringify(payload));
   } else if (event.level === "warn") {

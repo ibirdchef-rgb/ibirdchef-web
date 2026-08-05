@@ -1,5 +1,16 @@
 export { PHASE1_ASSUMPTIONS, PHASE1_DISCLAIMERS } from "@/lib/business-fit/disclaimers";
 export {
+  CAPACITY_STATUSES,
+  EVENT_PROFIT_DECISIONS,
+  parseSimulateEventProfitInput,
+  simulateEventProfit,
+  simulateEventProfitInputSchema,
+  type CapacityStatus,
+  type EventProfitDecision,
+  type SimulateEventProfitInput,
+  type SimulateEventProfitResult,
+} from "@/lib/business-fit/event-profit";
+export {
   compareFoodServiceConcepts,
   type CompareConcept,
 } from "@/lib/business-fit/compare";
