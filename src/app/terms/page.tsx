@@ -58,7 +58,13 @@ export default function TermsPage() {
 
       <h2 className="pt-4 text-xl font-semibold text-[#071a2b]">Contact</h2>
       <p>
-        {ownerFieldOrPlaceholder(ansOwnerConfig.supportEmail, "ANS_SUPPORT_EMAIL")}
+        Support:{" "}
+        <a
+          className="font-semibold text-[#0b4f9c] underline underline-offset-4"
+          href={ansOwnerConfig.supportEmailHref}
+        >
+          {ansOwnerConfig.supportEmail}
+        </a>
       </p>
 
       <p className="rounded-md border border-[#0b4f9c]/20 bg-white p-4 text-sm">

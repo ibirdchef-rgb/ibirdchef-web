@@ -82,7 +82,20 @@ export default function PrivacyPage() {
         Publisher: {ansOwnerConfig.publisherName}
         <br />
         Support:{" "}
-        {ownerFieldOrPlaceholder(ansOwnerConfig.supportEmail, "ANS_SUPPORT_EMAIL")}
+        <a
+          className="font-semibold text-[#0b4f9c] underline underline-offset-4"
+          href={ansOwnerConfig.supportEmailHref}
+        >
+          {ansOwnerConfig.supportEmail}
+        </a>
+        <br />
+        Privacy / data requests:{" "}
+        <strong>
+          {ownerFieldOrPlaceholder(
+            ansOwnerConfig.privacyContactEmail,
+            "ANS_PRIVACY_CONTACT_EMAIL",
+          )}
+        </strong>
         <br />
         Address:{" "}
         {ownerFieldOrPlaceholder(
@@ -92,8 +105,9 @@ export default function PrivacyPage() {
       </p>
 
       <p className="rounded-md border border-[#0b4f9c]/20 bg-white p-4 text-sm">
-        Owner configuration placeholders above must be replaced with approved ANS
-        Corporation values before ChatGPT App Directory submission.
+        The Marketplace support email is approved for general support only. Privacy
+        and data-deletion contacts remain owner placeholders until separately
+        approved. Do not invent remaining legal fields.
       </p>
     </AnsPolicyShell>
   );

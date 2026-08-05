@@ -57,7 +57,9 @@ export default function DataRequestPage() {
 
       <p className="rounded-md border border-[#0b4f9c]/20 bg-white p-4 text-sm">
         Response timelines and verification procedures must be defined by ANS
-        Corporation before marketplace publication.
+        Corporation before marketplace publication. The approved Marketplace support
+        email (<code>support@prosperityaxis.com</code>) is for general support only
+        and is not the privacy/data-deletion contact until separately approved.
       </p>
     </AnsPolicyShell>
   );

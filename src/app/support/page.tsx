@@ -23,9 +23,12 @@ export default function SupportPage() {
       <ul className="list-disc space-y-2 pl-5">
         <li>
           Email:{" "}
-          <strong>
-            {ownerFieldOrPlaceholder(ansOwnerConfig.supportEmail, "ANS_SUPPORT_EMAIL")}
-          </strong>
+          <a
+            className="font-semibold text-[#0b4f9c] underline underline-offset-4"
+            href={ansOwnerConfig.supportEmailHref}
+          >
+            {ansOwnerConfig.supportEmail}
+          </a>
         </li>
         <li>
           Support URL:{" "}
@@ -48,7 +51,7 @@ export default function SupportPage() {
       <p>
         Questions about planning estimates, how to interpret budget alignment /
         timeline readiness / operational fit / planning risks, MCP tool usage, and
-        privacy or data requests.
+        general product support.
       </p>
 
       <h2 className="pt-4 text-xl font-semibold text-[#071a2b]">What support cannot provide</h2>
@@ -59,8 +62,9 @@ export default function SupportPage() {
       </p>
 
       <p className="rounded-md border border-[#0b4f9c]/20 bg-white p-4 text-sm">
-        Do not invent a support email. Owner must set{" "}
-        <code>ANS_SUPPORT_EMAIL</code> and related fields before submission.
+        Privacy and data-deletion requests use a separately approved privacy contact
+        (not yet set). Do not send those requests to the support address until the
+        owner designates that channel.
       </p>
     </AnsPolicyShell>
   );

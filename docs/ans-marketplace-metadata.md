@@ -12,6 +12,7 @@
 | Privacy URL | https://ibirdchef.com/privacy |
 | Terms URL | https://ibirdchef.com/terms |
 | Support URL | https://ibirdchef.com/support |
+| Support email | support@prosperityaxis.com (`mailto:support@prosperityaxis.com`) — general Marketplace support only; not approved for privacy/data-deletion requests yet |
 | Disclaimer URL | https://ibirdchef.com/business-fit/disclaimer |
 | Data request URL | https://ibirdchef.com/data-request |
 | Authentication | Bearer token via `ANS_MCP_AUTH_TOKEN` (required in production). Exact ChatGPT connector auth mechanism to be confirmed against current OpenAI Apps SDK requirements before submission. |

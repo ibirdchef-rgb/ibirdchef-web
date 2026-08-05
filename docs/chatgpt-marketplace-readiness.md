@@ -15,7 +15,8 @@
 - [x] Marketplace metadata draft
 - [x] Deployment guide + env template placeholders
 - [x] Security/abuse tests
-- [ ] Owner fills support/privacy/legal env values
+- [x] Owner approved Marketplace support email: `support@prosperityaxis.com`
+- [ ] Owner fills remaining privacy/legal env values (privacy contact, address, jurisdiction, retention, countries, support URL)
 - [ ] Owner sets production MCP bearer token
 - [ ] Owner confirms country availability
 - [ ] Authenticated reviewer walkthrough in ChatGPT

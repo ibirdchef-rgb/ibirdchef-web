@@ -10,6 +10,8 @@
 6. Check desktop (1440), tablet (1024), mobile (390).
 7. Print / Save PDF → hero photo removed; logo + report retained.
 8. Visit `/privacy`, `/terms`, `/support`, `/data-request`, `/business-fit/disclaimer`.
+9. On `/support`, confirm a clickable support link to `mailto:support@prosperityaxis.com`.
+10. Confirm privacy / data-request pages still show a separate privacy-contact placeholder (do not assume support@prosperityaxis.com handles deletion requests).
 
 ## MCP
 
