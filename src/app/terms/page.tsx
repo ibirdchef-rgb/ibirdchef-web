@@ -43,8 +43,11 @@ export default function TermsPage() {
 
       <h2 className="pt-4 text-xl font-semibold text-[#071a2b]">Jurisdiction</h2>
       <p>
-        Governing jurisdiction:{" "}
-        <strong>{ansOwnerConfig.governingJurisdiction}</strong>.
+        These terms are governed by the laws of{" "}
+        <strong>{ansOwnerConfig.governingJurisdiction}</strong>. Where California
+        privacy rights and requirements apply to a request or user, those applicable
+        California rights and requirements will be honored. California law is not
+        treated as a second governing jurisdiction for every user.
       </p>
 
       <h2 className="pt-4 text-xl font-semibold text-[#071a2b]">Contact</h2>
@@ -56,11 +59,6 @@ export default function TermsPage() {
         >
           {ansOwnerConfig.supportEmail}
         </a>
-      </p>
-
-      <p className="rounded-md border border-[#0b4f9c]/20 bg-white p-4 text-sm">
-        Final legal wording and jurisdiction must be approved by ANS Corporation
-        before marketplace publication. Placeholders are intentional.
       </p>
     </AnsPolicyShell>
   );

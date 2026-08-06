@@ -21,18 +21,21 @@
 12. Owner-approved Business Fit privacy publication details on `/business-fit/privacy`:
     - Privacy contact: `order@ibirdchef.com`
     - Public mailing address: 3850 Klahanie Dr SE, Building 23, Apt 306, Sammamish, WA 98029, United States (**owner-approved for publication**)
+    - `ANS_BUSINESS_ADDRESS` override honored on `/business-fit/privacy` and `/support`
     - Governing law: Washington State
     - Applicable California privacy rights honored where they apply (not a second governing jurisdiction)
     - Maximum standard retention: 90 days, with lawful/security exceptions
+13. Terms page states Washington governing law and no longer claims placeholders remain
 
 ## Latest automated verification
 
 | Check | Result |
 |---|---|
-| `pnpm test` | PASS (123/123) |
+| `pnpm test` | PASS (128/128) |
 | Security + abuse tests | PASS |
 | Marketplace evaluation cases | PASS (5+/3−) |
-| Privacy-route tests | PASS |
+| Privacy / legal route tests | PASS |
+| Business-address override tests | PASS |
 | `pnpm lint` | PASS |
 | `pnpm build` | PASS |
 | Local MCP smoke (`mcp/smoke.mjs`) | PASS (`MCP_SMOKE_OK`, five tools) |

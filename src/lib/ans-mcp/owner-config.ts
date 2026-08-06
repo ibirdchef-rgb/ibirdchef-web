@@ -27,6 +27,46 @@ function readOptional(name: string): string | null {
   return value ? value : null;
 }
 
+/** Resolve the configured business address, honoring ANS_BUSINESS_ADDRESS. */
+export function resolveBusinessAddress(): string {
+  return readOptional("ANS_BUSINESS_ADDRESS") ?? ANS_APPROVED_BUSINESS_ADDRESS;
+}
+
+/**
+ * Derive safe display lines from a configured address.
+ * Keeps the approved default's multi-line layout; splits overrides on newlines
+ * or commas so pages do not hard-code the default lines.
+ */
+export function businessAddressLinesFor(address: string): string[] {
+  const normalized = address.trim();
+  if (!normalized) {
+    return [...ANS_APPROVED_BUSINESS_ADDRESS_LINES];
+  }
+  if (normalized === ANS_APPROVED_BUSINESS_ADDRESS) {
+    return [...ANS_APPROVED_BUSINESS_ADDRESS_LINES];
+  }
+  const byNewline = normalized
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (byNewline.length > 1) {
+    return byNewline;
+  }
+  return normalized
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+/** Current configured address as display lines (reads env at call time). */
+export function getBusinessAddressLines(): string[] {
+  return businessAddressLinesFor(resolveBusinessAddress());
+}
+
+export function isApprovedDefaultBusinessAddress(address = resolveBusinessAddress()): boolean {
+  return address.trim() === ANS_APPROVED_BUSINESS_ADDRESS;
+}
+
 export const ansOwnerConfig = {
   publisherName: "ANS Corporation",
   appName: "ANS Food Business Fit",
@@ -39,9 +79,12 @@ export const ansOwnerConfig = {
   privacyContactEmailHref: `mailto:${
     readOptional("ANS_PRIVACY_CONTACT_EMAIL") ?? ANS_APPROVED_PRIVACY_CONTACT_EMAIL
   }`,
-  businessAddress:
-    readOptional("ANS_BUSINESS_ADDRESS") ?? ANS_APPROVED_BUSINESS_ADDRESS,
-  businessAddressLines: ANS_APPROVED_BUSINESS_ADDRESS_LINES,
+  get businessAddress() {
+    return resolveBusinessAddress();
+  },
+  get businessAddressLines() {
+    return getBusinessAddressLines();
+  },
   governingJurisdiction:
     readOptional("ANS_GOVERNING_JURISDICTION") ?? ANS_APPROVED_GOVERNING_JURISDICTION,
   dataRetentionStatement:
@@ -51,7 +94,7 @@ export const ansOwnerConfig = {
     readOptional("ANS_MCP_PRODUCTION_URL") ?? "https://ibirdchef.com/api/mcp",
   supportedCountries:
     readOptional("ANS_SUPPORTED_COUNTRIES") ?? ANS_APPROVED_SUPPORTED_COUNTRIES,
-} as const;
+};
 
 export function ownerFieldOrPlaceholder(
   value: string | null,

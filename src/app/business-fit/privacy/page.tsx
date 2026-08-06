@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import AnsPolicyShell from "@/components/ans/AnsPolicyShell";
 import {
-  ANS_APPROVED_BUSINESS_ADDRESS_LINES,
   ansOwnerConfig,
+  getBusinessAddressLines,
+  isApprovedDefaultBusinessAddress,
 } from "@/lib/ans-mcp/owner-config";
 
 export const metadata: Metadata = {
@@ -13,6 +14,9 @@ export const metadata: Metadata = {
 };
 
 export default function BusinessFitPrivacyPage() {
+  const businessAddressLines = getBusinessAddressLines();
+  const showApprovedAddressNote = isApprovedDefaultBusinessAddress();
+
   return (
     <AnsPolicyShell title="Privacy Policy">
       <p>
@@ -138,12 +142,12 @@ export default function BusinessFitPrivacyPage() {
         <br />
         Public mailing address:
       </p>
-      <p className="whitespace-pre-line">
-        {ANS_APPROVED_BUSINESS_ADDRESS_LINES.join("\n")}
-      </p>
-      <p className="text-sm text-[#334155]">
-        This mailing address was owner-approved for publication.
-      </p>
+      <p className="whitespace-pre-line">{businessAddressLines.join("\n")}</p>
+      {showApprovedAddressNote ? (
+        <p className="text-sm text-[#334155]">
+          This mailing address was owner-approved for publication.
+        </p>
+      ) : null}
     </AnsPolicyShell>
   );
 }

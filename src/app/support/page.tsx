@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import AnsPolicyShell from "@/components/ans/AnsPolicyShell";
-import {
-  ANS_APPROVED_BUSINESS_ADDRESS_LINES,
-  ansOwnerConfig,
-} from "@/lib/ans-mcp/owner-config";
+import { ansOwnerConfig, getBusinessAddressLines } from "@/lib/ans-mcp/owner-config";
 
 export const metadata: Metadata = {
   title: "Support — ANS Food Business Fit",
@@ -12,6 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default function SupportPage() {
+  const businessAddressLines = getBusinessAddressLines();
+
   return (
     <AnsPolicyShell title="Support">
       <p>
@@ -42,7 +41,7 @@ export default function SupportPage() {
         <li>
           Business address:{" "}
           <strong className="whitespace-pre-line">
-            {ANS_APPROVED_BUSINESS_ADDRESS_LINES.join("\n")}
+            {businessAddressLines.join("\n")}
           </strong>
         </li>
       </ul>
