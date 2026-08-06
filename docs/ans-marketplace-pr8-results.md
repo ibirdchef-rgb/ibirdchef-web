@@ -24,19 +24,24 @@
 
 | Check | Result |
 |---|---|
-| `pnpm test` (104 tests) | PASS |
+| `pnpm test` | PASS (see latest commit report) |
 | Security + abuse tests | PASS |
 | Marketplace evaluation cases | PASS (5+/3−) |
 | `pnpm lint` | PASS |
 | `pnpm build` | PASS |
 | Local MCP smoke (`mcp/smoke.mjs`) | PASS (`MCP_SMOKE_OK`, five tools including `simulate_event_profit`) |
+| `GET /api/mcp` | HTTP 405 + `Allow: POST, DELETE` |
+| Unknown MCP tool fields | Rejected at transport schema boundary |
+| Oversized local MCP body | HTTP 413 without socket destroy |
 
 ## Remaining blockers (owner)
 
 - Set `ANS_MCP_AUTH_TOKEN` in Vercel Production (never commit the value).
+- Configure shared production rate-limit store env vars (`KV_REST_API_URL` + `KV_REST_API_TOKEN`, or `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`). Production MCP fails closed with 503 until configured.
 - Set `OPENAI_APPS_DOMAIN_CHALLENGE` (or `ANS_DOMAIN_VERIFICATION_CHALLENGE`) for domain verification.
 - Approve remaining privacy/legal fields: `ANS_PRIVACY_CONTACT_EMAIL`, `ANS_BUSINESS_ADDRESS`, `ANS_GOVERNING_JURISDICTION`, `ANS_DATA_RETENTION_STATEMENT`.
 - Owner approval required before: merge, production deploy, OpenAI App Directory submit.
+- No custom in-repo MCP tool UI; live tool UX must be checked later in ChatGPT Developer Mode after stable HTTPS deploy.
 
 ## Explicit non-actions preserved
 

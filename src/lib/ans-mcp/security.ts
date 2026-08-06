@@ -3,6 +3,12 @@
  */
 
 import { timingSafeEqual } from "node:crypto";
+import {
+  resetRateLimitStoreCache,
+  resolveRateLimitStore,
+  setRateLimitStoreForTests,
+  type RateLimitStore,
+} from "@/lib/ans-mcp/rate-limit-store";
 
 export const MCP_MAX_BODY_BYTES = 64 * 1024; // 64 KiB
 export const MCP_RATE_LIMIT_WINDOW_MS = 60_000;
@@ -16,11 +22,6 @@ export function getPreAuthRateLimitMax(): number {
   const parsed = Number(process.env.ANS_MCP_PRE_AUTH_RATE_LIMIT_MAX ?? "30");
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 30;
 }
-
-type Bucket = { count: number; resetAt: number };
-
-const rateBuckets = new Map<string, Bucket>();
-const preAuthRateBuckets = new Map<string, Bucket>();
 
 export type SecurityFailure = {
   ok: false;
@@ -37,10 +38,15 @@ export type SecuritySuccess = {
 };
 
 /**
- * Prefer platform-provided client IPs. Do not trust a bare client-supplied
- * X-Forwarded-For list when not running behind Vercel.
+ * Trust platform client-IP headers only on the verified Vercel boundary.
+ * Outside Vercel, ignore spoofable forwarded headers and collapse to one bucket.
  */
 export function getClientKey(request: Request): string {
+  const onVercel = Boolean(process.env.VERCEL);
+  if (!onVercel) {
+    return "unknown";
+  }
+
   const vercelForwarded = request.headers.get("x-vercel-forwarded-for");
   if (vercelForwarded) {
     return vercelForwarded.split(",")[0]?.trim() || "unknown";
@@ -51,64 +57,92 @@ export function getClientKey(request: Request): string {
     return realIp;
   }
 
-  if (process.env.VERCEL) {
-    const forwarded = request.headers.get("x-forwarded-for");
-    if (forwarded) {
-      return forwarded.split(",")[0]?.trim() || "unknown";
-    }
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0]?.trim() || "unknown";
   }
 
   return "unknown";
 }
 
-function touchBucket(
-  buckets: Map<string, Bucket>,
+async function touchLimit(
+  bucket: "auth" | "preauth",
   clientKey: string,
   max: number,
-  now: number,
-): SecuritySuccess | SecurityFailure {
-  const existing = buckets.get(clientKey);
-  if (!existing || now >= existing.resetAt) {
-    buckets.set(clientKey, { count: 1, resetAt: now + MCP_RATE_LIMIT_WINDOW_MS });
-    return { ok: true };
-  }
-  if (existing.count >= max) {
-    const retryAfterSeconds = Math.max(
-      1,
-      Math.ceil((existing.resetAt - now) / 1000),
-    );
+  now = Date.now(),
+): Promise<SecuritySuccess | SecurityFailure> {
+  const resolved = resolveRateLimitStore();
+  if (!resolved.ok) {
     return {
       ok: false,
-      status: 429,
-      retryAfterSeconds,
+      status: 503,
       error: {
-        code: "rate_limited",
-        message: "Too many requests. Please retry later.",
+        code: "rate_limit_unavailable",
+        message: resolved.error,
       },
     };
   }
-  existing.count += 1;
-  return { ok: true };
+
+  try {
+    const touched = await resolved.store.touch(
+      bucket,
+      clientKey,
+      MCP_RATE_LIMIT_WINDOW_MS,
+      now,
+    );
+    // Align window end with store result; fall back to local window if needed.
+    const resetAt = touched.resetAt || now + MCP_RATE_LIMIT_WINDOW_MS;
+    if (touched.count > max) {
+      const retryAfterSeconds = Math.max(1, Math.ceil((resetAt - now) / 1000));
+      return {
+        ok: false,
+        status: 429,
+        retryAfterSeconds,
+        error: {
+          code: "rate_limited",
+          message: "Too many requests. Please retry later.",
+        },
+      };
+    }
+    return { ok: true };
+  } catch {
+    return {
+      ok: false,
+      status: 503,
+      error: {
+        code: "rate_limit_unavailable",
+        message: "Rate-limit service is temporarily unavailable.",
+      },
+    };
+  }
 }
 
-export function checkRateLimit(clientKey: string, now = Date.now()): SecuritySuccess | SecurityFailure {
-  return touchBucket(rateBuckets, clientKey, getRateLimitMax(), now);
+export async function checkRateLimit(
+  clientKey: string,
+  now = Date.now(),
+): Promise<SecuritySuccess | SecurityFailure> {
+  return touchLimit("auth", clientKey, getRateLimitMax(), now);
 }
 
 /**
  * Limits failed-auth traffic only. Authenticated traffic must use checkRateLimit.
  */
-export function checkPreAuthRateLimit(
+export async function checkPreAuthRateLimit(
   clientKey: string,
   now = Date.now(),
-): SecuritySuccess | SecurityFailure {
-  return touchBucket(preAuthRateBuckets, clientKey, getPreAuthRateLimitMax(), now);
+): Promise<SecuritySuccess | SecurityFailure> {
+  return touchLimit("preauth", clientKey, getPreAuthRateLimitMax(), now);
 }
 
-/** Test helper — clear in-memory buckets between tests. */
+/** Test helper — clear in-memory / cached store between tests. */
 export function resetRateLimitBuckets(): void {
-  rateBuckets.clear();
-  preAuthRateBuckets.clear();
+  setRateLimitStoreForTests(null);
+  resetRateLimitStoreCache();
+}
+
+/** Test helper — inject a custom store. */
+export function setRateLimitStore(store: RateLimitStore | null): void {
+  setRateLimitStoreForTests(store);
 }
 
 function tokensEqual(presented: string, required: string): boolean {
@@ -237,7 +271,7 @@ export function safeErrorResponse(
   status: number,
   code: string,
   message: string,
-  options?: { retryAfterSeconds?: number },
+  options?: { retryAfterSeconds?: number; allow?: string },
 ): Response {
   const headers: Record<string, string> = {
     "cache-control": "no-store",
@@ -245,6 +279,9 @@ export function safeErrorResponse(
   };
   if (options?.retryAfterSeconds) {
     headers["retry-after"] = String(options.retryAfterSeconds);
+  }
+  if (options?.allow) {
+    headers.allow = options.allow;
   }
   return Response.json(
     {

@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { createAnsFoodBusinessFitMcpServer } from "../src/lib/ans-mcp/create-mcp-server";
+import {
+  createAnsFoodBusinessFitMcpServer,
+  mcpEventProfitInputSchema,
+} from "../src/lib/ans-mcp/create-mcp-server";
 import { MCP_TOOL_NAMES, runMcpTool } from "./tools";
 
 
@@ -39,6 +42,7 @@ describe("MCP tools", () => {
               idempotentHint?: boolean;
               openWorldHint?: boolean;
             };
+            inputSchema?: { safeParse?: (value: unknown) => { success: boolean } };
           }
         >;
       }
@@ -51,6 +55,42 @@ describe("MCP tools", () => {
       assert.equal(annotations?.idempotentHint, true, name);
       assert.equal(annotations?.openWorldHint, false, name);
     }
+  });
+
+  it("rejects unknown fields at the MCP transport schema boundary", () => {
+    const server = createAnsFoodBusinessFitMcpServer();
+    const registered = (
+      server as unknown as {
+        _registeredTools: Record<
+          string,
+          {
+            inputSchema: {
+              safeParse: (value: unknown) => { success: boolean };
+            };
+          }
+        >;
+      }
+    )._registeredTools;
+
+    const parsed = registered.simulate_event_profit.inputSchema.safeParse({
+      guestCount: 10,
+      customerBudgetUsd: 500,
+      proposedSellingPriceUsd: 600,
+      foodCostUsd: 100,
+      laborCostUsd: 100,
+      tenantId: "cross-tenant",
+    });
+    assert.equal(parsed.success, false);
+
+    const direct = mcpEventProfitInputSchema.safeParse({
+      guestCount: 10,
+      customerBudgetUsd: 500,
+      proposedSellingPriceUsd: 600,
+      foodCostUsd: 100,
+      laborCostUsd: 100,
+      tenantId: "cross-tenant",
+    });
+    assert.equal(direct.success, false);
   });
 
 

@@ -1,11 +1,18 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
 import {
+  createMemoryRateLimitStore,
+  requiresSharedRateLimitStore,
+  resolveRateLimitStore,
+  setRateLimitStoreForTests,
+} from "./rate-limit-store";
+import {
   MCP_MAX_BODY_BYTES,
   checkAuth,
   checkContentLength,
   checkPreAuthRateLimit,
   checkRateLimit,
+  getClientKey,
   readLimitedBody,
   resetRateLimitBuckets,
   safeErrorResponse,
@@ -20,17 +27,21 @@ afterEach(() => {
   delete process.env.ANS_MCP_RATE_LIMIT_MAX;
   delete process.env.ANS_MCP_PRE_AUTH_RATE_LIMIT_MAX;
   delete process.env.VERCEL_ENV;
+  delete process.env.VERCEL;
+  delete process.env.KV_REST_API_URL;
+  delete process.env.KV_REST_API_TOKEN;
+  delete process.env.UPSTASH_REDIS_REST_URL;
+  delete process.env.UPSTASH_REDIS_REST_TOKEN;
   process.env.NODE_ENV = originalNodeEnv;
 });
 
-
 describe("ANS MCP security guards", () => {
-  it("rate limits repeated clients", () => {
+  it("rate limits repeated clients", async () => {
     process.env.ANS_MCP_RATE_LIMIT_MAX = "3";
-    assert.equal(checkRateLimit("client-a").ok, true);
-    assert.equal(checkRateLimit("client-a").ok, true);
-    assert.equal(checkRateLimit("client-a").ok, true);
-    const blocked = checkRateLimit("client-a");
+    assert.equal((await checkRateLimit("client-a")).ok, true);
+    assert.equal((await checkRateLimit("client-a")).ok, true);
+    assert.equal((await checkRateLimit("client-a")).ok, true);
+    const blocked = await checkRateLimit("client-a");
     assert.equal(blocked.ok, false);
     if (!blocked.ok) {
       assert.equal(blocked.status, 429);
@@ -38,28 +49,73 @@ describe("ANS MCP security guards", () => {
     }
   });
 
-  it("rate limits pre-auth attempts independently by client and recovers", () => {
+  it("rate limits pre-auth attempts independently by client and recovers", async () => {
     process.env.ANS_MCP_PRE_AUTH_RATE_LIMIT_MAX = "2";
     const start = 1_000;
 
-    assert.equal(checkPreAuthRateLimit("client-a", start).ok, true);
-    assert.equal(checkPreAuthRateLimit("client-a", start).ok, true);
-    const blocked = checkPreAuthRateLimit("client-a", start);
+    assert.equal((await checkPreAuthRateLimit("client-a", start)).ok, true);
+    assert.equal((await checkPreAuthRateLimit("client-a", start)).ok, true);
+    const blocked = await checkPreAuthRateLimit("client-a", start);
     assert.equal(blocked.ok, false);
     if (!blocked.ok) assert.equal(blocked.status, 429);
 
-    assert.equal(checkPreAuthRateLimit("client-b", start).ok, true);
+    assert.equal((await checkPreAuthRateLimit("client-b", start)).ok, true);
     assert.equal(
-      checkPreAuthRateLimit("client-a", start + 60_000).ok,
+      (await checkPreAuthRateLimit("client-a", start + 60_000)).ok,
       true,
     );
   });
 
-  it("keeps pre-auth and authenticated rate-limit buckets separate", () => {
+  it("keeps pre-auth and authenticated rate-limit buckets separate", async () => {
     process.env.ANS_MCP_PRE_AUTH_RATE_LIMIT_MAX = "1";
     process.env.ANS_MCP_RATE_LIMIT_MAX = "1";
-    assert.equal(checkPreAuthRateLimit("client-a").ok, true);
-    assert.equal(checkRateLimit("client-a").ok, true);
+    assert.equal((await checkPreAuthRateLimit("client-a")).ok, true);
+    assert.equal((await checkRateLimit("client-a")).ok, true);
+  });
+
+  it("fails closed in production when shared rate-limit store is unavailable", async () => {
+    process.env.VERCEL_ENV = "production";
+    assert.equal(requiresSharedRateLimitStore(), true);
+    const resolved = resolveRateLimitStore();
+    assert.equal(resolved.ok, false);
+
+    const blocked = await checkRateLimit("client-a");
+    assert.equal(blocked.ok, false);
+    if (!blocked.ok) {
+      assert.equal(blocked.status, 503);
+      assert.equal(blocked.error.code, "rate_limit_unavailable");
+    }
+  });
+
+  it("uses an injectable store in tests without a live service", async () => {
+    process.env.VERCEL_ENV = "production";
+    process.env.ANS_MCP_RATE_LIMIT_MAX = "1";
+    setRateLimitStoreForTests(createMemoryRateLimitStore());
+    assert.equal((await checkRateLimit("client-a")).ok, true);
+    const blocked = await checkRateLimit("client-a");
+    assert.equal(blocked.ok, false);
+    if (!blocked.ok) assert.equal(blocked.status, 429);
+  });
+
+  it("ignores spoofable forwarded IP headers outside the Vercel boundary", () => {
+    delete process.env.VERCEL;
+    process.env.ANS_MCP_REQUIRE_AUTH = "true";
+    const req = new Request("http://localhost/api/mcp", {
+      headers: {
+        "x-vercel-forwarded-for": "1.2.3.4",
+        "x-real-ip": "5.6.7.8",
+        "x-forwarded-for": "9.9.9.9",
+      },
+    });
+    assert.equal(getClientKey(req), "unknown");
+  });
+
+  it("uses Vercel forwarded IP headers only on the Vercel boundary", () => {
+    process.env.VERCEL = "1";
+    const req = new Request("http://localhost/api/mcp", {
+      headers: { "x-vercel-forwarded-for": "1.2.3.4, 10.0.0.1" },
+    });
+    assert.equal(getClientKey(req), "1.2.3.4");
   });
 
   it("requires bearer auth when enforced", () => {

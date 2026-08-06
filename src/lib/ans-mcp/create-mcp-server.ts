@@ -85,6 +85,25 @@ const eventProfitShape = {
     .describe("iBirdChef catering pilot region."),
 };
 
+/** Closed-world schemas used at the MCP transport validation boundary. */
+export const mcpBusinessFitInputSchema = z.object(businessFitShape).strict();
+export const mcpEventProfitInputSchema = z.object(eventProfitShape).strict();
+export const mcpCompareConceptsInputSchema = z
+  .object({
+    concepts: z
+      .array(
+        z
+          .object({
+            label: z.string().max(80),
+            input: mcpBusinessFitInputSchema,
+          })
+          .strict(),
+      )
+      .min(2)
+      .max(3),
+  })
+  .strict();
+
 function textResult(payload: unknown) {
   return {
     content: [
@@ -109,7 +128,7 @@ export function createAnsFoodBusinessFitMcpServer() {
       description:
         "Generate a preliminary ANS Food Business Fit report covering budget alignment, timeline readiness, operational fit, planning risks, missing information, and next steps." +
         PLANNING_GUARDRAIL,
-      inputSchema: businessFitShape,
+      inputSchema: mcpBusinessFitInputSchema,
       annotations: READ_ONLY_CLOSED_WORLD,
     },
     async (args) => textResult(runMcpTool("analyze_business_fit", args)),
@@ -122,17 +141,7 @@ export function createAnsFoodBusinessFitMcpServer() {
       description:
         "Compare 2–3 food-service concepts with the same deterministic planning model. Useful for budget and operational trade-offs; not a market-demand or revenue forecast." +
         PLANNING_GUARDRAIL,
-      inputSchema: {
-        concepts: z
-          .array(
-            z.object({
-              label: z.string().max(80),
-              input: z.object(businessFitShape),
-            }),
-          )
-          .min(2)
-          .max(3),
-      },
+      inputSchema: mcpCompareConceptsInputSchema,
       annotations: READ_ONLY_CLOSED_WORLD,
     },
     async (args) => textResult(runMcpTool("compare_food_service_concepts", args)),
@@ -145,7 +154,7 @@ export function createAnsFoodBusinessFitMcpServer() {
       description:
         "Build a preliminary startup budget planning range with category breakdown that reconciles to total low/high estimates." +
         PLANNING_GUARDRAIL,
-      inputSchema: businessFitShape,
+      inputSchema: mcpBusinessFitInputSchema,
       annotations: READ_ONLY_CLOSED_WORLD,
     },
     async (args) => textResult(runMcpTool("build_startup_budget", args)),
@@ -158,7 +167,7 @@ export function createAnsFoodBusinessFitMcpServer() {
       description:
         "Generate generic licensing/checklist and equipment planning categories. All categories require local professional review; opening dates are not guaranteed." +
         PLANNING_GUARDRAIL,
-      inputSchema: businessFitShape,
+      inputSchema: mcpBusinessFitInputSchema,
       annotations: READ_ONLY_CLOSED_WORLD,
     },
     async (args) => textResult(runMcpTool("generate_opening_checklist", args)),
@@ -171,7 +180,7 @@ export function createAnsFoodBusinessFitMcpServer() {
       description:
         "Read-only preliminary event-profit simulation from operator-entered guests, budget, proposed price, costs, and capacity-status planning flags for iBirdChef catering pilots (Seattle / Bay Area). Never sends quotes, accepts payments, books events, confirms capacity, or bypasses human approval." +
         PLANNING_GUARDRAIL,
-      inputSchema: eventProfitShape,
+      inputSchema: mcpEventProfitInputSchema,
       annotations: READ_ONLY_CLOSED_WORLD,
     },
     async (args) => textResult(runMcpTool("simulate_event_profit", args)),

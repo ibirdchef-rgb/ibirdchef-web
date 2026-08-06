@@ -13,6 +13,8 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const MCP_ALLOW = "POST, DELETE";
+
 async function handleMcp(request: Request): Promise<Response> {
   const clientKey = getClientKey(request);
 
@@ -21,7 +23,7 @@ async function handleMcp(request: Request): Promise<Response> {
   // not capped by the lower pre-auth bucket.
   const auth = checkAuth(request);
   if (!auth.ok) {
-    const preAuthRate = checkPreAuthRateLimit(clientKey);
+    const preAuthRate = await checkPreAuthRateLimit(clientKey);
     if (!preAuthRate.ok) {
       logMcpEvent({
         level: "warn",
@@ -45,7 +47,7 @@ async function handleMcp(request: Request): Promise<Response> {
     return safeErrorResponse(auth.status, auth.error.code, auth.error.message);
   }
 
-  const rate = checkRateLimit(clientKey);
+  const rate = await checkRateLimit(clientKey);
   if (!rate.ok) {
     logMcpEvent({
       level: "warn",
@@ -132,8 +134,14 @@ async function handleMcp(request: Request): Promise<Response> {
   }
 }
 
-export async function GET(request: Request) {
-  return handleMcp(request);
+export async function GET() {
+  // Stateless per-request MCP transport cannot usefully hold SSE; reject GET.
+  return safeErrorResponse(
+    405,
+    "method_not_allowed",
+    "GET is not supported on this MCP endpoint. Use POST.",
+    { allow: MCP_ALLOW },
+  );
 }
 
 export async function POST(request: Request) {
