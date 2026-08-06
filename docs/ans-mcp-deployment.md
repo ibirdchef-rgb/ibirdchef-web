@@ -25,7 +25,7 @@ See `.env.example`. Critical production values:
 - `OPENAI_APPS_DOMAIN_CHALLENGE` or `ANS_DOMAIN_VERIFICATION_CHALLENGE` — plain-text domain verification token
 - `ANS_MCP_PRODUCTION_URL` — optional override reported in docs/metadata
 - Approved support defaults: `support@prosperityaxis.com`, `https://ibirdchef.com/support`, countries `United States`
-- Remaining owner/legal placeholders: `ANS_PRIVACY_CONTACT_EMAIL`, `ANS_BUSINESS_ADDRESS`, `ANS_GOVERNING_JURISDICTION`, `ANS_DATA_RETENTION_STATEMENT`
+- Owner-approved privacy/legal defaults: privacy contact `order@ibirdchef.com`, published mailing address, Washington State governing law, 90-day standard retention (see `/business-fit/privacy`)
 
 Never commit secrets. Client IP headers are trusted only on the Vercel boundary (`VERCEL` set by the platform).
 

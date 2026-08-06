@@ -12,7 +12,7 @@
 8. Visit `/business-fit/privacy`, `/terms`, `/support`, `/data-request`, `/business-fit/disclaimer`.
 9. Visit `/privacy` separately and confirm it remains the iBirdChef catering privacy placeholder.
 10. On `/support`, confirm a clickable support link to `mailto:support@prosperityaxis.com`.
-11. Confirm privacy / data-request pages still show a separate privacy-contact placeholder (do not assume support@prosperityaxis.com handles deletion requests).
+11. Confirm `/business-fit/privacy` and `/data-request` show privacy contact `order@ibirdchef.com` (not the general support inbox).
 
 ## MCP
 

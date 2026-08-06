@@ -21,7 +21,7 @@
 - [x] Owner approved Marketplace support email: `support@prosperityaxis.com`
 - [x] Owner approved support URL: `https://ibirdchef.com/support`
 - [x] Owner approved supported countries: United States
-- [ ] Owner fills remaining privacy/legal env values (privacy contact, address, jurisdiction, retention)
+- [x] Owner-approved privacy/legal publication values wired (privacy contact, address, Washington governing law, 90-day retention, California rights where applicable)
 - [ ] Owner sets production MCP bearer token (`ANS_MCP_AUTH_TOKEN`)
 - [ ] Owner sets domain challenge token (`OPENAI_APPS_DOMAIN_CHALLENGE`)
 - [ ] Authenticated reviewer walkthrough in ChatGPT

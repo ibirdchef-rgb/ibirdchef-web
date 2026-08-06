@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import AnsPolicyShell from "@/components/ans/AnsPolicyShell";
-import {
-  ansOwnerConfig,
-  ownerFieldOrPlaceholder,
-} from "@/lib/ans-mcp/owner-config";
+import { ansOwnerConfig } from "@/lib/ans-mcp/owner-config";
 
 export const metadata: Metadata = {
   title: "Terms of Use — ANS Food Business Fit",
@@ -47,13 +44,7 @@ export default function TermsPage() {
       <h2 className="pt-4 text-xl font-semibold text-[#071a2b]">Jurisdiction</h2>
       <p>
         Governing jurisdiction:{" "}
-        <strong>
-          {ownerFieldOrPlaceholder(
-            ansOwnerConfig.governingJurisdiction,
-            "ANS_GOVERNING_JURISDICTION",
-          )}
-        </strong>
-        .
+        <strong>{ansOwnerConfig.governingJurisdiction}</strong>.
       </p>
 
       <h2 className="pt-4 text-xl font-semibold text-[#071a2b]">Contact</h2>

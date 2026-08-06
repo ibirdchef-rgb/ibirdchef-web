@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import AnsPolicyShell from "@/components/ans/AnsPolicyShell";
-import {
-  ansOwnerConfig,
-  ownerFieldOrPlaceholder,
-} from "@/lib/ans-mcp/owner-config";
+import { ansOwnerConfig } from "@/lib/ans-mcp/owner-config";
 
 export const metadata: Metadata = {
   title: "Data Request — ANS Food Business Fit",
@@ -25,12 +22,12 @@ export default function DataRequestPage() {
       <ol className="list-decimal space-y-2 pl-5">
         <li>
           Email{" "}
-          <strong>
-            {ownerFieldOrPlaceholder(
-              ansOwnerConfig.privacyContactEmail,
-              "ANS_PRIVACY_CONTACT_EMAIL",
-            )}
-          </strong>
+          <a
+            className="font-semibold text-[#0b4f9c] underline underline-offset-4"
+            href={ansOwnerConfig.privacyContactEmailHref}
+          >
+            {ansOwnerConfig.privacyContactEmail}
+          </a>
           .
         </li>
         <li>State whether you are requesting access, correction, or deletion.</li>
@@ -46,20 +43,18 @@ export default function DataRequestPage() {
         Phase 1 planning inputs intentionally exclude name, email, and phone. Some
         technical logs or hosting metadata may still exist and will be handled
         according to the owner-approved retention statement:{" "}
-        <strong>
-          {ownerFieldOrPlaceholder(
-            ansOwnerConfig.dataRetentionStatement,
-            "ANS_DATA_RETENTION_STATEMENT",
-          )}
-        </strong>
-        .
+        <strong>{ansOwnerConfig.dataRetentionStatement}</strong>.
       </p>
 
       <p className="rounded-md border border-[#0b4f9c]/20 bg-white p-4 text-sm">
-        Response timelines and verification procedures must be defined by ANS
-        Corporation before marketplace publication. The approved Marketplace support
-        email (<code>support@prosperityaxis.com</code>) is for general support only
-        and is not the privacy/data-deletion contact until separately approved.
+        The approved Marketplace support email (
+        <code>support@prosperityaxis.com</code>) remains for general support only.
+        Privacy and data-deletion requests should use the privacy contact shown above
+        and described on{" "}
+        <a className="text-[#0b4f9c] underline" href="/business-fit/privacy">
+          /business-fit/privacy
+        </a>
+        .
       </p>
     </AnsPolicyShell>
   );

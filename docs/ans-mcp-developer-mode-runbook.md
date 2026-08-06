@@ -27,7 +27,7 @@
 2. Confirm P5 demonstration numbers and **Budget mismatch**.
 3. Confirm tools advertise read-only / non-destructive / closed-world annotations.
 4. Confirm support email/URL and United States availability are approved values.
-5. Confirm privacy/data-deletion fields remain placeholders until owner approval.
+5. Confirm `/business-fit/privacy` shows owner-approved privacy contact, published mailing address, Washington governing law, California rights where applicable, and 90-day retention.
 
 ## Explicit non-goals
 

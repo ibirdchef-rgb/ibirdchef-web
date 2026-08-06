@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import AnsPolicyShell from "@/components/ans/AnsPolicyShell";
 import {
+  ANS_APPROVED_BUSINESS_ADDRESS_LINES,
   ansOwnerConfig,
-  ownerFieldOrPlaceholder,
 } from "@/lib/ans-mcp/owner-config";
 
 export const metadata: Metadata = {
@@ -41,11 +41,8 @@ export default function SupportPage() {
         </li>
         <li>
           Business address:{" "}
-          <strong>
-            {ownerFieldOrPlaceholder(
-              ansOwnerConfig.businessAddress,
-              "ANS_BUSINESS_ADDRESS",
-            )}
+          <strong className="whitespace-pre-line">
+            {ANS_APPROVED_BUSINESS_ADDRESS_LINES.join("\n")}
           </strong>
         </li>
       </ul>
@@ -65,9 +62,16 @@ export default function SupportPage() {
       </p>
 
       <p className="rounded-md border border-[#0b4f9c]/20 bg-white p-4 text-sm">
-        Privacy and data-deletion requests use a separately approved privacy contact
-        (not yet set). Do not send those requests to the support address until the
-        owner designates that channel.
+        Privacy and data-deletion requests for Business Fit should use the approved
+        privacy contact on{" "}
+        <a className="text-[#0b4f9c] underline" href="/business-fit/privacy">
+          /business-fit/privacy
+        </a>{" "}
+        or the{" "}
+        <a className="text-[#0b4f9c] underline" href="/data-request">
+          data request
+        </a>{" "}
+        page, not the general Marketplace support inbox.
       </p>
     </AnsPolicyShell>
   );

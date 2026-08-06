@@ -2,7 +2,6 @@
 
 **Branch:** `feature/ans-chatgpt-marketplace`  
 **PR:** https://github.com/ibirdchef-rgb/ibirdchef-web/pull/8 (keep Draft; do not merge)  
-**Current head:** see latest commit on branch  
 **Pilot:** iBirdChef catering — Bay Area and Seattle  
 **Out of scope:** Chef World, Revenue Bridge, OpenAI submission, production deploy
 
@@ -19,29 +18,34 @@
 9. Domain challenge at `/.well-known/openai-apps-challenge`
 10. Exactly five positive and three negative Marketplace evaluation cases
 11. Approved demo: cost $2,070, profit $2,055, margin 49.82%, decision **Budget mismatch**, human approval required
+12. Owner-approved Business Fit privacy publication details on `/business-fit/privacy`:
+    - Privacy contact: `order@ibirdchef.com`
+    - Public mailing address: 3850 Klahanie Dr SE, Building 23, Apt 306, Sammamish, WA 98029, United States (**owner-approved for publication**)
+    - Governing law: Washington State
+    - Applicable California privacy rights honored where they apply (not a second governing jurisdiction)
+    - Maximum standard retention: 90 days, with lawful/security exceptions
 
 ## Latest automated verification
 
 | Check | Result |
 |---|---|
-| `pnpm test` | PASS (121/121) |
+| `pnpm test` | PASS (123/123) |
 | Security + abuse tests | PASS |
 | Marketplace evaluation cases | PASS (5+/3−) |
-| Focused break-even profit tests | PASS |
-| Focused credential-pair tests | PASS |
+| Privacy-route tests | PASS |
 | `pnpm lint` | PASS |
 | `pnpm build` | PASS |
 | Local MCP smoke (`mcp/smoke.mjs`) | PASS (`MCP_SMOKE_OK`, five tools) |
 | `GET /api/mcp` / local GET `/mcp` | HTTP 405 + `Allow: POST, DELETE` |
 | Unknown MCP tool fields | Rejected at transport schema boundary |
 | Oversized local MCP body | HTTP 413 `payload_too_large` |
+| Global `/privacy` | Remains separate iBirdChef catering placeholder |
 
 ## Remaining blockers (owner)
 
 - Set `ANS_MCP_AUTH_TOKEN` in Vercel Production (never commit the value).
 - Configure one complete shared rate-limit pair: `KV_REST_API_URL` + `KV_REST_API_TOKEN`, or `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`.
 - Set `OPENAI_APPS_DOMAIN_CHALLENGE` (or `ANS_DOMAIN_VERIFICATION_CHALLENGE`).
-- Approve remaining privacy/legal fields: `ANS_PRIVACY_CONTACT_EMAIL`, `ANS_BUSINESS_ADDRESS`, `ANS_GOVERNING_JURISDICTION`, `ANS_DATA_RETENTION_STATEMENT`.
 - Owner approval required before: merge, production deploy, OpenAI App Directory submit.
 - No custom in-repo MCP tool UI; live tool UX must be checked later in ChatGPT Developer Mode after stable HTTPS deploy.
 

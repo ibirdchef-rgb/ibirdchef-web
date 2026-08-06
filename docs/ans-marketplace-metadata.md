@@ -12,7 +12,10 @@
 | Privacy URL | https://ibirdchef.com/business-fit/privacy |
 | Terms URL | https://ibirdchef.com/terms |
 | Support URL | https://ibirdchef.com/support |
-| Support email | support@prosperityaxis.com (`mailto:support@prosperityaxis.com`) — general Marketplace support only; not approved for privacy/data-deletion requests yet |
+| Support email | support@prosperityaxis.com (`mailto:support@prosperityaxis.com`) — general Marketplace support only |
+| Privacy contact | order@ibirdchef.com — Business Fit privacy / data requests |
+| Public mailing address | 3850 Klahanie Dr SE, Building 23, Apt 306, Sammamish, WA 98029, United States (owner-approved for publication) |
+| Governing law | Washington State (California privacy rights honored where applicable; not a second governing jurisdiction) |
 | Disclaimer URL | https://ibirdchef.com/business-fit/disclaimer |
 | Data request URL | https://ibirdchef.com/data-request |
 | Authentication | Bearer token via `ANS_MCP_AUTH_TOKEN` (required in production). Exact ChatGPT connector auth mechanism to be confirmed against current OpenAI Apps SDK requirements before submission. |
