@@ -104,15 +104,27 @@ export const mcpCompareConceptsInputSchema = z
   })
   .strict();
 
-function textResult(payload: unknown) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify(payload, null, 2),
-      },
-    ],
-  };
+type ToolPayload = {
+  ok: boolean;
+  error?: unknown;
+  result?: unknown;
+};
+
+/**
+ * Serialize tool payloads for MCP. Domain-validation failures (`ok: false`)
+ * must set `isError: true` so clients treat them as failed tool calls.
+ */
+export function toolCallResult(payload: ToolPayload) {
+  const content = [
+    {
+      type: "text" as const,
+      text: JSON.stringify(payload, null, 2),
+    },
+  ];
+  if (!payload.ok) {
+    return { content, isError: true as const };
+  }
+  return { content };
 }
 
 export function createAnsFoodBusinessFitMcpServer() {
@@ -131,7 +143,7 @@ export function createAnsFoodBusinessFitMcpServer() {
       inputSchema: mcpBusinessFitInputSchema,
       annotations: READ_ONLY_CLOSED_WORLD,
     },
-    async (args) => textResult(runMcpTool("analyze_business_fit", args)),
+    async (args) => toolCallResult(runMcpTool("analyze_business_fit", args)),
   );
 
   server.registerTool(
@@ -144,7 +156,7 @@ export function createAnsFoodBusinessFitMcpServer() {
       inputSchema: mcpCompareConceptsInputSchema,
       annotations: READ_ONLY_CLOSED_WORLD,
     },
-    async (args) => textResult(runMcpTool("compare_food_service_concepts", args)),
+    async (args) => toolCallResult(runMcpTool("compare_food_service_concepts", args)),
   );
 
   server.registerTool(
@@ -157,7 +169,7 @@ export function createAnsFoodBusinessFitMcpServer() {
       inputSchema: mcpBusinessFitInputSchema,
       annotations: READ_ONLY_CLOSED_WORLD,
     },
-    async (args) => textResult(runMcpTool("build_startup_budget", args)),
+    async (args) => toolCallResult(runMcpTool("build_startup_budget", args)),
   );
 
   server.registerTool(
@@ -170,7 +182,7 @@ export function createAnsFoodBusinessFitMcpServer() {
       inputSchema: mcpBusinessFitInputSchema,
       annotations: READ_ONLY_CLOSED_WORLD,
     },
-    async (args) => textResult(runMcpTool("generate_opening_checklist", args)),
+    async (args) => toolCallResult(runMcpTool("generate_opening_checklist", args)),
   );
 
   server.registerTool(
@@ -183,7 +195,7 @@ export function createAnsFoodBusinessFitMcpServer() {
       inputSchema: mcpEventProfitInputSchema,
       annotations: READ_ONLY_CLOSED_WORLD,
     },
-    async (args) => textResult(runMcpTool("simulate_event_profit", args)),
+    async (args) => toolCallResult(runMcpTool("simulate_event_profit", args)),
   );
 
   return server;

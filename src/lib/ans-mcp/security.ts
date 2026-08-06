@@ -38,28 +38,75 @@ export type SecuritySuccess = {
 };
 
 /**
- * Trust platform client-IP headers only on the verified Vercel boundary.
- * Outside Vercel, ignore spoofable forwarded headers and collapse to one bucket.
+ * Allowlisted client-identity headers that may be trusted outside Vercel only
+ * when the operator explicitly enables the trusted-proxy boundary.
+ * Never trust arbitrary header names.
+ */
+export const ANS_MCP_TRUSTED_CLIENT_HEADER_ALLOWLIST = [
+  "x-forwarded-for",
+  "x-real-ip",
+  "cf-connecting-ip",
+  "true-client-ip",
+  "x-ans-mcp-client-ip",
+] as const;
+
+const CLIENT_KEY_RE = /^[\w.:%-]{1,128}$/;
+
+function firstForwardedValue(raw: string | null): string | null {
+  if (!raw) return null;
+  const value = raw.split(",")[0]?.trim() ?? "";
+  if (!value || !CLIENT_KEY_RE.test(value)) return null;
+  return value;
+}
+
+/**
+ * Non-Vercel trusted proxy is enabled only when both are set:
+ * - `ANS_MCP_TRUST_PROXY=true`
+ * - `ANS_MCP_TRUSTED_CLIENT_HEADER` is one of the allowlisted header names
+ */
+export function getConfiguredTrustedClientHeader(): string | null {
+  if (process.env.ANS_MCP_TRUST_PROXY !== "true") {
+    return null;
+  }
+  const configured = process.env.ANS_MCP_TRUSTED_CLIENT_HEADER?.trim().toLowerCase() ?? "";
+  if (
+    !configured ||
+    !(ANS_MCP_TRUSTED_CLIENT_HEADER_ALLOWLIST as readonly string[]).includes(configured)
+  ) {
+    return null;
+  }
+  return configured;
+}
+
+/**
+ * Derive a stable per-client rate-limit key.
+ * - On Vercel: trust platform-provided forwarded client headers.
+ * - Outside Vercel: trust a forwarded header only when the operator explicitly
+ *   configures `ANS_MCP_TRUST_PROXY=true` plus an allowlisted
+ *   `ANS_MCP_TRUSTED_CLIENT_HEADER`. Otherwise ignore spoofable headers and
+ *   fall back to the shared `"unknown"` bucket.
  */
 export function getClientKey(request: Request): string {
   const onVercel = Boolean(process.env.VERCEL);
-  if (!onVercel) {
+  if (onVercel) {
+    const vercelForwarded = firstForwardedValue(
+      request.headers.get("x-vercel-forwarded-for"),
+    );
+    if (vercelForwarded) return vercelForwarded;
+
+    const realIp = firstForwardedValue(request.headers.get("x-real-ip"));
+    if (realIp) return realIp;
+
+    const forwarded = firstForwardedValue(request.headers.get("x-forwarded-for"));
+    if (forwarded) return forwarded;
+
     return "unknown";
   }
 
-  const vercelForwarded = request.headers.get("x-vercel-forwarded-for");
-  if (vercelForwarded) {
-    return vercelForwarded.split(",")[0]?.trim() || "unknown";
-  }
-
-  const realIp = request.headers.get("x-real-ip")?.trim();
-  if (realIp) {
-    return realIp;
-  }
-
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0]?.trim() || "unknown";
+  const trustedHeader = getConfiguredTrustedClientHeader();
+  if (trustedHeader) {
+    const trustedValue = firstForwardedValue(request.headers.get(trustedHeader));
+    if (trustedValue) return trustedValue;
   }
 
   return "unknown";

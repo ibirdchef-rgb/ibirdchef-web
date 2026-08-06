@@ -31,7 +31,17 @@ See `.env.example`. Critical production values:
 - Approved support defaults: `support@prosperityaxis.com`, `https://ibirdchef.com/support`, countries `United States`
 - Owner-approved privacy/legal defaults: privacy contact `order@ibirdchef.com`, published mailing address, Washington State governing law, 90-day standard retention (see `/business-fit/privacy`)
 
-Never commit secrets. Client IP headers are trusted only on the Vercel boundary (`VERCEL` set by the platform).
+Never commit secrets.
+
+### Client identity / rate-limit keys
+
+- On Vercel (`VERCEL` set by the platform): client keys come from platform-provided forwarded headers (`x-vercel-forwarded-for`, then `x-real-ip`, then `x-forwarded-for`).
+- Outside Vercel: spoofable forwarded headers are **ignored by default** (all clients share the safe `"unknown"` bucket).
+- To enable per-client limits on a supported non-Vercel host behind your own reverse proxy, set **both**:
+  - `ANS_MCP_TRUST_PROXY=true`
+  - `ANS_MCP_TRUSTED_CLIENT_HEADER` to one allowlisted name: `x-forwarded-for`, `x-real-ip`, `cf-connecting-ip`, `true-client-ip`, or `x-ans-mcp-client-ip`
+- Only that configured header is trusted. Partial/misconfigured settings fall back to `"unknown"`. Never trust arbitrary header names.
+- JSON-RPC batch arrays are rejected at `/api/mcp` with HTTP 400 (`batch_not_supported`) so one HTTP request cannot execute many tool calls under a single rate-limit charge.
 
 ## Deploy notes
 

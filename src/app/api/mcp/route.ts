@@ -94,6 +94,22 @@ async function handleMcp(request: Request): Promise<Response> {
       }
     }
 
+    // JSON-RPC batches can execute many MCP messages under one HTTP request.
+    // Reject them before dispatch so one rate-limit unit cannot cover a batch.
+    if (Array.isArray(parsedBody)) {
+      logMcpEvent({
+        level: "warn",
+        message: "mcp_batch_rejected",
+        clientKey,
+        status: 400,
+      });
+      return safeErrorResponse(
+        400,
+        "batch_not_supported",
+        "JSON-RPC batch requests are not supported on this MCP endpoint.",
+      );
+    }
+
     const response = await transport.handleRequest(request, {
       parsedBody,
     });

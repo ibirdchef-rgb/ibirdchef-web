@@ -15,6 +15,8 @@
 4. Call MCP with `Authorization: Bearer <token>`.
 5. Failed-auth traffic is rate-limited separately from authenticated traffic.
 6. Authenticated traffic uses `ANS_MCP_RATE_LIMIT_MAX` (default 60/min).
+7. Outside Vercel, set `ANS_MCP_TRUST_PROXY=true` and an allowlisted `ANS_MCP_TRUSTED_CLIENT_HEADER` only when a trusted reverse proxy sets that header; otherwise clients share the safe `"unknown"` bucket. Do not trust spoofable headers without this explicit boundary.
+8. JSON-RPC batch arrays are not supported on `/api/mcp` (rejected before tool dispatch).
 
 ## Domain verification
 

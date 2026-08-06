@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   createAnsFoodBusinessFitMcpServer,
   mcpEventProfitInputSchema,
+  toolCallResult,
 } from "../src/lib/ans-mcp/create-mcp-server";
 import { MCP_TOOL_NAMES, runMcpTool } from "./tools";
 
@@ -55,6 +56,26 @@ describe("MCP tools", () => {
       assert.equal(annotations?.idempotentHint, true, name);
       assert.equal(annotations?.openWorldHint, false, name);
     }
+  });
+
+  it("marks domain-validation failures with isError while successes stay clear", () => {
+    const failed = toolCallResult(
+      runMcpTool("analyze_business_fit", {
+        zipCode: "12",
+        businessType: "cafe",
+        cuisine: "american",
+        investmentBudget: "150_300k",
+        ownerExperience: "some_food_service",
+        facilitySize: "under_1000",
+        serviceModel: "dine_in",
+        targetOpeningDate: "2027-06-01",
+      }),
+    );
+    assert.equal(failed.isError, true);
+
+    const ok = toolCallResult(runMcpTool("analyze_business_fit", sampleInput));
+    assert.equal("isError" in ok && ok.isError, false);
+    assert.equal(JSON.parse(ok.content[0].text).ok, true);
   });
 
   it("rejects unknown fields at the MCP transport schema boundary", () => {

@@ -26,6 +26,8 @@ afterEach(() => {
   delete process.env.ANS_MCP_REQUIRE_AUTH;
   delete process.env.ANS_MCP_RATE_LIMIT_MAX;
   delete process.env.ANS_MCP_PRE_AUTH_RATE_LIMIT_MAX;
+  delete process.env.ANS_MCP_TRUST_PROXY;
+  delete process.env.ANS_MCP_TRUSTED_CLIENT_HEADER;
   delete process.env.VERCEL_ENV;
   delete process.env.VERCEL;
   delete process.env.KV_REST_API_URL;
@@ -110,9 +112,11 @@ describe("ANS MCP security guards", () => {
     if (!blocked.ok) assert.equal(blocked.status, 429);
   });
 
-  it("ignores spoofable forwarded IP headers outside the Vercel boundary", () => {
+  it("ignores spoofable forwarded IP headers outside the Vercel boundary when proxy trust is not configured", () => {
     delete process.env.VERCEL;
     process.env.ANS_MCP_REQUIRE_AUTH = "true";
+    delete process.env.ANS_MCP_TRUST_PROXY;
+    delete process.env.ANS_MCP_TRUSTED_CLIENT_HEADER;
     const req = new Request("http://localhost/api/mcp", {
       headers: {
         "x-vercel-forwarded-for": "1.2.3.4",
@@ -129,6 +133,69 @@ describe("ANS MCP security guards", () => {
       headers: { "x-vercel-forwarded-for": "1.2.3.4, 10.0.0.1" },
     });
     assert.equal(getClientKey(req), "1.2.3.4");
+  });
+
+  it("derives separate stable client keys from a configured non-Vercel trusted proxy header", () => {
+    delete process.env.VERCEL;
+    process.env.ANS_MCP_TRUST_PROXY = "true";
+    process.env.ANS_MCP_TRUSTED_CLIENT_HEADER = "x-real-ip";
+
+    const clientA = getClientKey(
+      new Request("http://localhost/api/mcp", {
+        headers: { "x-real-ip": "10.0.0.1", "x-forwarded-for": "spoofed" },
+      }),
+    );
+    const clientB = getClientKey(
+      new Request("http://localhost/api/mcp", {
+        headers: { "x-real-ip": "10.0.0.2", "x-forwarded-for": "spoofed" },
+      }),
+    );
+    assert.equal(clientA, "10.0.0.1");
+    assert.equal(clientB, "10.0.0.2");
+    assert.notEqual(clientA, clientB);
+  });
+
+  it("does not trust spoofable headers when trust proxy is only partially configured", () => {
+    delete process.env.VERCEL;
+    process.env.ANS_MCP_TRUST_PROXY = "true";
+    // Header name missing / not allowlisted → safe fallback
+    process.env.ANS_MCP_TRUSTED_CLIENT_HEADER = "x-evil-spoof";
+    const req = new Request("http://localhost/api/mcp", {
+      headers: {
+        "x-evil-spoof": "1.2.3.4",
+        "x-forwarded-for": "9.9.9.9",
+      },
+    });
+    assert.equal(getClientKey(req), "unknown");
+    assert.equal(JSON.stringify({ key: getClientKey(req) }).includes("ANS_MCP"), false);
+  });
+
+  it("keeps separate rate-limit buckets for different trusted non-Vercel clients", async () => {
+    delete process.env.VERCEL;
+    process.env.ANS_MCP_TRUST_PROXY = "true";
+    process.env.ANS_MCP_TRUSTED_CLIENT_HEADER = "x-forwarded-for";
+    process.env.ANS_MCP_RATE_LIMIT_MAX = "1";
+
+    const keyA = getClientKey(
+      new Request("http://localhost/api/mcp", {
+        headers: { "x-forwarded-for": "203.0.113.10" },
+      }),
+    );
+    const keyB = getClientKey(
+      new Request("http://localhost/api/mcp", {
+        headers: { "x-forwarded-for": "203.0.113.20" },
+      }),
+    );
+    assert.equal((await checkRateLimit(keyA)).ok, true);
+    assert.equal((await checkRateLimit(keyB)).ok, true);
+    const blockedA = await checkRateLimit(keyA);
+    assert.equal(blockedA.ok, false);
+    if (!blockedA.ok) {
+      assert.equal(blockedA.status, 429);
+      assert.equal(JSON.stringify(blockedA).includes("203.0.113"), false);
+      assert.equal(JSON.stringify(blockedA).includes("ANS_MCP_TRUST"), false);
+    }
+    assert.equal((await checkRateLimit(keyB)).ok, false);
   });
 
   it("requires bearer auth when enforced", () => {
