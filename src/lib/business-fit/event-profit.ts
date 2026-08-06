@@ -220,9 +220,12 @@ export function simulateEventProfit(
       `Expected margin ${(expectedMargin * 100).toFixed(2)}% is below target ${(input.targetMargin * 100).toFixed(2)}%.`,
     );
   } else if (
-    input.capacityStatus === "constrained" ||
-    missingCostWarnings.some((warning) => warning.includes("not provided"))
+    expectedProfitUsd !== null &&
+    expectedProfitUsd > 0 &&
+    (input.capacityStatus === "constrained" ||
+      missingCostWarnings.some((warning) => warning.includes("not provided")))
   ) {
+    // Break-even (profit === 0) and losses are never "profitable*".
     decisionState = "Profitable with adjustments";
     decisionReasons.push(
       "Economics may work, but optional costs or capacity constraints still need human adjustments.",
@@ -235,7 +238,9 @@ export function simulateEventProfit(
   } else {
     decisionState = "Manual review required";
     decisionReasons.push(
-      "Preliminary economics are inconclusive; human approval is required before any commercial action.",
+      expectedProfitUsd !== null && expectedProfitUsd === 0
+        ? "Expected profit is exactly break-even; this is not classified as profitable and requires human review."
+        : "Preliminary economics are inconclusive; human approval is required before any commercial action.",
     );
   }
 

@@ -138,4 +138,56 @@ describe("simulate_event_profit validation", () => {
       "Manual review required",
     );
   });
+
+  it("never classifies negative or break-even profit as profitable", () => {
+    const negative = simulateEventProfit(
+      mustParse({
+        guestCount: 50,
+        customerBudgetUsd: 2000,
+        proposedSellingPriceUsd: 1500,
+        targetMargin: 0,
+        foodCostUsd: 1000,
+        laborCostUsd: 800,
+        packagingCostUsd: 50,
+        deliveryCostUsd: 50,
+        capacityStatus: "available_for_planning",
+      }),
+    );
+    assert.equal(negative.expectedProfitUsd, -400);
+    assert.notEqual(negative.decisionState, "Profitable");
+    assert.notEqual(negative.decisionState, "Profitable with adjustments");
+    assert.equal(negative.humanApprovalRequired, true);
+
+    const breakEven = simulateEventProfit(
+      mustParse({
+        guestCount: 50,
+        customerBudgetUsd: 2000,
+        proposedSellingPriceUsd: 1800,
+        targetMargin: 0,
+        foodCostUsd: 1000,
+        laborCostUsd: 800,
+        // omit packaging/delivery — previously misclassified as profitable-with-adjustments
+        capacityStatus: "available_for_planning",
+      }),
+    );
+    assert.equal(breakEven.expectedProfitUsd, 0);
+    assert.equal(breakEven.decisionState, "Manual review required");
+    assert.equal(breakEven.humanApprovalRequired, true);
+
+    const slightlyPositive = simulateEventProfit(
+      mustParse({
+        guestCount: 50,
+        customerBudgetUsd: 2000,
+        proposedSellingPriceUsd: 1801,
+        targetMargin: 0,
+        foodCostUsd: 1000,
+        laborCostUsd: 800,
+        capacityStatus: "available_for_planning",
+      }),
+    );
+    assert.equal(slightlyPositive.expectedProfitUsd, 1);
+    assert.equal(slightlyPositive.decisionState, "Profitable with adjustments");
+    assert.equal(slightlyPositive.humanApprovalRequired, true);
+  });
 });
+

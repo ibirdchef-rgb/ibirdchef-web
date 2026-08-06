@@ -37,19 +37,41 @@ export function createMemoryRateLimitStore(): RateLimitStore {
   };
 }
 
-export function getSharedRateLimitRestConfig(): { url: string; token: string } | null {
-  const url =
-    process.env.KV_REST_API_URL?.trim() ||
-    process.env.UPSTASH_REDIS_REST_URL?.trim() ||
-    "";
-  const token =
-    process.env.KV_REST_API_TOKEN?.trim() ||
-    process.env.UPSTASH_REDIS_REST_TOKEN?.trim() ||
-    "";
-  if (!url || !token) {
-    return null;
+export type SharedRateLimitProvider = "kv" | "upstash";
+
+export type SharedRateLimitRestConfig = {
+  url: string;
+  token: string;
+  provider: SharedRateLimitProvider;
+};
+
+/**
+ * Select shared-store credentials as complete matching pairs only.
+ * Never combine a URL from one provider with a token from the other.
+ * If both complete pairs exist, prefer the Vercel KV pair deterministically.
+ */
+export function getSharedRateLimitRestConfig(): SharedRateLimitRestConfig | null {
+  const kvUrl = process.env.KV_REST_API_URL?.trim() || "";
+  const kvToken = process.env.KV_REST_API_TOKEN?.trim() || "";
+  if (kvUrl && kvToken) {
+    return {
+      url: kvUrl.replace(/\/$/, ""),
+      token: kvToken,
+      provider: "kv",
+    };
   }
-  return { url: url.replace(/\/$/, ""), token };
+
+  const upstashUrl = process.env.UPSTASH_REDIS_REST_URL?.trim() || "";
+  const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim() || "";
+  if (upstashUrl && upstashToken) {
+    return {
+      url: upstashUrl.replace(/\/$/, ""),
+      token: upstashToken,
+      provider: "upstash",
+    };
+  }
+
+  return null;
 }
 
 export function requiresSharedRateLimitStore(): boolean {

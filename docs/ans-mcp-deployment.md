@@ -20,8 +20,8 @@ See `.env.example`. Critical production values:
 - Auth is enforced when `VERCEL_ENV=production` **or** `ANS_MCP_REQUIRE_AUTH=true` (not bare `NODE_ENV=production`)
 - `ANS_MCP_RATE_LIMIT_MAX` — authenticated requests per client per minute (default 60)
 - `ANS_MCP_PRE_AUTH_RATE_LIMIT_MAX` — failed-auth attempts per client per minute (default 30); does **not** cap authenticated traffic
-- Shared rate-limit store (required when `VERCEL_ENV=production`): `KV_REST_API_URL` + `KV_REST_API_TOKEN`, or `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`
-- Production fails closed with HTTP 503 if the shared rate-limit store is missing or unavailable
+- Shared rate-limit store (required when `VERCEL_ENV=production`): use a complete matching pair only — `KV_REST_API_URL` + `KV_REST_API_TOKEN`, or `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (never mix across pairs; if both complete pairs exist, KV is preferred)
+- Production fails closed with HTTP 503 if no complete pair is configured or the store is unavailable
 - `OPENAI_APPS_DOMAIN_CHALLENGE` or `ANS_DOMAIN_VERIFICATION_CHALLENGE` — plain-text domain verification token
 - `ANS_MCP_PRODUCTION_URL` — optional override reported in docs/metadata
 - Approved support defaults: `support@prosperityaxis.com`, `https://ibirdchef.com/support`, countries `United States`
