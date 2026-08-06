@@ -10,10 +10,11 @@
 ## Auth
 
 1. Store `ANS_MCP_AUTH_TOKEN` only in Vercel Production env (never commit).
-2. Production enforcement uses `VERCEL_ENV=production` or `ANS_MCP_REQUIRE_AUTH=true`.
-3. Call MCP with `Authorization: Bearer <token>`.
-4. Failed-auth traffic is rate-limited separately from authenticated traffic.
-5. Authenticated traffic uses `ANS_MCP_RATE_LIMIT_MAX` (default 60/min).
+2. Auth enforcement uses `VERCEL_ENV=production` or `ANS_MCP_REQUIRE_AUTH=true`.
+3. Whenever auth is enforced, a shared KV/Upstash rate-limit store is required; missing/incomplete credentials fail closed with HTTP 503.
+4. Call MCP with `Authorization: Bearer <token>`.
+5. Failed-auth traffic is rate-limited separately from authenticated traffic.
+6. Authenticated traffic uses `ANS_MCP_RATE_LIMIT_MAX` (default 60/min).
 
 ## Domain verification
 

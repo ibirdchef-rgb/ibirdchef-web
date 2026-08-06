@@ -74,9 +74,22 @@ export function getSharedRateLimitRestConfig(): SharedRateLimitRestConfig | null
   return null;
 }
 
+/**
+ * Shared storage is mandatory whenever the public MCP endpoint enforces auth:
+ * - Vercel Production (`VERCEL_ENV=production`), or
+ * - Explicit auth (`ANS_MCP_REQUIRE_AUTH=true`), including authenticated
+ *   non-Vercel hosts and authenticated Vercel Preview deployments.
+ * Local unauthenticated development may use the in-memory limiter.
+ */
 export function requiresSharedRateLimitStore(): boolean {
-  return process.env.VERCEL_ENV === "production";
+  return (
+    process.env.VERCEL_ENV === "production" ||
+    process.env.ANS_MCP_REQUIRE_AUTH === "true"
+  );
 }
+
+const SHARED_STORE_UNAVAILABLE_MESSAGE =
+  "Shared rate-limit store is not configured for this authenticated MCP deployment.";
 
 async function restCommand(
   config: { url: string; token: string },
@@ -140,7 +153,8 @@ export function resetRateLimitStoreCache(): void {
 
 /**
  * Resolve the active store.
- * Production requires a shared REST store; local/tests use memory.
+ * Authenticated deployments require a shared REST store; local unauthenticated
+ * development/tests may use memory.
  */
 export function resolveRateLimitStore():
   | { ok: true; store: RateLimitStore; kind: "memory" | "rest" }
@@ -159,7 +173,7 @@ export function resolveRateLimitStore():
     return {
       ok: false,
       kind: "unavailable",
-      error: "Shared rate-limit store is not configured for production.",
+      error: SHARED_STORE_UNAVAILABLE_MESSAGE,
     };
   }
 
@@ -172,7 +186,7 @@ export function resolveRateLimitStore():
       return {
         ok: false,
         kind: "unavailable",
-        error: "Shared rate-limit store is not configured for production.",
+        error: SHARED_STORE_UNAVAILABLE_MESSAGE,
       };
     }
     cachedStore = createRestRateLimitStore(restConfig);

@@ -87,6 +87,19 @@ describe("ANS MCP security guards", () => {
     }
   });
 
+  it("fails closed when ANS_MCP_REQUIRE_AUTH enforces shared rate-limit storage", async () => {
+    delete process.env.VERCEL_ENV;
+    process.env.ANS_MCP_REQUIRE_AUTH = "true";
+    assert.equal(requiresSharedRateLimitStore(), true);
+    const blocked = await checkRateLimit("client-a");
+    assert.equal(blocked.ok, false);
+    if (!blocked.ok) {
+      assert.equal(blocked.status, 503);
+      assert.equal(blocked.error.code, "rate_limit_unavailable");
+      assert.equal(JSON.stringify(blocked).includes("KV_REST_API"), false);
+    }
+  });
+
   it("uses an injectable store in tests without a live service", async () => {
     process.env.VERCEL_ENV = "production";
     process.env.ANS_MCP_RATE_LIMIT_MAX = "1";

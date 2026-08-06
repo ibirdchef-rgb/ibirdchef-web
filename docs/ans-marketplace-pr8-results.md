@@ -9,7 +9,7 @@
 
 1. Five read-only MCP tools including `simulate_event_profit`
 2. Auth + separate pre-auth / post-auth rate limits; timing-safe bearer compare
-3. Shared production rate-limit store via complete Vercel KV or Upstash credential pairs (never mixed); fail-closed 503 in production when unavailable
+3. Shared KV/Upstash rate-limit store required whenever MCP auth is enforced (`VERCEL_ENV=production` or `ANS_MCP_REQUIRE_AUTH=true`, including authenticated Preview); complete matching credential pairs only (never mixed); fail-closed 503 when unavailable
 4. Proxy client-IP headers trusted only on the Vercel boundary
 5. Strict closed-world schemas at the MCP transport boundary
 6. `GET /api/mcp` returns HTTP 405 with `Allow: POST, DELETE`
@@ -31,8 +31,9 @@
 
 | Check | Result |
 |---|---|
-| `pnpm test` | PASS (128/128) |
+| `pnpm test` | PASS (135/135) |
 | Security + abuse tests | PASS |
+| Shared rate-limit enforcement gate | PASS (production, `ANS_MCP_REQUIRE_AUTH`, authenticated Preview, local memory, fail-closed pairs) |
 | Marketplace evaluation cases | PASS (5+/3−) |
 | Privacy / legal route tests | PASS |
 | Business-address override tests | PASS |
@@ -43,11 +44,12 @@
 | Unknown MCP tool fields | Rejected at transport schema boundary |
 | Oversized local MCP body | HTTP 413 `payload_too_large` |
 | Global `/privacy` | Remains separate iBirdChef catering placeholder |
+| Approved demo | $2,070 cost / $2,055 profit / 49.82% margin / Budget mismatch / human approval required |
 
 ## Remaining blockers (owner)
 
 - Set `ANS_MCP_AUTH_TOKEN` in Vercel Production (never commit the value).
-- Configure one complete shared rate-limit pair: `KV_REST_API_URL` + `KV_REST_API_TOKEN`, or `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`.
+- Configure one complete shared rate-limit pair whenever auth is enforced: `KV_REST_API_URL` + `KV_REST_API_TOKEN`, or `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`.
 - Set `OPENAI_APPS_DOMAIN_CHALLENGE` (or `ANS_DOMAIN_VERIFICATION_CHALLENGE`).
 - Owner approval required before: merge, production deploy, OpenAI App Directory submit.
 - No custom in-repo MCP tool UI; live tool UX must be checked later in ChatGPT Developer Mode after stable HTTPS deploy.
