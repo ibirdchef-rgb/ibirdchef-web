@@ -92,6 +92,24 @@ const SHARED_STORE_UNAVAILABLE_MESSAGE =
   "Shared rate-limit store is not configured for this authenticated MCP deployment.";
 
 /**
+ * Bound every shared KV/Upstash REST call so a stalled provider cannot hang
+ * authenticated MCP requests until the platform kills the invocation.
+ * 1.5s is well above normal Redis REST latency and well below serverless limits.
+ */
+export const SHARED_RATE_LIMIT_STORE_TIMEOUT_MS = 1_500;
+
+let storeTimeoutMsForTests: number | null = null;
+
+/** Test helper — override the shared-store request deadline. */
+export function setSharedRateLimitStoreTimeoutForTests(ms: number | null): void {
+  storeTimeoutMsForTests = ms;
+}
+
+export function getSharedRateLimitStoreTimeoutMs(): number {
+  return storeTimeoutMsForTests ?? SHARED_RATE_LIMIT_STORE_TIMEOUT_MS;
+}
+
+/**
  * Atomic fixed-window counter: INCR and set EXPIRE only on the first hit.
  * Uses a Redis Lua script so a successful INCR cannot leave a key without TTL
  * when the expiry step would have failed as a separate REST call.
@@ -123,30 +141,40 @@ async function restEvalIncrExpire(
   key: string,
   ttlSeconds: number,
 ): Promise<number> {
-  const response = await fetch(config.url, {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${config.token}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify(buildRateLimitIncrExpireCommand(key, ttlSeconds)),
-    cache: "no-store",
-  });
-  if (!response.ok) {
+  try {
+    const response = await fetch(config.url, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${config.token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(buildRateLimitIncrExpireCommand(key, ttlSeconds)),
+      cache: "no-store",
+      signal: AbortSignal.timeout(getSharedRateLimitStoreTimeoutMs()),
+    });
+    if (!response.ok) {
+      throw new Error("rate_limit_store_unavailable");
+    }
+    const payload = (await response.json()) as {
+      result?: unknown;
+      error?: unknown;
+    };
+    if (payload.error != null) {
+      throw new Error("rate_limit_store_unavailable");
+    }
+    const count = Number(payload.result);
+    if (!Number.isFinite(count) || count < 1) {
+      throw new Error("rate_limit_store_unavailable");
+    }
+    return count;
+  } catch (error) {
+    // Preserve the intentional fail-closed message; map timeouts/stalls/network
+    // errors to the same safe path without leaking provider or abort details.
+    if (error instanceof Error && error.message === "rate_limit_store_unavailable") {
+      throw error;
+    }
     throw new Error("rate_limit_store_unavailable");
   }
-  const payload = (await response.json()) as {
-    result?: unknown;
-    error?: unknown;
-  };
-  if (payload.error != null) {
-    throw new Error("rate_limit_store_unavailable");
-  }
-  const count = Number(payload.result);
-  if (!Number.isFinite(count) || count < 1) {
-    throw new Error("rate_limit_store_unavailable");
-  }
-  return count;
 }
 
 export function createRestRateLimitStore(config: {

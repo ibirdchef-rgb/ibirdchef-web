@@ -10,7 +10,7 @@
 1. Five read-only MCP tools including `simulate_event_profit`
 2. Auth + separate pre-auth / post-auth rate limits; timing-safe bearer compare
 3. Shared KV/Upstash rate-limit store required whenever MCP auth is enforced (`VERCEL_ENV=production` or `ANS_MCP_REQUIRE_AUTH=true`, including authenticated Preview); complete matching credential pairs only (never mixed); fail-closed 503 when unavailable
-4. Shared-store counters use an atomic Redis `EVAL` script (`INCR` + first-hit `EXPIRE`) so a successful increment cannot leave a key without TTL
+4. Shared-store counters use an atomic Redis `EVAL` script (`INCR` + first-hit `EXPIRE`) so a successful increment cannot leave a key without TTL; every REST call is bounded by a 1.5s abort timeout and stalls fail closed
 5. Proxy client-IP headers trusted on the Vercel boundary; outside Vercel only when `ANS_MCP_TRUST_PROXY=true` plus an allowlisted `ANS_MCP_TRUSTED_CLIENT_HEADER`
 6. Strict closed-world schemas at the MCP transport boundary; domain-validation failures return MCP tool results with `isError: true`
 7. JSON-RPC batch arrays rejected at `/api/mcp` before tool dispatch (`batch_not_supported`)
@@ -28,9 +28,10 @@
 
 | Check | Result |
 |---|---|
-| `pnpm test` | PASS (156/156) |
+| `pnpm test` | PASS (157/157) |
 | Security + abuse tests | PASS |
 | Atomic rate-limit INCR+EXPIRE | PASS (mocked REST EVAL; no live KV/Redis) |
+| Shared-store request timeout | PASS (AbortSignal deadline; stalled fetch fails closed 503) |
 | Shared rate-limit enforcement gate | PASS |
 | Trusted non-Vercel client identity | PASS |
 | Domain-validation MCP `isError` | PASS |

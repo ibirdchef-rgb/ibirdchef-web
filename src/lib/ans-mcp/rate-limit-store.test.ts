@@ -2,21 +2,27 @@ import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
 import {
   RATE_LIMIT_INCR_EXPIRE_SCRIPT,
+  SHARED_RATE_LIMIT_STORE_TIMEOUT_MS,
   buildRateLimitIncrExpireCommand,
   createMemoryRateLimitStore,
   createRestRateLimitStore,
   getSharedRateLimitRestConfig,
+  getSharedRateLimitStoreTimeoutMs,
   requiresSharedRateLimitStore,
   resetRateLimitStoreCache,
   resolveRateLimitStore,
   setRateLimitStoreForTests,
+  setSharedRateLimitStoreTimeoutForTests,
 } from "./rate-limit-store";
+import { checkRateLimit, resetRateLimitBuckets } from "./security";
 
 const originalFetch = globalThis.fetch;
 
 afterEach(() => {
   setRateLimitStoreForTests(null);
   resetRateLimitStoreCache();
+  setSharedRateLimitStoreTimeoutForTests(null);
+  resetRateLimitBuckets();
   globalThis.fetch = originalFetch;
   delete process.env.VERCEL_ENV;
   delete process.env.VERCEL;
@@ -199,7 +205,12 @@ describe("atomic shared rate-limit INCR + EXPIRE", () => {
   });
 
   it("performs increment and initial expiry atomically in one REST call", async () => {
-    const calls: Array<{ url: string; body: string; auth: string | null }> = [];
+    const calls: Array<{
+      url: string;
+      body: string;
+      auth: string | null;
+      hasAbortSignal: boolean;
+    }> = [];
     let nextCount = 0;
     globalThis.fetch = (async (input, init) => {
       nextCount += 1;
@@ -210,6 +221,7 @@ describe("atomic shared rate-limit INCR + EXPIRE", () => {
         url,
         body,
         auth: headers.get("authorization"),
+        hasAbortSignal: Boolean(init?.signal),
       });
       return new Response(JSON.stringify({ result: nextCount }), {
         status: 200,
@@ -229,10 +241,12 @@ describe("atomic shared rate-limit INCR + EXPIRE", () => {
     assert.equal(second.count, 2);
     assert.equal(first.resetAt, second.resetAt);
     assert.equal(calls.length, 2);
+    assert.equal(getSharedRateLimitStoreTimeoutMs(), SHARED_RATE_LIMIT_STORE_TIMEOUT_MS);
     for (const call of calls) {
       assert.equal(call.url, "https://kv.example.invalid");
       assert.equal(call.url.includes("/incr/"), false);
       assert.equal(call.url.includes("/expire/"), false);
+      assert.equal(call.hasAbortSignal, true);
       const parsed = JSON.parse(call.body) as unknown[];
       assert.equal(parsed[0], "EVAL");
       assert.match(String(parsed[1]), /INCR/);
@@ -250,9 +264,11 @@ describe("atomic shared rate-limit INCR + EXPIRE", () => {
     assert.equal(config?.provider, "upstash");
 
     let sawEval = false;
+    let sawAbortSignal = false;
     globalThis.fetch = (async (_input, init) => {
       const body = String(init?.body ?? "");
       sawEval = body.includes("EVAL") && body.includes("EXPIRE");
+      sawAbortSignal = Boolean(init?.signal);
       return new Response(JSON.stringify({ result: 1 }), { status: 200 });
     }) as typeof fetch;
 
@@ -263,6 +279,7 @@ describe("atomic shared rate-limit INCR + EXPIRE", () => {
     const touched = await store.touch("preauth", "client-b", 60_000, 2_000);
     assert.equal(touched.count, 1);
     assert.equal(sawEval, true);
+    assert.equal(sawAbortSignal, true);
   });
 
   it("fails closed safely when the shared store returns an error", async () => {
@@ -298,5 +315,68 @@ describe("atomic shared rate-limit INCR + EXPIRE", () => {
     await assert.rejects(() => store.touch("auth", "client-a", 60_000, 1_000), {
       message: "rate_limit_store_unavailable",
     });
+  });
+
+  it("times out stalled shared-store requests and fails closed safely", async () => {
+    setSharedRateLimitStoreTimeoutForTests(40);
+    assert.equal(getSharedRateLimitStoreTimeoutMs(), 40);
+
+    let observedSignal: AbortSignal | null | undefined;
+    globalThis.fetch = (async (_input, init) => {
+      observedSignal = init?.signal;
+      assert.ok(observedSignal, "expected abort deadline on shared-store fetch");
+      return await new Promise<Response>((_resolve, reject) => {
+        const onAbort = () => {
+          reject(new DOMException("The operation was aborted", "AbortError"));
+        };
+        if (observedSignal?.aborted) {
+          onAbort();
+          return;
+        }
+        observedSignal?.addEventListener("abort", onAbort, { once: true });
+      });
+    }) as typeof fetch;
+
+    const store = createRestRateLimitStore({
+      url: "https://kv.example.invalid",
+      token: "kv-token-secret",
+    });
+
+    const started = Date.now();
+    await assert.rejects(
+      () => store.touch("auth", "client-a", 60_000, 1_000),
+      (error: unknown) => {
+        assert.ok(error instanceof Error);
+        assert.equal(error.message, "rate_limit_store_unavailable");
+        assert.equal(error.message.includes("kv-token-secret"), false);
+        assert.equal(error.message.includes("kv.example.invalid"), false);
+        assert.equal(error.message.includes("AbortError"), false);
+        return true;
+      },
+    );
+    const elapsed = Date.now() - started;
+    assert.ok(elapsed < 1_000, `timeout should be prompt, elapsed=${elapsed}ms`);
+    assert.ok(observedSignal?.aborted, "abort signal should fire for stalled request");
+
+    // Existing security path maps store failures to safe HTTP 503.
+    process.env.ANS_MCP_REQUIRE_AUTH = "true";
+    process.env.KV_REST_API_URL = "https://kv.example.invalid";
+    process.env.KV_REST_API_TOKEN = "kv-token-secret";
+    resetRateLimitStoreCache();
+    setRateLimitStoreForTests(null);
+    // Force the rest store path with the same stalled fetch.
+    const resolved = resolveRateLimitStore();
+    assert.equal(resolved.ok, true);
+    if (resolved.ok) {
+      assert.equal(resolved.kind, "rest");
+    }
+    const blocked = await checkRateLimit("client-timeout");
+    assert.equal(blocked.ok, false);
+    if (!blocked.ok) {
+      assert.equal(blocked.status, 503);
+      assert.equal(blocked.error.code, "rate_limit_unavailable");
+      assert.equal(JSON.stringify(blocked).includes("kv-token-secret"), false);
+      assert.equal(JSON.stringify(blocked).includes("kv.example.invalid"), false);
+    }
   });
 });
