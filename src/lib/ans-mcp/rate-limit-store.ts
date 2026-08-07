@@ -91,22 +91,62 @@ export function requiresSharedRateLimitStore(): boolean {
 const SHARED_STORE_UNAVAILABLE_MESSAGE =
   "Shared rate-limit store is not configured for this authenticated MCP deployment.";
 
-async function restCommand(
+/**
+ * Atomic fixed-window counter: INCR and set EXPIRE only on the first hit.
+ * Uses a Redis Lua script so a successful INCR cannot leave a key without TTL
+ * when the expiry step would have failed as a separate REST call.
+ */
+export const RATE_LIMIT_INCR_EXPIRE_SCRIPT = [
+  "local c = redis.call('INCR', KEYS[1])",
+  "if c == 1 then",
+  "  redis.call('EXPIRE', KEYS[1], ARGV[1])",
+  "end",
+  "return c",
+].join("\n");
+
+/** Build the REST EVAL command payload (no credentials). */
+export function buildRateLimitIncrExpireCommand(
+  key: string,
+  ttlSeconds: number,
+): [string, string, string, string, string] {
+  return [
+    "EVAL",
+    RATE_LIMIT_INCR_EXPIRE_SCRIPT,
+    "1",
+    key,
+    String(ttlSeconds),
+  ];
+}
+
+async function restEvalIncrExpire(
   config: { url: string; token: string },
-  pathAndQuery: string,
-): Promise<unknown> {
-  const response = await fetch(`${config.url}${pathAndQuery}`, {
+  key: string,
+  ttlSeconds: number,
+): Promise<number> {
+  const response = await fetch(config.url, {
     method: "POST",
     headers: {
       authorization: `Bearer ${config.token}`,
+      "content-type": "application/json",
     },
+    body: JSON.stringify(buildRateLimitIncrExpireCommand(key, ttlSeconds)),
     cache: "no-store",
   });
   if (!response.ok) {
     throw new Error("rate_limit_store_unavailable");
   }
-  const payload = (await response.json()) as { result?: unknown };
-  return payload.result;
+  const payload = (await response.json()) as {
+    result?: unknown;
+    error?: unknown;
+  };
+  if (payload.error != null) {
+    throw new Error("rate_limit_store_unavailable");
+  }
+  const count = Number(payload.result);
+  if (!Number.isFinite(count) || count < 1) {
+    throw new Error("rate_limit_store_unavailable");
+  }
+  return count;
 }
 
 export function createRestRateLimitStore(config: {
@@ -117,16 +157,8 @@ export function createRestRateLimitStore(config: {
     async touch(bucket, clientKey, windowMs, now = Date.now()) {
       const windowId = Math.floor(now / windowMs);
       const key = `ans-mcp:rl:${bucket}:${clientKey}:${windowId}`;
-      const encodedKey = encodeURIComponent(key);
-      const countRaw = await restCommand(config, `/incr/${encodedKey}`);
-      const count = Number(countRaw);
-      if (!Number.isFinite(count) || count < 1) {
-        throw new Error("rate_limit_store_unavailable");
-      }
-      if (count === 1) {
-        const ttlSeconds = Math.max(1, Math.ceil(windowMs / 1000) + 1);
-        await restCommand(config, `/expire/${encodedKey}/${ttlSeconds}`);
-      }
+      const ttlSeconds = Math.max(1, Math.ceil(windowMs / 1000) + 1);
+      const count = await restEvalIncrExpire(config, key, ttlSeconds);
       return {
         count,
         resetAt: (windowId + 1) * windowMs,

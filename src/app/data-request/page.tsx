@@ -47,10 +47,15 @@ export default function DataRequestPage() {
       </p>
 
       <p className="rounded-md border border-[#0b4f9c]/20 bg-white p-4 text-sm">
-        The approved Marketplace support email (
-        <code>support@prosperityaxis.com</code>) remains for general support only.
-        Privacy and data-deletion requests should use the privacy contact shown above
-        and described on{" "}
+        The Marketplace support email (
+        <a
+          className="font-semibold text-[#0b4f9c] underline underline-offset-4"
+          href={ansOwnerConfig.supportEmailHref}
+        >
+          {ansOwnerConfig.supportEmail}
+        </a>
+        ) remains for general support only. Privacy and data-deletion requests should
+        use the privacy contact shown above and described on{" "}
         <a className="text-[#0b4f9c] underline" href="/business-fit/privacy">
           /business-fit/privacy
         </a>

@@ -25,6 +25,7 @@ See `.env.example`. Critical production values:
   - `ANS_MCP_REQUIRE_AUTH=true` (including authenticated non-Vercel hosts and authenticated Vercel Preview)
 - Use a complete matching pair only — `KV_REST_API_URL` + `KV_REST_API_TOKEN`, or `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (never mix across pairs; if both complete pairs exist, KV is preferred)
 - Authenticated deployments fail closed with HTTP 503 if no complete pair is configured or the store is unavailable
+- Shared-store counters use an atomic Redis `EVAL` script (`INCR` + first-hit `EXPIRE`) so a successful increment cannot leave a key without TTL
 - Local unauthenticated development may use the in-memory limiter
 - `OPENAI_APPS_DOMAIN_CHALLENGE` or `ANS_DOMAIN_VERIFICATION_CHALLENGE` — plain-text domain verification token
 - `ANS_MCP_PRODUCTION_URL` — optional override reported in docs/metadata

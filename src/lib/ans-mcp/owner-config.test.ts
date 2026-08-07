@@ -3,13 +3,16 @@ import { afterEach, describe, it } from "node:test";
 import {
   ANS_APPROVED_BUSINESS_ADDRESS,
   ANS_APPROVED_BUSINESS_ADDRESS_LINES,
+  ANS_APPROVED_SUPPORT_EMAIL,
   businessAddressLinesFor,
   getBusinessAddressLines,
   resolveBusinessAddress,
+  resolveSupportEmail,
 } from "./owner-config";
 
 afterEach(() => {
   delete process.env.ANS_BUSINESS_ADDRESS;
+  delete process.env.ANS_SUPPORT_EMAIL;
 });
 
 describe("business address configuration", () => {
@@ -39,5 +42,17 @@ describe("business address configuration", () => {
       "Unit 2",
       "Seattle, WA 98101",
     ]);
+  });
+});
+
+describe("support email configuration", () => {
+  it("uses the approved default support email", () => {
+    delete process.env.ANS_SUPPORT_EMAIL;
+    assert.equal(resolveSupportEmail(), ANS_APPROVED_SUPPORT_EMAIL);
+  });
+
+  it("honors ANS_SUPPORT_EMAIL overrides", () => {
+    process.env.ANS_SUPPORT_EMAIL = "override-support@example.com";
+    assert.equal(resolveSupportEmail(), "override-support@example.com");
   });
 });

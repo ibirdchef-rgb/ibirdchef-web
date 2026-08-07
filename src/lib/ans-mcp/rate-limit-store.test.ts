@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
 import {
+  RATE_LIMIT_INCR_EXPIRE_SCRIPT,
+  buildRateLimitIncrExpireCommand,
   createMemoryRateLimitStore,
+  createRestRateLimitStore,
   getSharedRateLimitRestConfig,
   requiresSharedRateLimitStore,
   resetRateLimitStoreCache,
@@ -9,9 +12,12 @@ import {
   setRateLimitStoreForTests,
 } from "./rate-limit-store";
 
+const originalFetch = globalThis.fetch;
+
 afterEach(() => {
   setRateLimitStoreForTests(null);
   resetRateLimitStoreCache();
+  globalThis.fetch = originalFetch;
   delete process.env.VERCEL_ENV;
   delete process.env.VERCEL;
   delete process.env.ANS_MCP_REQUIRE_AUTH;
@@ -177,5 +183,120 @@ describe("shared rate-limit enforcement gate", () => {
     assert.equal(config?.provider, "upstash");
     setRateLimitStoreForTests(createMemoryRateLimitStore());
     assert.equal(resolveRateLimitStore().ok, true);
+  });
+});
+
+describe("atomic shared rate-limit INCR + EXPIRE", () => {
+  it("builds a single EVAL command that increments and expires on first hit", () => {
+    const command = buildRateLimitIncrExpireCommand("ans-mcp:rl:auth:client:1", 61);
+    assert.equal(command[0], "EVAL");
+    assert.equal(command[1], RATE_LIMIT_INCR_EXPIRE_SCRIPT);
+    assert.match(command[1], /INCR/);
+    assert.match(command[1], /EXPIRE/);
+    assert.equal(command[2], "1");
+    assert.equal(command[3], "ans-mcp:rl:auth:client:1");
+    assert.equal(command[4], "61");
+  });
+
+  it("performs increment and initial expiry atomically in one REST call", async () => {
+    const calls: Array<{ url: string; body: string; auth: string | null }> = [];
+    let nextCount = 0;
+    globalThis.fetch = (async (input, init) => {
+      nextCount += 1;
+      const url = String(input);
+      const body = String(init?.body ?? "");
+      const headers = new Headers(init?.headers);
+      calls.push({
+        url,
+        body,
+        auth: headers.get("authorization"),
+      });
+      return new Response(JSON.stringify({ result: nextCount }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }) as typeof fetch;
+
+    const store = createRestRateLimitStore({
+      url: "https://kv.example.invalid",
+      token: "kv-token-secret",
+    });
+    const windowMs = 60_000;
+    const first = await store.touch("auth", "client-a", windowMs, 1_000);
+    const second = await store.touch("auth", "client-a", windowMs, 1_500);
+
+    assert.equal(first.count, 1);
+    assert.equal(second.count, 2);
+    assert.equal(first.resetAt, second.resetAt);
+    assert.equal(calls.length, 2);
+    for (const call of calls) {
+      assert.equal(call.url, "https://kv.example.invalid");
+      assert.equal(call.url.includes("/incr/"), false);
+      assert.equal(call.url.includes("/expire/"), false);
+      const parsed = JSON.parse(call.body) as unknown[];
+      assert.equal(parsed[0], "EVAL");
+      assert.match(String(parsed[1]), /INCR/);
+      assert.match(String(parsed[1]), /EXPIRE/);
+      assert.equal(parsed[3], "ans-mcp:rl:auth:client-a:0");
+      assert.equal(String(call.body).includes("kv-token-secret"), false);
+      assert.equal(call.auth, "Bearer kv-token-secret");
+    }
+  });
+
+  it("supports complete Upstash pairs with the same atomic EVAL path", async () => {
+    process.env.UPSTASH_REDIS_REST_URL = "https://upstash.example.invalid";
+    process.env.UPSTASH_REDIS_REST_TOKEN = "upstash-token-secret";
+    const config = getSharedRateLimitRestConfig();
+    assert.equal(config?.provider, "upstash");
+
+    let sawEval = false;
+    globalThis.fetch = (async (_input, init) => {
+      const body = String(init?.body ?? "");
+      sawEval = body.includes("EVAL") && body.includes("EXPIRE");
+      return new Response(JSON.stringify({ result: 1 }), { status: 200 });
+    }) as typeof fetch;
+
+    const store = createRestRateLimitStore({
+      url: config!.url,
+      token: config!.token,
+    });
+    const touched = await store.touch("preauth", "client-b", 60_000, 2_000);
+    assert.equal(touched.count, 1);
+    assert.equal(sawEval, true);
+  });
+
+  it("fails closed safely when the shared store returns an error", async () => {
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ error: "ERR unavailable" }), {
+        status: 200,
+      })) as typeof fetch;
+
+    const store = createRestRateLimitStore({
+      url: "https://kv.example.invalid",
+      token: "kv-token-secret",
+    });
+    await assert.rejects(
+      () => store.touch("auth", "client-a", 60_000, 1_000),
+      (error: unknown) => {
+        assert.ok(error instanceof Error);
+        assert.equal(error.message, "rate_limit_store_unavailable");
+        assert.equal(error.message.includes("kv-token"), false);
+        assert.equal(error.message.includes("example.invalid"), false);
+        return true;
+      },
+    );
+  });
+
+  it("fails closed when the REST transport is unavailable", async () => {
+    globalThis.fetch = (async () =>
+      new Response("nope", { status: 503 })) as typeof fetch;
+
+    const store = createRestRateLimitStore({
+      url: "https://upstash.example.invalid",
+      token: "upstash-token-secret",
+    });
+    await assert.rejects(() => store.touch("auth", "client-a", 60_000, 1_000), {
+      message: "rate_limit_store_unavailable",
+    });
   });
 });

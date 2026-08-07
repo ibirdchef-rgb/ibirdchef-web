@@ -67,12 +67,21 @@ export function isApprovedDefaultBusinessAddress(address = resolveBusinessAddres
   return address.trim() === ANS_APPROVED_BUSINESS_ADDRESS;
 }
 
+/** Resolve the configured Marketplace support email, honoring ANS_SUPPORT_EMAIL. */
+export function resolveSupportEmail(): string {
+  return readOptional("ANS_SUPPORT_EMAIL") ?? ANS_APPROVED_SUPPORT_EMAIL;
+}
+
 export const ansOwnerConfig = {
   publisherName: "ANS Corporation",
   appName: "ANS Food Business Fit",
   productName: "ANS Food Service OS",
-  supportEmail: readOptional("ANS_SUPPORT_EMAIL") ?? ANS_APPROVED_SUPPORT_EMAIL,
-  supportEmailHref: `mailto:${readOptional("ANS_SUPPORT_EMAIL") ?? ANS_APPROVED_SUPPORT_EMAIL}`,
+  get supportEmail() {
+    return resolveSupportEmail();
+  },
+  get supportEmailHref() {
+    return `mailto:${resolveSupportEmail()}`;
+  },
   supportUrl: readOptional("ANS_SUPPORT_URL") ?? ANS_APPROVED_SUPPORT_URL,
   privacyContactEmail:
     readOptional("ANS_PRIVACY_CONTACT_EMAIL") ?? ANS_APPROVED_PRIVACY_CONTACT_EMAIL,
