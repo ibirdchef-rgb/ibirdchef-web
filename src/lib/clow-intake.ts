@@ -47,7 +47,10 @@ export function buildClowInquiryPayload(
     guestCount: inquiry.guestCount,
     cuisinePreference: inquiry.cuisinePreference,
     serviceStyle: inquiry.serviceStyle,
-    serviceType: inquiry.serviceType,
+    serviceType:
+      inquiry.serviceType === "Private & Family Events"
+        ? "Special Events"
+        : inquiry.serviceType,
     estimatedBudget: inquiry.estimatedBudget,
     dietaryNeeds: inquiry.dietaryNeeds,
     leadSource: inquiry.leadSource,
