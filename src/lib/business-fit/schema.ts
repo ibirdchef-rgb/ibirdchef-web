@@ -17,6 +17,7 @@ export const businessFitInputSchema = z
     zipCode: z
       .string()
       .trim()
+      .max(16)
       .regex(ZIP_RE, "zipCode must be a 5-digit U.S. ZIP code"),
     businessType: z.enum(BUSINESS_TYPES),
     cuisine: z.enum(CUISINES),
@@ -27,6 +28,7 @@ export const businessFitInputSchema = z
     targetOpeningDate: z
       .string()
       .trim()
+      .max(32)
       .regex(ISO_DATE_RE, "targetOpeningDate must be YYYY-MM-DD")
       .refine((value) => {
         const [y, m, d] = value.split("-").map(Number);

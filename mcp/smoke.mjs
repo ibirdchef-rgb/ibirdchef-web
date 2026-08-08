@@ -74,6 +74,7 @@ async function main() {
     "build_startup_budget",
     "compare_food_service_concepts",
     "generate_opening_checklist",
+    "simulate_event_profit",
   ];
   for (const name of expected) {
     if (!names.includes(name)) {
@@ -100,6 +101,20 @@ async function main() {
             },
           },
         ],
+      },
+    ],
+    [
+      "simulate_event_profit",
+      {
+        guestCount: 150,
+        customerBudgetUsd: 3500,
+        proposedSellingPriceUsd: 4125,
+        foodCostUsd: 1120,
+        laborCostUsd: 620,
+        packagingCostUsd: 185,
+        deliveryCostUsd: 145,
+        capacityStatus: "available_for_planning",
+        serviceRegion: "seattle",
       },
     ],
   ];

@@ -195,7 +195,7 @@ export default function BusinessFitPage() {
               </p>
               <ul className="ans-trust sans">
                 <li>Deterministic estimates</li>
-                <li>No personal data</li>
+                <li>No contact information</li>
                 <li>Print-ready report</li>
               </ul>
               <ul className="ans-pillars sans">

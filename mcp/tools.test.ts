@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import {
+  createAnsFoodBusinessFitMcpServer,
+  mcpEventProfitInputSchema,
+  toolCallResult,
+} from "../src/lib/ans-mcp/create-mcp-server";
 import { MCP_TOOL_NAMES, runMcpTool } from "./tools";
+
 
 const sampleInput = {
   zipCode: "98109",
@@ -14,13 +20,121 @@ const sampleInput = {
 };
 
 describe("MCP tools", () => {
-  it("registers all four Phase 1 tools", () => {
+  it("registers all five Marketplace tools", () => {
     assert.deepEqual(MCP_TOOL_NAMES.sort(), [
       "analyze_business_fit",
       "build_startup_budget",
       "compare_food_service_concepts",
       "generate_opening_checklist",
+      "simulate_event_profit",
     ].sort());
+  });
+
+  it("annotates every MCP tool as read-only, non-destructive, closed-world", () => {
+    const server = createAnsFoodBusinessFitMcpServer();
+    const registered = (
+      server as unknown as {
+        _registeredTools: Record<
+          string,
+          {
+            annotations?: {
+              readOnlyHint?: boolean;
+              destructiveHint?: boolean;
+              idempotentHint?: boolean;
+              openWorldHint?: boolean;
+            };
+            inputSchema?: { safeParse?: (value: unknown) => { success: boolean } };
+          }
+        >;
+      }
+    )._registeredTools;
+
+    for (const name of MCP_TOOL_NAMES) {
+      const annotations = registered[name]?.annotations;
+      assert.equal(annotations?.readOnlyHint, true, name);
+      assert.equal(annotations?.destructiveHint, false, name);
+      assert.equal(annotations?.idempotentHint, true, name);
+      assert.equal(annotations?.openWorldHint, false, name);
+    }
+  });
+
+  it("marks domain-validation failures with isError while successes stay clear", () => {
+    const failed = toolCallResult(
+      runMcpTool("analyze_business_fit", {
+        zipCode: "12",
+        businessType: "cafe",
+        cuisine: "american",
+        investmentBudget: "150_300k",
+        ownerExperience: "some_food_service",
+        facilitySize: "under_1000",
+        serviceModel: "dine_in",
+        targetOpeningDate: "2027-06-01",
+      }),
+    );
+    assert.equal(failed.isError, true);
+
+    const ok = toolCallResult(runMcpTool("analyze_business_fit", sampleInput));
+    assert.equal("isError" in ok && ok.isError, false);
+    assert.equal(JSON.parse(ok.content[0].text).ok, true);
+  });
+
+  it("rejects unknown fields at the MCP transport schema boundary", () => {
+    const server = createAnsFoodBusinessFitMcpServer();
+    const registered = (
+      server as unknown as {
+        _registeredTools: Record<
+          string,
+          {
+            inputSchema: {
+              safeParse: (value: unknown) => { success: boolean };
+            };
+          }
+        >;
+      }
+    )._registeredTools;
+
+    const parsed = registered.simulate_event_profit.inputSchema.safeParse({
+      guestCount: 10,
+      customerBudgetUsd: 500,
+      proposedSellingPriceUsd: 600,
+      foodCostUsd: 100,
+      laborCostUsd: 100,
+      tenantId: "cross-tenant",
+    });
+    assert.equal(parsed.success, false);
+
+    const direct = mcpEventProfitInputSchema.safeParse({
+      guestCount: 10,
+      customerBudgetUsd: 500,
+      proposedSellingPriceUsd: 600,
+      foodCostUsd: 100,
+      laborCostUsd: 100,
+      tenantId: "cross-tenant",
+    });
+    assert.equal(direct.success, false);
+  });
+
+
+  it("simulate_event_profit returns the approved demonstration decision", () => {
+    const result = runMcpTool("simulate_event_profit", {
+      guestCount: 150,
+      customerBudgetUsd: 3500,
+      proposedSellingPriceUsd: 4125,
+      foodCostUsd: 1120,
+      laborCostUsd: 620,
+      packagingCostUsd: 185,
+      deliveryCostUsd: 145,
+      capacityStatus: "available_for_planning",
+      serviceRegion: "seattle",
+    });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.equal(result.result.totalKnownCostUsd, 2070);
+      assert.equal(result.result.expectedProfitUsd, 2055);
+      assert.equal(result.result.expectedMarginPercent, 49.82);
+      assert.equal(result.result.decisionState, "Budget mismatch");
+      assert.equal(result.result.humanApprovalRequired, true);
+    }
   });
 
   it("analyze_business_fit returns a planning report", () => {

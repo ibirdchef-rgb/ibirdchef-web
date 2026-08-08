@@ -17,8 +17,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * Route exists for Scope A, but policy copy is held until an approved draft
- * is provided. Do not invent privacy language from another project.
+ * The catering policy copy remains held until an approved draft is provided.
+ * Business Fit has its own policy at /business-fit/privacy.
  */
 export default function PrivacyPage() {
   return (

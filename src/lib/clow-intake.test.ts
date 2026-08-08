@@ -70,10 +70,23 @@ describe("CLOW inquiry intake wiring", () => {
     assert.equal(payload.eventTime, "12:00");
     assert.equal(payload.eventCity, "Bellevue");
     assert.equal(payload.venueOrZip, "98004");
+    assert.equal(payload.serviceType, "Corporate Catering");
     assert.equal(payload.leadSource, "Website");
     assert.equal(payload.contactConsent, true);
     assert.equal(payload.smsConsent, false);
     assert.equal(payload.pageSource, "homepage");
+  });
+
+  it("maps Private & Family Events to Special Events for CLOW only", () => {
+    const payload = buildClowInquiryPayload(
+      {
+        ...sampleInquiry,
+        serviceType: "Private & Family Events",
+      },
+      "web_private_event",
+    );
+
+    assert.equal(payload.serviceType, "Special Events");
   });
 
   it("does not break the email-success path when CLOW times out or fails", async () => {
