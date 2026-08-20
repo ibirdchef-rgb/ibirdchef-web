@@ -1,21 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import BusinessLocations from "@/components/BusinessLocations";
 import { useRegion } from "@/components/RegionProvider";
+import { paths } from "@/lib/paths";
 import { regions } from "@/lib/regions";
-
-const vendorNotes = [
-  {
-    title: "Aramark approved vendor",
-    description:
-      "Approved-vendor experience supporting professional corporate foodservice operations.",
-  },
-  {
-    title: "Sodexo approved vendor",
-    description:
-      "Experience working within established corporate dining and event-service requirements.",
-  },
-] as const;
+import { siteConfig } from "@/lib/site";
 
 export default function TrustAreas() {
   const { region } = useRegion();
@@ -38,11 +28,11 @@ export default function TrustAreas() {
             id="areas-heading"
             className="mt-4 font-serif text-4xl font-semibold tracking-tight text-[var(--navy)] sm:text-5xl"
           >
-            Greater Seattle and the San Francisco Bay Area.
+            Seattle, Bellevue, Redmond, the Eastside, and the Bay Area.
           </h2>
           <p className="mt-5 text-lg leading-8 text-[var(--ink-muted)]">
-            Choose your region anytime. Until then, we present both markets
-            clearly—using only our approved service cities.
+            Choose your region anytime. Until then, both markets are shown
+            clearly using our current service cities.
           </p>
         </div>
 
@@ -52,14 +42,23 @@ export default function TrustAreas() {
               {seattle.label}
             </h3>
             <p className="mt-3 leading-7 text-[var(--ink-muted)]">
-              {seattle.cities.join(" · ")} {seattle.surroundingLabel}.
+              Seattle · Bellevue · Redmond · Eastside, including Issaquah and
+              nearby communities.
             </p>
-            <Link
-              href={seattle.path}
-              className="mt-5 inline-flex min-h-11 items-center font-semibold text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4 hover:decoration-[var(--bronze)]"
-            >
-              Explore Seattle Area
-            </Link>
+            <div className="mt-5 flex flex-wrap gap-4">
+              <Link
+                href={seattle.path}
+                className="inline-flex min-h-11 items-center font-semibold text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4 hover:decoration-[var(--bronze)]"
+              >
+                Explore Seattle Area
+              </Link>
+              <Link
+                href={paths.bellevue}
+                className="inline-flex min-h-11 items-center font-semibold text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4 hover:decoration-[var(--bronze)]"
+              >
+                Bellevue catering
+              </Link>
+            </div>
           </article>
 
           <article className="texture-california border-t border-[var(--california)]/45 pt-8">
@@ -85,25 +84,18 @@ export default function TrustAreas() {
           </p>
         ) : null}
 
-        <div className="mt-14 grid gap-8 md:grid-cols-2">
-          {vendorNotes.map((note) => (
-            <article
-              key={note.title}
-              className="border-t border-[var(--navy)]/15 pt-6"
-            >
-              <h3 className="text-lg font-semibold text-[var(--navy)]">
-                {note.title}
-              </h3>
-              <p className="mt-3 leading-7 text-[var(--ink-muted)]">
-                {note.description}
-              </p>
-            </article>
-          ))}
+        <div className="mt-14 border-t border-[var(--navy)]/10 pt-10">
+          <h3 className="font-serif text-2xl font-semibold text-[var(--navy)]">
+            Operating locations
+          </h3>
+          <p className="mt-3 max-w-2xl leading-7 text-[var(--ink-muted)]">
+            Business and production addresses for catering operations.
+          </p>
+          <BusinessLocations className="mt-6" />
         </div>
 
-        <p className="mt-8 text-center text-xs leading-5 text-[var(--ink-muted)]">
-          Approved-vendor status is presented as factual business experience and
-          does not imply endorsement by the named organizations.
+        <p className="mt-10 max-w-3xl text-sm leading-6 text-[var(--ink-muted)]">
+          {siteConfig.mealsDeliveredNote} {siteConfig.vendorStatus}
         </p>
       </div>
     </section>

@@ -1,18 +1,42 @@
+import Link from "next/link";
+import { paths } from "@/lib/paths";
+
 const services = [
   {
-    title: "Private Chef Dining",
+    title: "Corporate Box Meals",
     description:
-      "Personalized in-home dining experiences designed around your event, preferences, and dietary needs.",
+      "Seasonal boxed lunches with vegetarian and protein choices, planned for office teams.",
+    href: `${paths.menu}?buy=corporate-box-meals`,
   },
   {
-    title: "Corporate Catering",
+    title: "Tray / Drop-Off Catering",
     description:
-      "Professional breakfast, lunch, reception, and executive catering for workplaces across Greater Seattle and the San Francisco Bay Area.",
+      "Drop-off trays for workplaces that need reliable lunch or meeting service without a full on-site crew.",
+    href: `${paths.menu}?buy=tray-drop-off`,
   },
   {
-    title: "Special Events",
+    title: "Buffets",
     description:
-      "Thoughtful menus and reliable culinary execution for celebrations, weddings, corporate events, and private gatherings.",
+      "Shareable buffet menus for meetings, receptions, and larger workplace gatherings.",
+    href: `${paths.menu}?buy=buffet-catering`,
+  },
+  {
+    title: "Corporate & Cultural Events",
+    description:
+      "South Asian and cultural menus for employee events, tenant gatherings, and office celebrations.",
+    href: `${paths.menu}?buy=cultural-regional`,
+  },
+  {
+    title: "Live Stations",
+    description:
+      "Chef-attended dosa, chaat, and tandoor/grill stations quoted after event review.",
+    href: `${paths.menu}?buy=live-stations`,
+  },
+  {
+    title: "Private Events",
+    description:
+      "Birthdays, cultural celebrations, private dinners, and family gatherings with a custom quote.",
+    href: paths.privateEvents,
   },
 ] as const;
 
@@ -31,15 +55,16 @@ export default function ServiceCategories() {
           id="services-heading"
           className="mt-4 font-serif text-4xl font-semibold tracking-tight text-[var(--navy)] sm:text-5xl"
         >
-          Curated hospitality for workplaces and celebrations.
+          Corporate catering, office meals, events and live stations.
         </h2>
         <p className="mt-5 text-lg leading-8 text-[var(--ink-muted)]">
-          From intimate dinners to workplace catering, every menu is planned for
-          flavor, presentation, and dependable execution.
+          Start with the service style that fits your workplace or celebration.
+          Menus are confirmed after we review guest count, timing, and dietary
+          needs.
         </p>
       </div>
 
-      <div className="mt-12 grid gap-8 md:grid-cols-3">
+      <div className="mt-12 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
         {services.map((service, index) => (
           <article
             key={service.title}
@@ -54,6 +79,12 @@ export default function ServiceCategories() {
             <p className="mt-4 leading-7 text-[var(--ink-muted)]">
               {service.description}
             </p>
+            <Link
+              href={service.href}
+              className="mt-5 inline-flex min-h-11 items-center font-semibold text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4 hover:decoration-[var(--bronze)]"
+            >
+              Explore {service.title}
+            </Link>
           </article>
         ))}
       </div>

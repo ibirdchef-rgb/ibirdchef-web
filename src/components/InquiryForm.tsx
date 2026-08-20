@@ -27,6 +27,7 @@ import {
   type EventCategory,
   type PageSource,
 } from "@/lib/event-inquiry";
+import { QUOTE_INQUIRY_MESSAGE, TASTING_INQUIRY_MESSAGE } from "@/lib/paths";
 import {
   OUTSIDE_AREA_MESSAGE,
   regions,
@@ -64,7 +65,7 @@ function eventTypesForCategory(category: EventCategory | ""): readonly string[] 
 function InquiryFormInner({
   title = "Catering inquiry",
   description = "Share a few details about your event. Required fields are marked with an asterisk.",
-  submitLabel = "Send inquiry",
+  submitLabel = "Request Catering",
   defaultEventCategory,
   defaultServiceType,
   defaultServiceRegion = "",
@@ -72,11 +73,14 @@ function InquiryFormInner({
 }: InquiryFormProps) {
   const formId = useId();
   const searchParams = useSearchParams();
+  const intent = searchParams.get("intent");
+  const isTasting = intent === "tasting";
+  const isQuote = intent === "quote";
   const { region: preferredRegion } = useRegion();
   const [status, setStatus] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [eventCategory, setEventCategory] = useState<EventCategory | "">(
-    defaultEventCategory ?? "",
+    defaultEventCategory ?? (isTasting || isQuote ? "corporate" : ""),
   );
   const [serviceRegionOverride, setServiceRegionOverride] = useState<
     ServiceRegion | "" | null
@@ -112,10 +116,30 @@ function InquiryFormInner({
     ]);
   }, [searchParams]);
 
+  const intentMessage = isTasting
+    ? TASTING_INQUIRY_MESSAGE
+    : isQuote
+      ? QUOTE_INQUIRY_MESSAGE
+      : "";
+  const resolvedTitle = isTasting
+    ? "Book a tasting"
+    : isQuote
+      ? "Get a catering quote"
+      : title;
+  const resolvedSubmitLabel = isTasting
+    ? "Book a Tasting"
+    : isQuote
+      ? "Get a Quote"
+      : submitLabel;
+  const resolvedServiceType =
+    defaultServiceType ??
+    (isTasting || isQuote ? "Corporate Catering" : undefined);
+  const defaultEventType = isTasting ? "Menu tasting" : "";
+
   const serviceRegion =
     serviceRegionOverride ??
     (defaultServiceRegion || preferredRegion || "");
-  const message = messageOverride ?? dishPrefill;
+  const message = messageOverride ?? (dishPrefill || intentMessage);
 
   const cityOptions = useMemo(() => {
     if (!serviceRegion) {
@@ -244,7 +268,7 @@ function InquiryFormInner({
         id={`${formId}-title`}
         className="font-serif text-2xl font-semibold text-[var(--navy)]"
       >
-        {title}
+        {resolvedTitle}
       </h3>
       <p className="mt-3 leading-7 text-[var(--ink-muted)]">{description}</p>
 
@@ -427,7 +451,7 @@ function InquiryFormInner({
             id={`${formId}-event-type`}
             name="eventType"
             required
-            defaultValue=""
+            defaultValue={eventCategory === "corporate" ? defaultEventType : ""}
             disabled={status === "submitting"}
             className={fieldClassName}
           >
@@ -530,7 +554,7 @@ function InquiryFormInner({
             id={`${formId}-service-type`}
             name="serviceType"
             required
-            defaultValue={defaultServiceType ?? ""}
+            defaultValue={resolvedServiceType ?? ""}
             disabled={status === "submitting"}
             className={fieldClassName}
           >
@@ -666,7 +690,7 @@ function InquiryFormInner({
           disabled={status === "submitting"}
           className="inline-flex h-12 min-w-[11rem] shrink-0 items-center justify-center rounded-full bg-[var(--bronze-dark)] px-7 text-sm font-semibold text-white transition hover:bg-[var(--bronze)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--bronze-dark)] disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {status === "submitting" ? "Sending…" : submitLabel}
+          {status === "submitting" ? "Sending…" : resolvedSubmitLabel}
         </button>
       </div>
     </form>

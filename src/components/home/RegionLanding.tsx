@@ -1,16 +1,38 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import CtaButtons from "@/components/CtaButtons";
 import PlanEventCta from "@/components/home/PlanEventCta";
 import PlanningSteps from "@/components/home/PlanningSteps";
 import RegionPageSync from "@/components/RegionPageSync";
 import SiteShell from "@/components/SiteShell";
 import { regions, type ServiceRegion } from "@/lib/regions";
+import { paths } from "@/lib/paths";
 import { siteConfig } from "@/lib/site";
 
-export default function RegionLanding({ regionId }: { regionId: ServiceRegion }) {
+type LocationFocus = {
+  city: string;
+  headline: string;
+  summary: string;
+  eyebrow?: string;
+};
+
+export default function RegionLanding({
+  regionId,
+  focus,
+  pageSource,
+}: {
+  regionId: ServiceRegion;
+  focus?: LocationFocus;
+  pageSource?: "seattle" | "bay-area" | "bellevue";
+}) {
   const region = regions[regionId];
   const texture =
     region.accentHint === "pacific" ? "texture-pacific" : "texture-california";
-  const pageSource = regionId === "seattle" ? "seattle" : "bay-area";
+  const resolvedPageSource =
+    pageSource ?? (regionId === "seattle" ? "seattle" : "bay-area");
+  const headline = focus?.headline ?? region.headline;
+  const summary = focus?.summary ?? region.summary;
+  const eyebrow = focus?.eyebrow ?? region.shortLabel;
 
   return (
     <SiteShell>
@@ -25,34 +47,21 @@ export default function RegionLanding({ regionId }: { regionId: ServiceRegion })
               iBirdChef
             </p>
             <p className="mt-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--bronze-dark)]">
-              {region.shortLabel}
+              {eyebrow}
             </p>
             <h1
               id="region-heading"
               className="mt-6 max-w-3xl font-serif text-4xl font-semibold leading-[1.1] tracking-tight text-[var(--navy)] sm:text-5xl"
             >
-              {region.headline}
+              {headline}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--ink-muted)]">
-              {region.summary}
+              {summary}
             </p>
             <p className="mt-4 text-sm font-medium text-[var(--navy)]">
               {region.cities.join(" · ")} {region.surroundingLabel}.
             </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <a
-                href="#contact"
-                className="inline-flex min-h-12 items-center justify-center rounded-full bg-[var(--bronze)] px-7 text-sm font-semibold text-white transition hover:bg-[var(--bronze-dark)]"
-              >
-                Plan an event in {region.shortLabel}
-              </a>
-              <Link
-                href="/#menu"
-                className="inline-flex min-h-12 items-center justify-center rounded-full border border-[var(--navy)]/20 bg-white/70 px-7 text-sm font-semibold text-[var(--navy)] transition hover:border-[var(--bronze)]"
-              >
-                View seasonal boxes
-              </Link>
-            </div>
+            <CtaButtons variant="onLight" className="mt-9" />
           </div>
         </section>
 
@@ -68,7 +77,7 @@ export default function RegionLanding({ regionId }: { regionId: ServiceRegion })
               id="local-points-heading"
               className="mt-4 font-serif text-4xl font-semibold tracking-tight text-[var(--navy)] sm:text-5xl"
             >
-              Planned for {region.label}.
+              Planned for {focus?.city ?? region.label}.
             </h2>
             <p className="mt-5 text-lg leading-8 text-[var(--ink-muted)]">
               Regional logistics and pricing assumptions stay separate. Your
@@ -100,13 +109,20 @@ export default function RegionLanding({ regionId }: { regionId: ServiceRegion })
             <p className="text-sm leading-7 text-[var(--ink-muted)]">
               Prefer the other market? Explore{" "}
               <Link
-                href={regionId === "seattle" ? "/bay-area" : "/seattle"}
+                href={regionId === "seattle" ? paths.bayArea : paths.seattle}
                 className="font-semibold text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4"
               >
                 {regionId === "seattle"
                   ? regions.bay_area.shortLabel
                   : regions.seattle.shortLabel}
               </Link>
+              , email{" "}
+              <a
+                href={siteConfig.emailHref}
+                className="font-semibold text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4"
+              >
+                {siteConfig.emailDisplay}
+              </a>
               , or call{" "}
               <a
                 href={siteConfig.phoneHref}
@@ -120,12 +136,43 @@ export default function RegionLanding({ regionId }: { regionId: ServiceRegion })
         </section>
 
         <PlanEventCta
-          pageSource={pageSource}
+          pageSource={resolvedPageSource}
           defaultServiceRegion={regionId}
-          heading={`Tell us about your ${region.shortLabel} event.`}
+          heading={`Request catering in ${focus?.city ?? region.shortLabel}.`}
           description={`Share your city, venue or ZIP, date, guests, event type, and service style for ${region.label}. Outside listed cities may still be available after confirmation.`}
         />
       </main>
     </SiteShell>
   );
+}
+
+export function regionPageMetadata(
+  regionId: ServiceRegion,
+): Metadata {
+  const region = regions[regionId];
+  return {
+    title: region.seoTitle,
+    description: region.seoDescription,
+    alternates: {
+      canonical: region.path,
+    },
+    openGraph: {
+      title: `${region.seoTitle} | iBirdChef`,
+      description: region.seoDescription,
+      url: region.path,
+      type: "website",
+      images: [
+        {
+          url: "/ibirdchef-hero.jpg",
+          alt: "Grilled skewers with rice and sides prepared by iBirdChef",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${region.seoTitle} | iBirdChef`,
+      description: region.seoDescription,
+      images: ["/ibirdchef-hero.jpg"],
+    },
+  };
 }

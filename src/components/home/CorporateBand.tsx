@@ -1,3 +1,7 @@
+import Link from "next/link";
+import { paths } from "@/lib/paths";
+import { siteConfig } from "@/lib/site";
+
 export default function CorporateBand() {
   return (
     <section
@@ -15,19 +19,28 @@ export default function CorporateBand() {
               id="corporate-heading"
               className="mt-4 font-serif text-4xl font-semibold tracking-tight sm:text-5xl"
             >
-              Workplace hospitality with disciplined execution.
+              Built for workplace teams, events, and hospitality partners.
             </h2>
           </div>
           <div>
             <p className="text-lg leading-8 text-white/75">
-              Breakfast, lunch, reception, and executive catering for offices
-              across Greater Seattle and the San Francisco Bay Area—planned
-              around production timing, dietary needs, and dependable service.
+              {siteConfig.mealsDeliveredNote} Breakfast, lunch, reception, and
+              executive catering for offices across Greater Seattle and the San
+              Francisco Bay Area.
+            </p>
+            <p className="mt-4 text-sm leading-6 text-white/70">
+              {siteConfig.vendorStatus}
             </p>
             <p className="mt-4 text-sm leading-6 text-white/60">
               Final pricing is confirmed after we review your event details and
               operational requirements.
             </p>
+            <Link
+              href={paths.contact}
+              className="mt-6 inline-flex min-h-12 items-center font-semibold text-[var(--ivory-soft)] underline decoration-[var(--bronze)] underline-offset-4 hover:text-white"
+            >
+              Request Catering
+            </Link>
           </div>
         </div>
       </div>

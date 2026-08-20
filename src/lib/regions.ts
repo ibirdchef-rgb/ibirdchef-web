@@ -24,26 +24,26 @@ export const regions: Record<ServiceRegion, RegionConfig> = {
     id: "seattle",
     label: "Greater Seattle",
     shortLabel: "Seattle Area",
-    headline: "Premium catering for Greater Seattle workplaces and celebrations.",
+    headline: "Corporate catering for Seattle, Bellevue, Redmond and the Eastside.",
     summary:
-      "From downtown Seattle offices to Eastside gatherings in Bellevue, Redmond, and Issaquah, menus are planned for the way your guests actually meet.",
+      "Office lunches, box meals, buffets, cultural menus, private events and live culinary stations across Seattle, Bellevue, Redmond and surrounding Eastside communities.",
     cities: ["Seattle", "Bellevue", "Redmond", "Issaquah"],
-    surroundingLabel: "and surrounding communities",
+    surroundingLabel: "and surrounding Eastside communities",
     accentHint: "pacific",
     path: "/seattle",
-    seoTitle: "Seattle & Eastside Catering and Private Chef",
+    seoTitle: "Corporate Catering in Seattle & the Eastside",
     seoDescription:
-      "iBirdChef provides South Asian corporate catering and private-chef dining across Greater Seattle, including Seattle, Bellevue, Redmond, Issaquah, and nearby communities.",
+      "iBirdChef provides corporate catering, office lunch catering, cultural menus and live stations across Seattle, Bellevue, Redmond and the Eastside.",
     localPoints: [
       {
-        title: "Eastside corporate hospitality",
+        title: "Office meals for Seattle and the Eastside",
         description:
-          "Reliable breakfast, lunch, and reception service for Bellevue, Redmond, and Seattle workplaces—planned around production timing and dietary needs.",
+          "Boxed lunches, drop-off trays, and buffet service for Bellevue, Redmond, and Seattle workplaces—planned around timing and dietary needs.",
       },
       {
-        title: "Private dinners with PNW pace",
+        title: "Cultural events and live stations",
         description:
-          "In-home and intimate gatherings shaped for Seattle evenings, family celebrations, and thoughtfully paced private-chef service.",
+          "South Asian menus, cultural employee events, and live dosa, chaat, and tandoor stations for offices and private gatherings.",
       },
       {
         title: "Custom quotes after review",
@@ -56,26 +56,33 @@ export const regions: Record<ServiceRegion, RegionConfig> = {
     id: "bay_area",
     label: "San Francisco Bay Area",
     shortLabel: "Bay Area",
-    headline: "Premium catering for Bay Area offices, homes, and celebrations.",
+    headline: "Corporate catering for the San Francisco Bay Area.",
     summary:
-      "South Asian menus for San Francisco, Fremont, Hayward, San Jose, Palo Alto, and surrounding communities—planned for multicultural tables and contemporary events.",
-    cities: ["San Francisco", "Fremont", "Hayward", "San Jose", "Palo Alto"],
+      "Office meals, cultural menus, private events and live stations for San Francisco, Santa Clara, San Jose, Palo Alto, Fremont, Hayward, and surrounding communities.",
+    cities: [
+      "San Francisco",
+      "Santa Clara",
+      "Fremont",
+      "Hayward",
+      "San Jose",
+      "Palo Alto",
+    ],
     surroundingLabel: "and surrounding communities",
     accentHint: "california",
     path: "/bay-area",
-    seoTitle: "Bay Area Catering and Private Chef",
+    seoTitle: "Corporate Catering in the San Francisco Bay Area",
     seoDescription:
-      "iBirdChef provides South Asian corporate catering and private-chef dining across the San Francisco Bay Area, including San Francisco, Fremont, Hayward, San Jose, Palo Alto, and nearby communities.",
+      "iBirdChef provides corporate catering, office meals, cultural menus and live stations across the San Francisco Bay Area, including Santa Clara, San Jose, Palo Alto, Fremont and San Francisco.",
     localPoints: [
       {
-        title: "Peninsula and South Bay gatherings",
+        title: "South Bay and Peninsula offices",
         description:
-          "Menus for Palo Alto, San Jose, and surrounding workplaces and homes—balanced for guest preferences and event flow.",
+          "Menus for Santa Clara, San Jose, Palo Alto, and surrounding workplaces—planned for guest preferences and event flow.",
       },
       {
         title: "East Bay and San Francisco service",
         description:
-          "Corporate lunches, receptions, and private celebrations planned for Fremont, Hayward, San Francisco, and nearby communities.",
+          "Corporate lunches, receptions, cultural events, and private celebrations planned for Fremont, Hayward, San Francisco, and nearby communities.",
       },
       {
         title: "Custom quotes after review",
@@ -87,7 +94,7 @@ export const regions: Record<ServiceRegion, RegionConfig> = {
 };
 
 export const DUAL_MARKET_HEADLINE =
-  "Premium Catering & Private Chef Experiences in Greater Seattle and the San Francisco Bay Area";
+  "Corporate Catering for Seattle & the Eastside";
 
 export const OUTSIDE_AREA_MESSAGE =
   "Your location may still be available. Submit your event details for confirmation.";

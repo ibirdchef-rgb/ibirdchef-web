@@ -10,9 +10,9 @@ const experiencePoints = [
       "Dependable breakfast, lunch, reception, and executive service planned around production timing and dietary needs.",
   },
   {
-    title: "Private dining",
+    title: "Live culinary stations",
     description:
-      "In-home and private-chef experiences for intimate gatherings, celebrations, and thoughtfully paced service.",
+      "Chef-attended dosa, chaat, and tandoor/grill stations for cultural events, receptions, and private gatherings.",
   },
   {
     title: "Dietary and allergy-aware planning",
@@ -37,12 +37,12 @@ export default function CuisineExperience() {
             id="experience-heading"
             className="mt-4 font-serif text-4xl font-semibold tracking-tight text-[var(--navy)] sm:text-5xl"
           >
-            A refined South Asian hospitality experience.
+            A refined South Asian catering experience for workplaces and celebrations.
           </h2>
           <p className="mt-5 max-w-xl text-lg leading-8 text-[var(--ink-muted)]">
-            iBirdChef focuses on custom South Asian menus, corporate catering,
-            private dining, and dietary and allergy-aware planning—prepared for
-            the way your guests actually gather.
+            iBirdChef focuses on corporate catering, office meals, cultural
+            menus, live stations, and private dining—prepared for the way your
+            guests actually gather.
           </p>
         </div>
 

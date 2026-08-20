@@ -101,6 +101,20 @@ describe("curated menu V1", () => {
     });
     assert.equal(butter.length, 1);
     assert.equal(butter[0]?.name, "Butter Chicken");
+
+    const liveStations = filterCuratedMenu(curatedMenuItems, {
+      query: "",
+      region: "all",
+      categoryId: "all",
+      serviceStyle: "all",
+      eventCategory: "all",
+      buyingId: "live-stations",
+    });
+    assert.equal(liveStations.length, 6);
+    assert.equal(
+      liveStations.every((item) => item.categoryId === "live-cooking-stations"),
+      true,
+    );
   });
 
   it("supports multi-dish inquiry prefills without inventing items", () => {
@@ -111,7 +125,7 @@ describe("curated menu V1", () => {
 
     const href = buildInquiryHrefForItemIds([butter.id, shrimp.id]);
     assert.match(href, /askDishes=/);
-    assert.match(href, /#contact$/);
+    assert.match(href, /\/contact/);
 
     const resolved = resolveMenuItemsFromInquiryParams({
       askDishes: `${butter.id},${shrimp.id}`,

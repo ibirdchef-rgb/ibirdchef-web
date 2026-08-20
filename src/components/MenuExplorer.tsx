@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { useId, useMemo, useState, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import { useRegion } from "@/components/RegionProvider";
+import {
+  BUYING_CATEGORIES,
+  isBuyingCategoryId,
+  type BuyingCategoryId,
+} from "@/lib/buying-categories";
 import {
   DIETARY_ALLERGEN_NOTICE,
   MENU_INQUIRY_NOTICE,
@@ -98,7 +104,9 @@ function FilterField({
 
 export default function MenuExplorer() {
   const baseId = useId();
+  const searchParams = useSearchParams();
   const { region: preferredRegion } = useRegion();
+  const initialBuy = searchParams.get("buy");
   const [query, setQuery] = useState("");
   const [region, setRegion] = useState<ServiceRegion | "all">("all");
   const [categoryId, setCategoryId] = useState<PublicMenuCategoryId | "all">(
@@ -109,6 +117,9 @@ export default function MenuExplorer() {
   >("all");
   const [eventCategory, setEventCategory] = useState<EventCategory | "all">(
     "all",
+  );
+  const [buyingId, setBuyingId] = useState<BuyingCategoryId | "all">(
+    isBuyingCategoryId(initialBuy) ? initialBuy : "all",
   );
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -122,8 +133,9 @@ export default function MenuExplorer() {
         categoryId,
         serviceStyle,
         eventCategory,
+        buyingId,
       }),
-    [query, region, categoryId, serviceStyle, eventCategory],
+    [query, region, categoryId, serviceStyle, eventCategory, buyingId],
   );
 
   const grouped = useMemo(() => {
@@ -161,22 +173,60 @@ export default function MenuExplorer() {
       <div className="mx-auto max-w-7xl px-6 py-14 lg:px-10 lg:py-16">
         <div className="max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze-dark)]">
-            Curated Menu
+            Catering Menu
           </p>
           <h2
             id="menu-heading"
             className="mt-3 font-serif text-4xl font-semibold tracking-tight text-[var(--navy)] sm:text-5xl"
           >
-            A multi-cuisine menu for thoughtfully planned events.
+            Browse by catering style, then add dishes to your inquiry.
           </h2>
           <p className="mt-4 text-lg leading-7 text-[var(--ink-muted)]">
-            Explore seasonal boxed lunches, signature dishes, and live cooking
-            stations. Add selections to one inquiry for a custom, chef-approved
-            proposal.
+            Start with corporate box meals, drop-off trays, buffets, cultural
+            menus, or live stations. Add selections to one inquiry for a custom,
+            chef-approved proposal.
           </p>
           <p className="mt-4 max-w-3xl text-sm leading-6 text-[var(--navy)]">
             {MENU_INQUIRY_NOTICE}
           </p>
+        </div>
+
+        <div className="-mx-6 mt-8 overflow-x-auto px-6 pb-1 sm:mx-0 sm:px-0">
+          <div className="flex min-w-max gap-2 sm:min-w-0 sm:flex-wrap">
+            <button
+              type="button"
+              onClick={() => setBuyingId("all")}
+              className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm font-semibold transition ${
+                buyingId === "all"
+                  ? "border-[var(--navy)] bg-[var(--navy)] text-white"
+                  : "border-[var(--navy)]/15 bg-white text-[var(--navy)] hover:border-[var(--bronze)]"
+              }`}
+            >
+              All styles
+            </button>
+            {BUYING_CATEGORIES.filter((category) => category.id !== "private-events").map(
+              (category) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => setBuyingId(category.id)}
+                  className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm font-semibold transition ${
+                    buyingId === category.id
+                      ? "border-[var(--navy)] bg-[var(--navy)] text-white"
+                      : "border-[var(--navy)]/15 bg-white text-[var(--navy)] hover:border-[var(--bronze)]"
+                  }`}
+                >
+                  {category.title}
+                </button>
+              ),
+            )}
+            <Link
+              href="/private-events"
+              className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-[var(--navy)]/15 bg-white px-4 text-sm font-semibold text-[var(--navy)] hover:border-[var(--bronze)]"
+            >
+              Private Events
+            </Link>
+          </div>
         </div>
 
         <div className="mt-8 grid gap-3 rounded-2xl border border-[var(--navy)]/10 bg-white/80 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-5">

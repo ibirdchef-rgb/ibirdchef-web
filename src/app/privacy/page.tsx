@@ -58,7 +58,7 @@ export default function PrivacyPage() {
 
         <p className="mt-10">
           <Link
-            href="/#contact"
+            href="/contact"
             className="inline-flex min-h-12 items-center rounded-full bg-[var(--bronze)] px-7 text-sm font-semibold text-white transition hover:bg-[var(--bronze-dark)]"
           >
             Back to inquiry

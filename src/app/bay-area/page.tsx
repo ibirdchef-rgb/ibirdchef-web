@@ -1,19 +1,9 @@
 import type { Metadata } from "next";
-import RegionLanding from "@/components/home/RegionLanding";
-import { regions } from "@/lib/regions";
+import RegionLanding, {
+  regionPageMetadata,
+} from "@/components/home/RegionLanding";
 
-export const metadata: Metadata = {
-  title: regions.bay_area.seoTitle,
-  description: regions.bay_area.seoDescription,
-  alternates: {
-    canonical: "/bay-area",
-  },
-  openGraph: {
-    title: `${regions.bay_area.seoTitle} | iBirdChef`,
-    description: regions.bay_area.seoDescription,
-    url: "/bay-area",
-  },
-};
+export const metadata: Metadata = regionPageMetadata("bay_area");
 
 export default function BayAreaPage() {
   return <RegionLanding regionId="bay_area" />;

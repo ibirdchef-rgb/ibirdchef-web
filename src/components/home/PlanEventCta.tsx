@@ -49,8 +49,8 @@ function shouldOpenFromLocation(): boolean {
 export default function PlanEventCta({
   pageSource = "homepage",
   defaultServiceRegion = "",
-  heading = "Tell us about your event.",
-  description = "Share your region, city, venue or ZIP, date, guest count, event type, and service style. We serve Greater Seattle and the San Francisco Bay Area.",
+  heading = "Request catering, get a quote, or book a tasting.",
+  description = "Share your region, city, venue or ZIP, date, guest count, event type, and service style. We serve Greater Seattle and the San Francisco Bay Area. Email order@ibirdchef.com anytime.",
   gateInquiryForm = false,
 }: PlanEventCtaProps) {
   const [formOpen, setFormOpen] = useState(!gateInquiryForm);
@@ -113,7 +113,7 @@ export default function PlanEventCta({
     >
       <div className="bg-[var(--navy)] px-8 py-14 text-white sm:px-12">
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze)]">
-          Plan Your Event
+          Request Catering
         </p>
 
         <h2
@@ -149,13 +149,15 @@ export default function PlanEventCta({
           <InquiryForm
             pageSource={pageSource}
             defaultServiceRegion={defaultServiceRegion}
+            title="Catering inquiry"
+            submitLabel="Request Catering"
           />
         </div>
       ) : (
         <div className="mt-8 rounded-3xl border border-[var(--navy)]/10 bg-[var(--ivory-soft)] px-6 py-8 sm:px-8">
           <p className="max-w-2xl text-base leading-7 text-[var(--ink-muted)]">
-            Prefer to start with the Catering Concierge above, or open the
-            inquiry form when you are ready to send your event details.
+            Open the inquiry form to request catering, get a quote, or book a
+            tasting. Our team follows up after reviewing your event details.
           </p>
 
           <button
@@ -163,7 +165,7 @@ export default function PlanEventCta({
             onClick={() => setFormOpen(true)}
             className="mt-5 inline-flex min-h-12 items-center justify-center rounded-full bg-[var(--bronze-dark)] px-6 text-sm font-semibold text-white transition hover:bg-[var(--bronze)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--bronze-dark)]"
           >
-            Open Inquiry Form
+            Request Catering
           </button>
         </div>
       )}
