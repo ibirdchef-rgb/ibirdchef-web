@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import CtaButtons from "@/components/CtaButtons";
 import RegionSelector from "@/components/RegionSelector";
 import { useRegion } from "@/components/RegionProvider";
 import { DUAL_MARKET_HEADLINE, regions } from "@/lib/regions";
@@ -9,10 +9,17 @@ import { DUAL_MARKET_HEADLINE, regions } from "@/lib/regions";
 export default function Hero() {
   const { region, ready } = useRegion();
   const selected = region ? regions[region] : null;
-  const marketLine =
+  const headline =
     ready && selected
-      ? `Premium catering & private chef experiences in ${selected.label}`
+      ? selected.id === "bay_area"
+        ? "Corporate Catering for the Bay Area"
+        : "Corporate Catering for Seattle & the Eastside"
       : DUAL_MARKET_HEADLINE;
+
+  const supportingLine =
+    ready && selected?.id === "bay_area"
+      ? "Office lunches, box meals, buffets, cultural menus, private events and live culinary stations across Santa Clara, San Jose, Palo Alto, San Francisco and surrounding communities."
+      : "Office lunches, box meals, buffets, cultural menus, private events and live culinary stations across Bellevue, Redmond, Seattle and surrounding areas.";
 
   return (
     <section
@@ -23,7 +30,7 @@ export default function Hero() {
       <div className="absolute inset-0">
         <Image
           src="/ibirdchef-hero.jpg"
-          alt=""
+          alt="Grilled skewers with rice and sides prepared by iBirdChef"
           fill
           sizes="100vw"
           className="object-cover object-[50%_40%] opacity-40"
@@ -31,52 +38,41 @@ export default function Hero() {
           quality={75}
         />
         <div
-          className="absolute inset-0 bg-[linear-gradient(105deg,rgba(4,31,39,0.94)_0%,rgba(4,31,39,0.8)_48%,rgba(4,31,39,0.58)_100%)]"
+          className="absolute inset-0 bg-[linear-gradient(105deg,rgba(8,47,53,0.94)_0%,rgba(11,61,68,0.82)_48%,rgba(11,61,68,0.58)_100%)]"
           aria-hidden="true"
         />
       </div>
 
-      <div className="relative mx-auto flex min-h-[min(90vh,48rem)] max-w-7xl flex-col justify-center px-6 py-16 lg:px-10 lg:py-24">
+      <div className="relative mx-auto flex min-h-[min(68vh,36rem)] max-w-7xl flex-col justify-center px-6 py-12 lg:px-10 lg:py-16">
         <div className="max-w-3xl reveal-up">
           <p className="font-serif text-5xl font-semibold tracking-tight text-[var(--ivory-soft)] sm:text-6xl lg:text-7xl">
             iBirdChef
           </p>
 
           <p className="mt-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--bronze)]">
-            South Asian Cuisine Catering
+            Corporate Catering · Office Meals · Private Events · Live Stations
           </p>
 
           <h1
             id="hero-heading"
             className="mt-6 font-serif text-3xl font-semibold leading-[1.12] tracking-tight text-[var(--ivory-soft)] sm:text-4xl lg:text-[2.75rem]"
           >
-            {marketLine}
+            {headline}
           </h1>
 
-          <p className="mt-6 max-w-xl text-base leading-8 text-white/80 sm:text-lg">
-            Custom South Asian menus for corporate workplaces, private dinners,
-            and family celebrations—planned with dietary care and chef-led
-            follow-up.
+          <p className="mt-6 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">
+            {supportingLine}
+          </p>
+
+          <p className="mt-4 text-sm font-medium tracking-wide text-white/70">
+            Seattle · Bellevue · Redmond · Eastside · Bay Area
           </p>
 
           <div className="mt-8">
             <RegionSelector variant="hero" />
           </div>
 
-          <div className="mt-9 flex w-full max-w-lg flex-col gap-3 sm:max-w-none sm:flex-row">
-            <a
-              href="#corporate"
-              className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[var(--bronze)] px-7 text-sm font-semibold text-white transition hover:bg-[var(--bronze-dark)] sm:w-auto"
-            >
-              Corporate Catering
-            </a>
-            <Link
-              href="/private-events"
-              className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-white/35 bg-white/5 px-7 text-sm font-semibold text-white transition hover:border-white/60 sm:w-auto"
-            >
-              Private & Family Events
-            </Link>
-          </div>
+          <CtaButtons className="mt-9" />
         </div>
       </div>
     </section>

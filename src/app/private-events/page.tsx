@@ -7,11 +7,31 @@ import { PRIVATE_FAMILY_EVENT_TYPES } from "@/lib/event-inquiry";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Private & Family Events",
+  title: "Private Events & Family Celebrations",
   description:
-    "Request a custom quote for birthdays, anniversaries, baby showers, graduations, housewarmings, religious and cultural celebrations, private dinners, and live cooking with iBirdChef.",
+    "Book private event catering for birthdays, cultural celebrations, private dinners, and live cooking with iBirdChef in Seattle, Bellevue, Redmond and the Bay Area.",
   alternates: {
     canonical: "/private-events",
+  },
+  openGraph: {
+    title: "Private Events & Family Celebrations | iBirdChef",
+    description:
+      "Request a custom quote for birthdays, cultural celebrations, private dinners, and live cooking with iBirdChef.",
+    url: "/private-events",
+    type: "website",
+    images: [
+      {
+        url: "/ibirdchef-hero.jpg",
+        alt: "Grilled skewers with rice and sides prepared by iBirdChef",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Private Events & Family Celebrations | iBirdChef",
+    description:
+      "Request a custom quote for private dinners, cultural celebrations, and family events with iBirdChef.",
+    images: ["/ibirdchef-hero.jpg"],
   },
 };
 
@@ -97,25 +117,31 @@ export default function PrivateEventsPage() {
               Area—every personal and family event receives a custom,
               chef-approved quote after we review your details.
             </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <a
                 href="#request-quote"
                 className="inline-flex min-h-12 items-center justify-center rounded-full bg-[var(--bronze)] px-7 text-sm font-semibold text-white transition hover:bg-[var(--bronze-dark)]"
               >
-                Request a Custom Quote
+                Get a Quote
               </a>
               <Link
-                href="/#menu"
+                href="/contact?intent=tasting"
                 className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/35 bg-white/5 px-7 text-sm font-semibold text-white transition hover:border-white/60"
               >
-                View seasonal boxes
+                Book a Tasting
+              </Link>
+              <Link
+                href="/menu"
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/35 bg-white/5 px-7 text-sm font-semibold text-white transition hover:border-white/60"
+              >
+                View Catering Menu
               </Link>
             </div>
           </div>
         </section>
 
         <section
-          className="mx-auto max-w-7xl px-6 py-20 lg:px-10"
+          className="mx-auto max-w-7xl px-6 section-y lg:px-10"
           aria-labelledby="occasions-heading"
         >
           <div className="max-w-3xl">
@@ -172,7 +198,7 @@ export default function PrivateEventsPage() {
 
         <section
           id="request-quote"
-          className="mx-auto max-w-7xl px-6 py-20 lg:px-10"
+          className="mx-auto max-w-7xl px-6 section-y lg:px-10"
           aria-labelledby="quote-heading"
         >
           <div className="bg-[var(--navy)] px-8 py-14 text-white sm:px-12">

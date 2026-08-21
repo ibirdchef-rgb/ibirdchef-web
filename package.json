@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test src/lib/clow-intake.test.ts src/lib/curated-menu.test.ts src/lib/quote-approval-workflow.test.ts src/lib/concierge/engine.test.ts src/lib/concierge/contact.test.ts src/lib/business-fit/business-fit.test.ts src/app/api/business-fit/route.test.ts mcp/tools.test.ts",
+    "test": "tsx --test src/lib/clow-intake.test.ts src/lib/curated-menu.test.ts src/lib/json-ld.test.ts src/lib/quote-approval-workflow.test.ts src/lib/concierge/engine.test.ts src/lib/concierge/contact.test.ts src/lib/business-fit/business-fit.test.ts src/app/api/business-fit/route.test.ts mcp/tools.test.ts",
     "mcp:dev": "tsx mcp/server.ts"
   },
   "dependencies": {

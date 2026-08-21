@@ -1,20 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f1e8;
-  --foreground: #1c1712;
-  --ivory: #f7f1e8;
-  --ivory-soft: #fffaf2;
-  --navy: #062b35;
-  --navy-deep: #041f27;
-  --bronze: #b8892d;
-  --bronze-dark: #8a6420;
-  --ink-muted: #5a4f45;
+  --background: #f4ebdd;
+  --foreground: #1b2426;
+  --ivory: #f4ebdd;
+  --ivory-soft: #fbf6ee;
+  --navy: #0b3d44;
+  --navy-deep: #082f35;
+  --bronze: #b08d4a;
+  --bronze-dark: #8a6c32;
+  --ink-muted: #5c5650;
   --pacific: #1f3d32;
   --pacific-soft: #dfe8e2;
-  --california: #c48a4a;
+  --california: #c49a62;
   --california-soft: #f3e6d4;
-  --surface-elevated: rgba(255, 250, 242, 0.88);
+  --surface-elevated: rgba(251, 246, 238, 0.94);
+  --surface-contrast: #fffdf8;
   --motion-fast: 180ms;
   --motion-medium: 320ms;
 }
@@ -37,23 +38,40 @@ body {
   outline-offset: 2px;
 }
 
+.section-y {
+  padding-block: 2.75rem;
+}
+
+@media (min-width: 1024px) {
+  .section-y {
+    padding-block: 3.75rem;
+  }
+}
+
+.surface-card {
+  background: var(--surface-contrast);
+  border: 1px solid rgba(11, 61, 68, 0.1);
+  border-top: 3px solid var(--bronze);
+  border-radius: 1rem;
+}
+
 .texture-ivory {
   background-color: var(--ivory);
   background-image:
-    radial-gradient(ellipse at top, rgba(184, 137, 45, 0.08), transparent 55%),
-    linear-gradient(180deg, rgba(255, 250, 242, 0.9), rgba(247, 241, 232, 1));
+    radial-gradient(ellipse at top, rgba(176, 141, 74, 0.1), transparent 55%),
+    linear-gradient(180deg, rgba(251, 246, 238, 0.92), rgba(244, 235, 221, 1));
 }
 
 .texture-pacific {
   background-image:
-    radial-gradient(circle at 12% 18%, rgba(31, 61, 50, 0.12), transparent 42%),
-    linear-gradient(160deg, #f4f7f5 0%, var(--ivory) 55%, #eef2ef 100%);
+    radial-gradient(circle at 12% 18%, rgba(11, 61, 68, 0.1), transparent 42%),
+    linear-gradient(160deg, #eef4f3 0%, var(--ivory) 55%, #e8efed 100%);
 }
 
 .texture-california {
   background-image:
-    radial-gradient(circle at 88% 12%, rgba(196, 138, 74, 0.16), transparent 40%),
-    linear-gradient(165deg, #fff8ef 0%, var(--ivory) 50%, #f6ebe0 100%);
+    radial-gradient(circle at 88% 12%, rgba(176, 141, 74, 0.16), transparent 40%),
+    linear-gradient(165deg, #fff8ef 0%, var(--ivory) 50%, #f3e8d6 100%);
 }
 
 .reveal-up {

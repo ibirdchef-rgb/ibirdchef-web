@@ -4,6 +4,7 @@
  * be rendered in the public UI.
  */
 
+import { matchesBuyingCategory, type BuyingCategoryId } from "@/lib/buying-categories";
 import { seasonalBoxes, type SeasonalBox } from "@/lib/menu";
 import {
   EVENT_CATEGORY_LABELS,
@@ -964,7 +965,7 @@ export function buildInquiryHrefForItemIds(itemIds: readonly string[]): string {
     params.set("askDishes", uniqueIds.join(","));
   }
   const query = params.toString();
-  return query ? `/?${query}#contact` : "/#contact";
+  return query ? `/contact?${query}` : "/contact";
 }
 
 export function resolveMenuItemsFromInquiryParams(input: {
@@ -1041,6 +1042,7 @@ export type MenuFilterState = {
   categoryId: PublicMenuCategoryId | "all";
   serviceStyle: (typeof SERVICE_STYLES)[number] | "all";
   eventCategory: EventCategory | "all";
+  buyingId?: BuyingCategoryId | "all";
 };
 
 export function filterCuratedMenu(
@@ -1069,6 +1071,9 @@ export function filterCuratedMenu(
       filters.eventCategory !== "all" &&
       !item.eventCategories.includes(filters.eventCategory)
     ) {
+      return false;
+    }
+    if (!matchesBuyingCategory(item, filters.buyingId ?? "all")) {
       return false;
     }
     if (!q) {

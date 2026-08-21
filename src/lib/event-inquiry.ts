@@ -45,6 +45,7 @@ export const CORPORATE_EVENT_TYPES = [
   "Reception / mixer",
   "Executive dining",
   "Recurring workplace meals",
+  "Menu tasting",
   "Other corporate event",
 ] as const;
 
@@ -93,6 +94,9 @@ export const PAGE_SOURCES = [
   "bay-area",
   "menu",
   "menu-chat",
+  "contact",
+  "services",
+  "bellevue",
   "other",
 ] as const;
 

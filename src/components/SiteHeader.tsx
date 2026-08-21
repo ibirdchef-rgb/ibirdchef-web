@@ -4,14 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import RegionSelector from "@/components/RegionSelector";
+import { paths } from "@/lib/paths";
 
 const navLinks = [
-  { href: "/#services", label: "Services" },
-  { href: "/#corporate", label: "Corporate" },
-  { href: "/private-events", label: "Private & Family Events" },
-  { href: "/#menu", label: "Menu" },
-  { href: "/#experience", label: "Experience" },
-  { href: "/#areas", label: "Service Areas" },
+  { href: paths.services, label: "Services" },
+  { href: paths.menu, label: "Menu" },
+  { href: paths.seattle, label: "Seattle" },
+  { href: paths.bayArea, label: "Bay Area" },
+  { href: paths.privateEvents, label: "Private Events" },
 ] as const;
 
 export default function SiteHeader() {
@@ -44,7 +44,7 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--navy)]/10 bg-[var(--ivory)]/95 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-[var(--navy)]/12 bg-[var(--ivory)]/97 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3 lg:px-10">
         <Link
           href="/#home"
@@ -53,7 +53,7 @@ export default function SiteHeader() {
         >
           <Image
             src="/ibirdchef-logo.jpeg"
-            alt="iBirdChef South Asian Cuisine Catering Company"
+            alt="iBirdChef corporate catering"
             width={64}
             height={64}
             className="h-12 w-12 shrink-0 rounded-lg object-cover sm:h-14 sm:w-14"
@@ -64,8 +64,9 @@ export default function SiteHeader() {
             <p className="font-serif text-lg font-semibold tracking-tight text-[var(--navy)] sm:text-xl">
               iBirdChef
             </p>
-            <p className="truncate text-[0.65rem] uppercase tracking-[0.18em] text-[var(--bronze-dark)] sm:text-xs sm:tracking-[0.22em]">
-              South Asian Cuisine Catering
+            <p className="text-[0.62rem] font-semibold uppercase leading-snug tracking-[0.12em] text-[var(--bronze-dark)] sm:text-xs sm:tracking-[0.18em]">
+              <span className="sm:hidden">Catering & Events</span>
+              <span className="hidden sm:inline">Corporate Catering & Events</span>
             </p>
           </div>
         </Link>
@@ -87,21 +88,21 @@ export default function SiteHeader() {
             ))}
 
             <Link
-              href="/#contact"
+              href={paths.contact}
               className="inline-flex min-h-12 items-center rounded-full bg-[var(--bronze)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--bronze-dark)]"
             >
-              Book
+              Request Catering
             </Link>
           </nav>
         </div>
 
-        <div className="flex items-center gap-2 xl:hidden">
+        <div className="flex min-w-0 items-center gap-2 xl:hidden">
           <Link
-            href="/#contact"
-            className="inline-flex min-h-11 items-center rounded-full bg-[var(--bronze)] px-4 py-2.5 text-sm font-semibold text-white"
+            href={paths.contact}
+            className="inline-flex min-h-11 items-center rounded-full bg-[var(--bronze)] px-3 py-2.5 text-sm font-semibold text-white sm:px-4"
             onClick={closeMenu}
           >
-            Book
+            Request Catering
           </Link>
 
           <button
@@ -139,11 +140,11 @@ export default function SiteHeader() {
             ))}
             <li>
               <Link
-                href="/#contact"
+                href={paths.contact}
                 className="mt-2 flex min-h-12 items-center justify-center rounded-full bg-[var(--bronze)] px-4 text-base font-semibold text-white"
                 onClick={closeMenu}
               >
-                Book
+                Request Catering
               </Link>
             </li>
           </ul>
