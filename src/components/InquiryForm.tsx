@@ -8,6 +8,7 @@ import {
  useState,
 } from "react";
 
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useRegion } from "@/components/RegionProvider";
 import {
@@ -27,7 +28,7 @@ import {
   type EventCategory,
   type PageSource,
 } from "@/lib/event-inquiry";
-import { QUOTE_INQUIRY_MESSAGE, TASTING_INQUIRY_MESSAGE } from "@/lib/paths";
+import { paths, QUOTE_INQUIRY_MESSAGE, TASTING_INQUIRY_MESSAGE } from "@/lib/paths";
 import {
   OUTSIDE_AREA_MESSAGE,
   regions,
@@ -680,11 +681,30 @@ function InquiryFormInner({
         </p>
       ) : null}
 
-      <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm leading-6 text-[var(--ink-muted)]">
-          Share your event details, iBirdChef follows up, and you receive a
-          custom, chef-approved quote after review.
-        </p>
+      <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="max-w-xl space-y-2 text-sm leading-6 text-[var(--ink-muted)]">
+          <p>
+            Submitting an inquiry does not confirm a booking. Availability,
+            menu, pricing, and event terms are confirmed in writing.
+          </p>
+          <p>
+            Review our{" "}
+            <Link
+              href={paths.privacy}
+              className="font-semibold text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4 hover:decoration-[var(--bronze)]"
+            >
+              Privacy Policy
+            </Link>{" "}
+            and{" "}
+            <Link
+              href={paths.terms}
+              className="font-semibold text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4 hover:decoration-[var(--bronze)]"
+            >
+              Catering Terms
+            </Link>
+            .
+          </p>
+        </div>
         <button
           type="submit"
           disabled={status === "submitting"}

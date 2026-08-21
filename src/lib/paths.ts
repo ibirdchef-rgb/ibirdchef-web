@@ -8,6 +8,7 @@ export const paths = {
   bayArea: "/bay-area",
   privateEvents: "/private-events",
   privacy: "/privacy",
+  terms: "/terms",
 } as const;
 
 export function contactHref(intent?: "tasting" | "quote"): string {

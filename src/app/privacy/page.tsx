@@ -56,9 +56,9 @@ export default function PrivacyPage() {
               <li>Any message you include with the inquiry</li>
             </ul>
             <p className="mt-3">
-              If you use the on-site catering concierge, the same kinds of event
-              and contact details may be collected so we can prepare an inquiry
-              for follow-up.
+              If you use the catering inquiry experience on this website, the
+              same kinds of event and contact details may be collected so we can
+              prepare an inquiry for follow-up.
             </p>
           </section>
 
@@ -131,7 +131,17 @@ export default function PrivacyPage() {
           </section>
         </div>
 
-        <p className="mt-10">
+        <p className="mt-8 text-base leading-7 text-[var(--ink-muted)]">
+          Related:{" "}
+          <Link
+            href={paths.terms}
+            className="font-semibold text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4"
+          >
+            Catering Terms
+          </Link>
+        </p>
+
+        <p className="mt-8">
           <Link
             href={paths.contact}
             className="inline-flex min-h-12 items-center rounded-full bg-[var(--bronze)] px-7 text-sm font-semibold text-white transition hover:bg-[var(--bronze-dark)]"
