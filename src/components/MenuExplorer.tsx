@@ -28,6 +28,7 @@ import {
   type EventCategory,
 } from "@/lib/event-inquiry";
 import { formatBoxPrice } from "@/lib/menu";
+import { paths } from "@/lib/paths";
 import { regions, type ServiceRegion } from "@/lib/regions";
 
 const selectClassName =
@@ -405,9 +406,21 @@ export default function MenuExplorer() {
           <p>
             Pricing shown applies only to seasonal boxed lunches at{" "}
             {formatBoxPrice(18)}. Other items use custom quote, market pricing,
-            or a chef-approved custom proposal.
+            or a chef-approved custom proposal. Availability and final pricing
+            are confirmed after event review.
           </p>
           <p>{DIETARY_ALLERGEN_NOTICE}</p>
+          <p>
+            For estimates, bookings, payments, cancellations, dietary requests,
+            and event service details, review our{" "}
+            <Link
+              href={paths.terms}
+              className="font-semibold text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4 hover:decoration-[var(--bronze)]"
+            >
+              Catering Terms
+            </Link>
+            .
+          </p>
         </div>
       </div>
     </section>

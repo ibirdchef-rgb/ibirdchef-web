@@ -15,5 +15,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteUrl}${paths.bayArea}`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.85 },
     { url: `${siteUrl}${paths.privateEvents}`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: `${siteUrl}${paths.privacy}`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
+    { url: `${siteUrl}${paths.terms}`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.4 },
   ];
 }

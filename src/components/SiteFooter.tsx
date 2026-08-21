@@ -13,6 +13,7 @@ const exploreLinks = [
   { href: paths.bayArea, label: "Bay Area" },
   { href: paths.privateEvents, label: "Private Events" },
   { href: paths.privacy, label: "Privacy" },
+  { href: paths.terms, label: "Catering Terms" },
 ] as const;
 
 export default function SiteFooter() {
