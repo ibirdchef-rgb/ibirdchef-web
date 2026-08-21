@@ -36,7 +36,7 @@ export default function MenuPage() {
   return (
     <SiteShell>
       <main id="main-content">
-        <section className="mx-auto max-w-7xl px-6 pt-12 lg:px-10">
+        <section className="mx-auto max-w-7xl px-6 pt-8 lg:px-10">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze-dark)]">
             Catering Menu
           </p>

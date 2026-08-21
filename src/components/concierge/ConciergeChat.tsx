@@ -158,7 +158,7 @@ export default function ConciergeChat() {
   return (
     <section
       id="concierge"
-      className="mx-auto max-w-7xl px-6 py-14 lg:px-10 lg:py-16"
+      className="mx-auto max-w-7xl px-6 section-y lg:px-10"
       aria-labelledby="concierge-heading"
     >
       <div

@@ -44,7 +44,7 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--navy)]/10 bg-[var(--ivory)]/95 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-[var(--navy)]/12 bg-[var(--ivory)]/97 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3 lg:px-10">
         <Link
           href="/#home"
@@ -64,8 +64,9 @@ export default function SiteHeader() {
             <p className="font-serif text-lg font-semibold tracking-tight text-[var(--navy)] sm:text-xl">
               iBirdChef
             </p>
-            <p className="truncate text-[0.65rem] uppercase tracking-[0.18em] text-[var(--bronze-dark)] sm:text-xs sm:tracking-[0.22em]">
-              Corporate Catering & Events
+            <p className="text-[0.62rem] font-semibold uppercase leading-snug tracking-[0.12em] text-[var(--bronze-dark)] sm:text-xs sm:tracking-[0.18em]">
+              <span className="sm:hidden">Catering & Events</span>
+              <span className="hidden sm:inline">Corporate Catering & Events</span>
             </p>
           </div>
         </Link>

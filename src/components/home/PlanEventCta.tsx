@@ -108,10 +108,10 @@ export default function PlanEventCta({
   return (
     <section
       id="contact"
-      className="mx-auto max-w-7xl px-6 py-20 lg:px-10"
+      className="mx-auto max-w-7xl px-6 section-y lg:px-10"
       aria-labelledby="contact-heading"
     >
-      <div className="bg-[var(--navy)] px-8 py-14 text-white sm:px-12">
+      <div className="bg-[var(--navy)] px-6 py-10 text-white sm:px-10 sm:py-12">
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze)]">
           Request Catering
         </p>

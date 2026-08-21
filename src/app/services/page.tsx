@@ -39,7 +39,7 @@ export default function ServicesPage() {
   return (
     <SiteShell>
       <main id="main-content">
-        <section className="mx-auto max-w-7xl px-6 py-16 lg:px-10 lg:py-24">
+        <section className="mx-auto max-w-7xl px-6 section-y lg:px-10">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze-dark)]">
             Services
           </p>
@@ -64,11 +64,11 @@ export default function ServicesPage() {
           >
             Choose a catering style
           </h2>
-          <ul className="mt-10 grid list-none gap-8 p-0 md:grid-cols-2 xl:grid-cols-3">
+          <ul className="mt-8 grid list-none gap-4 p-0 md:grid-cols-2 xl:grid-cols-3">
             {BUYING_CATEGORIES.map((category) => (
               <li
                 key={category.id}
-                className="border-t border-[var(--bronze)]/40 pt-8"
+                className="surface-card p-6"
               >
                 <h3 className="font-serif text-2xl font-semibold text-[var(--navy)]">
                   {category.title}
@@ -85,7 +85,7 @@ export default function ServicesPage() {
               </li>
             ))}
           </ul>
-          <p className="mt-12 max-w-3xl text-sm leading-6 text-[var(--ink-muted)]">
+          <p className="mt-8 max-w-3xl text-sm leading-6 text-[var(--ink-muted)]">
             {siteConfig.mealsDeliveredNote} {siteConfig.vendorStatus} Questions?
             Email{" "}
             <a

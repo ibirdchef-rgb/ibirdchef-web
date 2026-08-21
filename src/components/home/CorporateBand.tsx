@@ -9,15 +9,15 @@ export default function CorporateBand() {
       className="border-y border-[var(--navy)]/10 bg-[var(--navy)] text-white"
       aria-labelledby="corporate-heading"
     >
-      <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
-        <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
+      <div className="mx-auto max-w-7xl px-6 section-y lg:px-10">
+        <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze)]">
               Corporate Catering
             </p>
             <h2
               id="corporate-heading"
-              className="mt-4 font-serif text-4xl font-semibold tracking-tight sm:text-5xl"
+              className="mt-3 font-serif text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl"
             >
               Built for workplace teams, events, and hospitality partners.
             </h2>

@@ -42,7 +42,7 @@ export default function RegionLanding({
           className={`relative overflow-hidden border-b border-[var(--navy)]/10 ${texture}`}
           aria-labelledby="region-heading"
         >
-          <div className="mx-auto max-w-7xl px-6 py-16 lg:px-10 lg:py-24">
+          <div className="mx-auto max-w-7xl px-6 py-12 lg:px-10 lg:py-16">
             <p className="font-serif text-4xl font-semibold tracking-tight text-[var(--navy)] sm:text-5xl">
               iBirdChef
             </p>
@@ -66,7 +66,7 @@ export default function RegionLanding({
         </section>
 
         <section
-          className="mx-auto max-w-7xl px-6 py-20 lg:px-10"
+          className="mx-auto max-w-7xl px-6 section-y lg:px-10"
           aria-labelledby="local-points-heading"
         >
           <div className="max-w-3xl">

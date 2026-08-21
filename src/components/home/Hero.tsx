@@ -38,12 +38,12 @@ export default function Hero() {
           quality={75}
         />
         <div
-          className="absolute inset-0 bg-[linear-gradient(105deg,rgba(4,31,39,0.94)_0%,rgba(4,31,39,0.8)_48%,rgba(4,31,39,0.58)_100%)]"
+          className="absolute inset-0 bg-[linear-gradient(105deg,rgba(8,47,53,0.94)_0%,rgba(11,61,68,0.82)_48%,rgba(11,61,68,0.58)_100%)]"
           aria-hidden="true"
         />
       </div>
 
-      <div className="relative mx-auto flex min-h-[min(88vh,46rem)] max-w-7xl flex-col justify-center px-6 py-16 lg:px-10 lg:py-24">
+      <div className="relative mx-auto flex min-h-[min(68vh,36rem)] max-w-7xl flex-col justify-center px-6 py-12 lg:px-10 lg:py-16">
         <div className="max-w-3xl reveal-up">
           <p className="font-serif text-5xl font-semibold tracking-tight text-[var(--ivory-soft)] sm:text-6xl lg:text-7xl">
             iBirdChef

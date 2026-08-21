@@ -44,49 +44,48 @@ export default function ServiceCategories() {
   return (
     <section
       id="services"
-      className="mx-auto max-w-7xl px-6 py-20 lg:px-10"
+      className="border-b border-[var(--navy)]/10 bg-[var(--surface-contrast)]"
       aria-labelledby="services-heading"
     >
-      <div className="max-w-3xl">
-        <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze-dark)]">
-          Services
-        </p>
-        <h2
-          id="services-heading"
-          className="mt-4 font-serif text-4xl font-semibold tracking-tight text-[var(--navy)] sm:text-5xl"
-        >
-          Corporate catering, office meals, events and live stations.
-        </h2>
-        <p className="mt-5 text-lg leading-8 text-[var(--ink-muted)]">
-          Start with the service style that fits your workplace or celebration.
-          Menus are confirmed after we review guest count, timing, and dietary
-          needs.
-        </p>
-      </div>
-
-      <div className="mt-12 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-        {services.map((service, index) => (
-          <article
-            key={service.title}
-            className="border-t border-[var(--bronze)]/40 pt-8"
+      <div className="mx-auto max-w-7xl px-6 section-y lg:px-10">
+        <div className="max-w-3xl">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze-dark)]">
+            Services
+          </p>
+          <h2
+            id="services-heading"
+            className="mt-3 font-serif text-3xl font-semibold tracking-tight text-[var(--navy)] sm:text-4xl"
           >
-            <p className="text-sm font-bold text-[var(--bronze-dark)]">
-              0{index + 1}
-            </p>
-            <h3 className="mt-6 font-serif text-2xl font-semibold text-[var(--navy)]">
-              {service.title}
-            </h3>
-            <p className="mt-4 leading-7 text-[var(--ink-muted)]">
-              {service.description}
-            </p>
-            <Link
-              href={service.href}
-              className="mt-5 inline-flex min-h-11 items-center font-semibold text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4 hover:decoration-[var(--bronze)]"
-            >
-              Explore {service.title}
-            </Link>
-          </article>
-        ))}
+            Corporate catering, office meals, events and live stations.
+          </h2>
+          <p className="mt-4 text-base leading-7 text-[var(--ink-muted)] sm:text-lg sm:leading-8">
+            Start with the service style that fits your workplace or celebration.
+            Menus are confirmed after we review guest count, timing, and dietary
+            needs.
+          </p>
+        </div>
+
+        <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {services.map((service, index) => (
+            <article key={service.title} className="surface-card p-6">
+              <p className="text-sm font-bold text-[var(--bronze-dark)]">
+                0{index + 1}
+              </p>
+              <h3 className="mt-3 font-serif text-2xl font-semibold text-[var(--navy)]">
+                {service.title}
+              </h3>
+              <p className="mt-3 leading-7 text-[var(--ink-muted)]">
+                {service.description}
+              </p>
+              <Link
+                href={service.href}
+                className="mt-4 inline-flex min-h-11 items-center font-semibold text-[var(--navy)] underline decoration-[var(--bronze)]/50 underline-offset-4 hover:decoration-[var(--bronze)]"
+              >
+                Explore {service.title}
+              </Link>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );

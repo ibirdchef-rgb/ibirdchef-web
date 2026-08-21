@@ -141,7 +141,7 @@ export default function PrivateEventsPage() {
         </section>
 
         <section
-          className="mx-auto max-w-7xl px-6 py-20 lg:px-10"
+          className="mx-auto max-w-7xl px-6 section-y lg:px-10"
           aria-labelledby="occasions-heading"
         >
           <div className="max-w-3xl">
@@ -198,7 +198,7 @@ export default function PrivateEventsPage() {
 
         <section
           id="request-quote"
-          className="mx-auto max-w-7xl px-6 py-20 lg:px-10"
+          className="mx-auto max-w-7xl px-6 section-y lg:px-10"
           aria-labelledby="quote-heading"
         >
           <div className="bg-[var(--navy)] px-8 py-14 text-white sm:px-12">

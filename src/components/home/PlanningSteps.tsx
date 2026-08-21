@@ -23,24 +23,24 @@ export default function PlanningSteps() {
       className="border-y border-[var(--navy)]/10 bg-[var(--ivory-soft)]"
       aria-labelledby="planning-heading"
     >
-      <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
+      <div className="mx-auto max-w-7xl px-6 section-y lg:px-10">
         <div className="max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze-dark)]">
             How Planning Works
           </p>
           <h2
             id="planning-heading"
-            className="mt-4 font-serif text-4xl font-semibold tracking-tight text-[var(--navy)] sm:text-5xl"
+            className="mt-3 font-serif text-3xl font-semibold tracking-tight text-[var(--navy)] sm:text-4xl"
           >
             Simple steps from inquiry to a chef-approved quote.
           </h2>
         </div>
 
-        <ol className="mt-12 grid list-none gap-8 p-0 md:grid-cols-3">
+        <ol className="mt-8 grid list-none gap-4 p-0 md:grid-cols-3">
           {steps.map((step, index) => (
             <li
               key={step.title}
-              className="border-t border-[var(--navy)]/15 pt-6"
+              className="surface-card p-5"
             >
               <p className="text-sm font-bold text-[var(--bronze-dark)]">
                 0{index + 1}

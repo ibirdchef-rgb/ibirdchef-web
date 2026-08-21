@@ -10,14 +10,14 @@ export default function MenuHighlights() {
       className="border-y border-[var(--navy)]/10 texture-ivory"
       aria-labelledby="menu-heading"
     >
-      <div className="mx-auto max-w-7xl px-6 py-14 lg:px-10 lg:py-16">
+      <div className="mx-auto max-w-7xl px-6 section-y lg:px-10">
         <div className="max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze-dark)]">
             Catering Menu
           </p>
           <h2
             id="menu-heading"
-            className="mt-3 font-serif text-4xl font-semibold tracking-tight text-[var(--navy)] sm:text-5xl"
+            className="mt-3 font-serif text-3xl font-semibold tracking-tight text-[var(--navy)] sm:text-4xl"
           >
             Choose the catering style, then request a quote.
           </h2>
@@ -28,7 +28,7 @@ export default function MenuHighlights() {
           </p>
         </div>
 
-        <div className="mt-10 rounded-3xl border border-[var(--navy)]/10 bg-white/80 p-6 sm:p-8">
+        <div className="mt-8 rounded-3xl border border-[var(--navy)]/10 bg-[var(--surface-contrast)] p-5 sm:p-7">
           <h3 className="font-serif text-2xl font-semibold text-[var(--navy)]">
             Corporate boxed lunches
           </h3>
@@ -60,8 +60,8 @@ export default function MenuHighlights() {
           </ul>
         </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          <article className="rounded-2xl border border-[var(--navy)]/10 bg-white/80 p-5">
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <article className="surface-card p-5">
             <h3 className="font-serif text-xl font-semibold text-[var(--navy)]">
               Live Dosa
             </h3>
@@ -75,7 +75,7 @@ export default function MenuHighlights() {
               View live stations
             </Link>
           </article>
-          <article className="rounded-2xl border border-[var(--navy)]/10 bg-white/80 p-5">
+          <article className="surface-card p-5">
             <h3 className="font-serif text-xl font-semibold text-[var(--navy)]">
               Live Chaat
             </h3>
@@ -83,7 +83,7 @@ export default function MenuHighlights() {
               Live chaat and bites for receptions, cultural events, and office gatherings.
             </p>
           </article>
-          <article className="rounded-2xl border border-[var(--navy)]/10 bg-white/80 p-5">
+          <article className="surface-card p-5">
             <h3 className="font-serif text-xl font-semibold text-[var(--navy)]">
               Tandoor / Grill
             </h3>
@@ -93,7 +93,7 @@ export default function MenuHighlights() {
           </article>
         </div>
 
-        <div className="mt-10">
+        <div className="mt-8">
           <CtaButtons variant="onLight" />
         </div>
         <p className="mt-4 text-sm leading-6 text-[var(--ink-muted)]">

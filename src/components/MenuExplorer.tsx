@@ -170,7 +170,7 @@ export default function MenuExplorer() {
       className="border-y border-[var(--navy)]/10 texture-ivory"
       aria-labelledby="menu-heading"
     >
-      <div className="mx-auto max-w-7xl px-6 py-14 lg:px-10 lg:py-16">
+      <div className="mx-auto max-w-7xl px-6 section-y lg:px-10">
         <div className="max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--bronze-dark)]">
             Catering Menu
