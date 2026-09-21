@@ -180,6 +180,85 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+const STRICT_DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+type CalendarDateParts = { year: number; month: number; day: number };
+
+/**
+ * Parses a strict `YYYY-MM-DD` string into real calendar-date parts.
+ *
+ * Rejects anything native `Date` parsing would otherwise silently "fix up" —
+ * e.g. `2026-02-31` must NOT normalize into `2026-03-03`. We round-trip the
+ * numeric parts through `Date.UTC` and compare the result back against the
+ * input: `Date.UTC` normalizes out-of-range day/month values, so any
+ * mismatch after the round trip means the input wasn't a real calendar date.
+ */
+function parseStrictCalendarDate(value: string): CalendarDateParts | null {
+  const match = STRICT_DATE_ONLY_PATTERN.exec(value);
+  if (!match) {
+    return null;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+
+  if (month < 1 || month > 12 || day < 1 || day > 31) {
+    return null;
+  }
+
+  const roundTrip = new Date(Date.UTC(year, month - 1, day));
+  if (
+    roundTrip.getUTCFullYear() !== year ||
+    roundTrip.getUTCMonth() !== month - 1 ||
+    roundTrip.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return { year, month, day };
+}
+
+function compareCalendarDateParts(
+  a: CalendarDateParts,
+  b: CalendarDateParts,
+): number {
+  if (a.year !== b.year) return a.year - b.year;
+  if (a.month !== b.month) return a.month - b.month;
+  return a.day - b.day;
+}
+
+/**
+ * Today's calendar date, as plain parts (no timezone conversion applied on
+ * top of it). The app has no defined "business timezone" yet, so this
+ * intentionally reads whatever timezone the running process is already in —
+ * the same source every call to `validateEventInquiry` uses — rather than
+ * mixing a UTC-derived "today" with a locally-parsed submitted date.
+ */
+function serverTodayDateParts(reference: Date = new Date()): CalendarDateParts {
+  return {
+    year: reference.getFullYear(),
+    month: reference.getMonth() + 1,
+    day: reference.getDate(),
+  };
+}
+
+/**
+ * True when `value` is a real, strictly `YYYY-MM-DD`-formatted calendar date
+ * that is today or later. Exported so tests can pin "today" via
+ * `referenceToday` instead of depending on the clock.
+ */
+export function isUpcomingEventDate(
+  value: string,
+  referenceToday: CalendarDateParts = serverTodayDateParts(),
+): boolean {
+  const parsed = parseStrictCalendarDate(value);
+  if (!parsed) {
+    return false;
+  }
+  return compareCalendarDateParts(parsed, referenceToday) >= 0;
+}
+
 export function composeEventLocation(city: string, venueOrZip: string): string {
   const parts = [city.trim(), venueOrZip.trim()].filter(Boolean);
   return parts.join(" · ");
@@ -313,6 +392,14 @@ export function validateEventInquiry(
   const guestCount = Number(inquiry.guestCount);
   if (!Number.isFinite(guestCount) || guestCount < 1) {
     return { ok: false, error: "Guest count must be a positive number." };
+  }
+
+  if (!isUpcomingEventDate(inquiry.eventDate)) {
+    return {
+      ok: false,
+      error:
+        "Please provide a valid event date (YYYY-MM-DD) that is today or in the future.",
+    };
   }
 
   for (const [key, max] of Object.entries(EVENT_INQUIRY_MAX_LENGTH) as Array<
