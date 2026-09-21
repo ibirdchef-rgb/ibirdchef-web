@@ -53,6 +53,21 @@ export type InquiryFormProps = {
   pageSource?: PageSource;
 };
 
+/**
+ * Local (browser) calendar date as YYYY-MM-DD, used as the event-date
+ * input's `min`. Deliberately avoids `toISOString()`, which converts to UTC
+ * first and can report the wrong calendar day near midnight for negative
+ * UTC offsets (e.g. US timezones). This is a UX floor only — the server
+ * validation in `event-inquiry.ts` is the actual security boundary.
+ */
+function getLocalDateInputMin(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function eventTypesForCategory(category: EventCategory | ""): readonly string[] {
   if (category === "corporate") {
     return CORPORATE_EVENT_TYPES;
@@ -476,6 +491,7 @@ function InquiryFormInner({
             name="eventDate"
             type="date"
             required
+            min={getLocalDateInputMin()}
             disabled={status === "submitting"}
             className={fieldClassName}
           />
