@@ -3,6 +3,7 @@
 import {
  FormEvent,
  Suspense,
+ useEffect,
  useId,
  useMemo,
  useState,
@@ -68,6 +69,14 @@ function getLocalDateInputMin(): string {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * Name of the honeypot field. Real visitors never see or fill this input;
+ * only an automated filler that blindly populates every form field would.
+ * Kept generic/plausible-looking rather than named "honeypot" so a bot
+ * scanning field names for obvious traps doesn't skip it.
+ */
+const HONEYPOT_FIELD_NAME = "companyWebsite";
+
 function eventTypesForCategory(category: EventCategory | ""): readonly string[] {
   if (category === "corporate") {
     return CORPORATE_EVENT_TYPES;
@@ -88,6 +97,16 @@ function InquiryFormInner({
   pageSource = "homepage",
 }: InquiryFormProps) {
   const formId = useId();
+
+  // Anti-spam: records when the form became interactive so the server can
+  // reject submissions that arrive implausibly fast. Set in an effect (not
+  // during render) so server-rendered and first-client-render HTML match;
+  // null until then, which the server treats as "no timing metadata" rather
+  // than blocking.
+  const [formStartedAt, setFormStartedAt] = useState<number | null>(null);
+  useEffect(() => {
+    setFormStartedAt(Date.now());
+  }, []);
   const searchParams = useSearchParams();
   const intent = searchParams.get("intent");
   const isTasting = intent === "tasting";
@@ -210,6 +229,10 @@ function InquiryFormInner({
       smsConsent: formData.get("smsConsent") === "on",
       message: String(formData.get("message") ?? ""),
       pageSource,
+      // Anti-spam metadata only — never validated as customer data, and
+      // never forwarded to email/CLOW/iBirdOS payloads.
+      [HONEYPOT_FIELD_NAME]: String(formData.get(HONEYPOT_FIELD_NAME) ?? ""),
+      formStartedAt,
     };
 
     try {
@@ -280,6 +303,34 @@ function InquiryFormInner({
       className="rounded-3xl border border-[var(--navy)]/10 bg-white p-8 shadow-sm sm:p-10"
       aria-labelledby={`${formId}-title`}
     >
+      {/*
+        Honeypot: invisible to sighted users (absolutely positioned off
+        screen) and removed from both tab order and assistive-tech
+        announcement, so a real visitor never knows it exists and never
+        needs to interact with it. Only an automated form-filler that
+        blindly populates every field will put a value here.
+      */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          top: "-9999px",
+          width: "1px",
+          height: "1px",
+          overflow: "hidden",
+        }}
+      >
+        <label htmlFor={`${formId}-company-website`}>Company website</label>
+        <input
+          id={`${formId}-company-website`}
+          name={HONEYPOT_FIELD_NAME}
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
+      <input type="hidden" name="formStartedAt" value={formStartedAt ?? ""} readOnly />
       <h3
         id={`${formId}-title`}
         className="font-serif text-2xl font-semibold text-[var(--navy)]"

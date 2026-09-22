@@ -20,6 +20,45 @@ import { regionLabel } from "@/lib/regions";
 
 export const runtime = "nodejs";
 
+/** Must match the honeypot field name rendered in InquiryForm.tsx. */
+const HONEYPOT_FIELD_NAME = "companyWebsite";
+
+/**
+ * Submissions faster than this are treated as automated rather than a real
+ * person filling out the form. ~2s is a conservative floor: comfortably
+ * below any plausible human fill time, so it should never catch a real
+ * customer, even one that pastes every field.
+ */
+const MIN_HUMAN_SUBMIT_MS = 2000;
+
+/**
+ * True when the honeypot field carries any value. Real visitors never see or
+ * populate it (see InquiryForm.tsx); only an automated filler that blindly
+ * fills every field would.
+ */
+function isHoneypotFilled(raw: Record<string, unknown>): boolean {
+  const value = raw[HONEYPOT_FIELD_NAME];
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+/**
+ * True only when we have a well-formed client-reported form-start timestamp
+ * AND it shows the submission arrived unrealistically fast. Anything else —
+ * missing, malformed, or a client clock that runs behind the server — is
+ * treated as "no signal" and never blocks a legitimate inquiry.
+ */
+function isSuspiciouslyFastSubmission(raw: Record<string, unknown>): boolean {
+  const startedAt = raw.formStartedAt;
+  if (typeof startedAt !== "number" || !Number.isFinite(startedAt)) {
+    return false;
+  }
+  const elapsedMs = Date.now() - startedAt;
+  if (!Number.isFinite(elapsedMs) || elapsedMs < 0) {
+    return false;
+  }
+  return elapsedMs < MIN_HUMAN_SUBMIT_MS;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
@@ -111,6 +150,17 @@ export async function POST(request: Request) {
     json = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+  }
+
+  // Anti-spam gate: inspected before any validation, email send, CLOW
+  // forward, or iBirdOS handoff. A detected bot gets an indistinguishable
+  // success response with zero side effects and zero logged customer data —
+  // it should never learn what tripped it.
+  if (json && typeof json === "object") {
+    const rawBody = json as Record<string, unknown>;
+    if (isHoneypotFilled(rawBody) || isSuspiciouslyFastSubmission(rawBody)) {
+      return NextResponse.json({ ok: true }, { status: 200 });
+    }
   }
 
   const parsed = parseEventInquiry(json);
